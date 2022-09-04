@@ -171,4 +171,8 @@ impl NearLott {
         let data = self.data();
         data.random_result as u32
     }
+
+    pub fn get_current_timestamp(&self) -> u64 {
+        env::block_timestamp()
+    }
 }
