@@ -69,17 +69,17 @@ impl NearLott {
     #[payable]
     pub fn storage_withdraw(&mut self) {
         self.assert_one_yoctor();
-        let owner_id = env::predecessor_account_id();
-        let available_amount = self.storage_available(owner_id);
+        let sender_id: AccountId = env::predecessor_account_id();
+        let available_amount = self.storage_available(sender_id);
         if available_amount > 0 {
-            Promise::new(owner_id.clone()).transfer(available_amount);
+            Promise::new(env::predecessor_account_id()).transfer(available_amount);
         }
 
-        let usage_data = self.storage_usage(owner_id.clone());
+        let usage_data = self.storage_usage(env::predecessor_account_id());
         if usage_data > 0 {
             self.data_mut()
                 ._storage_deposits
-                .insert(&owner_id, &usage_data);
+                .insert(&env::predecessor_account_id(), &usage_data);
         }
     }
 
@@ -105,7 +105,7 @@ impl NearLott {
         assert!(
             self.storage_usage(_account_id) <= deposited,
             "{}",
-            ERR32_INSUFFICIENT_STORAGEE
+            ERR32_INSUFFICIENT_STORAGE
         );
     }
 

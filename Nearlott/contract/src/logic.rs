@@ -15,6 +15,7 @@ impl NearLott {
         _ticket_numbers: Vec<TicketNumber>,
         amount: u128,
     ) {
+        self.assert_contract_running();
         assert_eq!(_ticket_numbers.len(), 0, "{}", ERR21_TICKETS__LENGTH);
 
         let data = self.data_mut();
@@ -29,7 +30,12 @@ impl NearLott {
             ERR22_LOTTERY_CLAIM_TOO_MANY_TICKETS
         );
 
-        assert_eq!(lottery.status, Status::Open, "{}", ERR30_LOTTERY_IS_NOT_CLOSE);
+        assert_eq!(
+            lottery.status,
+            Status::Open,
+            "{}",
+            ERR30_LOTTERY_IS_NOT_CLOSE
+        );
 
         assert!(
             to_sec(env::block_timestamp()) < lottery.end_time as u32,
@@ -38,11 +44,12 @@ impl NearLott {
         );
 
         // Calculate number of NEAR to this contract
-        let amount_near_to_transfer = self._calculate_total_price_for_bulk_tickets(
+        let amount_near_to_transfer = _calculate_total_price_for_bulk_tickets(
             lottery.discount_divisor,
             lottery.price_ticket_in_near,
             _ticket_numbers.len() as u128,
         );
+
         assert!(
             env::attached_deposit() >= amount,
             "{}",
@@ -55,7 +62,8 @@ impl NearLott {
         );
 
         // Increment the total amount collected for the lottery round
-        lottery.amount_collected_in_near = lottery.amount_collected_in_near + amount_near_to_transfer;
+        lottery.amount_collected_in_near =
+            lottery.amount_collected_in_near + amount_near_to_transfer;
         data._lotteries.insert(&_lottery_id, &lottery);
 
         let mut number_tickets_in_a_lottery = data
@@ -144,8 +152,14 @@ impl NearLott {
         _ticket_ids: Vec<TicketId>,
         _brackets: Vec<BracketPosition>,
     ) {
+        self.assert_contract_running();
         let data = self.data_mut();
-        assert_eq!(_ticket_ids.len(), _brackets.len(), "{}", ERR20_LOTTERY_CLAIM_NOT_SAME_LENGTH);
+        assert_eq!(
+            _ticket_ids.len(),
+            _brackets.len(),
+            "{}",
+            ERR20_LOTTERY_CLAIM_NOT_SAME_LENGTH
+        );
 
         assert_ne!(_ticket_ids.len(), 0, "{}", ERR21_TICKETS__LENGTH);
 
@@ -160,7 +174,12 @@ impl NearLott {
             .get(&_lottery_id)
             .expect(ERR1_NOT_EXISTING_LOTTERY);
 
-        assert_eq!(lottery.status, Status::Claimable, "{}", ERR23_LOTTERY_CLAIM_TOO_MANY_TICKETS);
+        assert_eq!(
+            lottery.status,
+            Status::Claimable,
+            "{}",
+            ERR23_LOTTERY_CLAIM_TOO_MANY_TICKETS
+        );
 
         // Initializes the reward_in_near_to_transfer
         let mut reward_in_near_to_transfer = 0;
@@ -184,24 +203,35 @@ impl NearLott {
                 ._tickets
                 .get(&this_ticket_id)
                 .expect(ERR2_NOT_EXISTING_TICKET);
-            assert_eq!(env::predecessor_account_id(), ticket.owner, "{}", ERR25_LOTTERY_CLAIM_TICKET_TOO_HIGH);
+            assert_eq!(
+                env::predecessor_account_id(),
+                ticket.owner,
+                "{}",
+                ERR25_LOTTERY_CLAIM_TICKET_TOO_HIGH
+            );
 
             // Update the lottery ticket owner to 0x address
             ticket.owner = AccountId::new_unchecked("0".to_string());
             data._tickets.insert(&this_ticket_id, &ticket);
 
             let reward_for_ticket_id =
-                self._calculate_rewards_for_ticket_id(_lottery_id, this_ticket_id, _brackets[i]);
+                _calculate_rewards_for_ticket_id(data, _lottery_id, this_ticket_id, _brackets[i]);
 
             // Check user is claiming the correct bracket
             assert_ne!(reward_for_ticket_id, 0, "{}", ERR28_LOTTERY_CLAIM_NO_PRIZE);
 
             if _brackets[i] != 5 {
-                assert_eq!(self._calculate_rewards_for_ticket_id(
-                    _lottery_id,
-                    this_ticket_id,
-                    _brackets[i] + 1
-                ), 0, "{}", ERR29_LOTTERY_CLAIM_BRACKET_MUST_BE_HIGHER);
+                assert_eq!(
+                    _calculate_rewards_for_ticket_id(
+                        data,
+                        _lottery_id,
+                        this_ticket_id,
+                        _brackets[i] + 1
+                    ),
+                    0,
+                    "{}",
+                    ERR29_LOTTERY_CLAIM_BRACKET_MUST_BE_HIGHER
+                );
             }
             // Increment the reward to transfer
             reward_in_near_to_transfer += reward_for_ticket_id;
@@ -215,7 +245,7 @@ impl NearLott {
                 "type": "claim_ticket",
                 "params": {
                     "claimer": env::predecessor_account_id(),
-                    "transfer_amount":  rewardInNearToTransfer,
+                    "transfer_amount":  reward_in_near_to_transfer,
                     "current_lottery_id": _lottery_id,
                     "ticket_ids_length": _ticket_ids.len(),
                     "brackets_length": _brackets.len(),
@@ -232,15 +262,23 @@ impl NearLott {
      */
     pub fn close_lottery(&mut self, _lottery_id: LotteryId) {
         self.assert_operator_calling();
-
+        self.assert_contract_running();
         let data = self.data_mut();
         let mut lottery = data
             ._lotteries
             .get(&data.current_lottery_id)
             .expect(ERR1_NOT_EXISTING_LOTTERY);
 
-        self.get_random_number(data);
+        assert_eq!(
+            lottery.status,
+            Status::Open,
+            "{}",
+            ERR17_LOTTERY_IS_NOT_OPEN
+        );
+        let final_number = get_random_number();
+        data.random_result = final_number;
         lottery.status = Status::Close;
+        data._lotteries.insert(&_lottery_id, &lottery);
 
         env::log_str(
             &json!({
@@ -266,6 +304,7 @@ impl NearLott {
         _auto_injection: bool,
     ) {
         self.assert_operator_calling();
+        self.assert_contract_running();
 
         let data = self.data_mut();
         let mut lottery = data
@@ -287,7 +326,7 @@ impl NearLott {
         );
 
         // Calculate the finalNumber based on the randomResult generated
-        let _final_number = self.view_random_result();
+        let _final_number = data.random_result as u32;
 
         // Initialize a number to count addresses in the previous bracket
         let mut _number_addresses_in_previous_bracket: u128 = 0;
@@ -394,6 +433,7 @@ impl NearLott {
         _treasury_fee: u128,
     ) {
         self.assert_operator_calling();
+        self.assert_contract_running();
 
         let mut data = self.data_mut();
         let lottery = data
@@ -474,69 +514,5 @@ impl NearLott {
         );
 
         data.pending_injection_next_lottery = 0;
-    }
-
-    /**
-     * @notice Calculate final price for bulk of tickets
-     * @param _discount_divisor: divisor for the discount (the smaller it is, the greater the discount is)
-     * @param _price_ticket: price of a ticket
-     * @param _number_ticket: number of tickets purchased
-     */
-    pub(crate) fn _calculate_total_price_for_bulk_tickets(
-        &self,
-        _discount_divisor: u128,
-        _price_ticket: u128,
-        _number_ticket: u128,
-    ) -> u128 {
-        (_price_ticket * _number_ticket * (_discount_divisor + 1 - _number_ticket))
-            / _discount_divisor
-    }
-
-    /**
-     * @notice Calculate rewards for a given ticket
-     * @param _lottery_id: lottery id
-     * @param _ticket_id: ticket id
-     * @param _bracket: bracket for the ticketId to verify the claim and calculate rewards
-     */
-    pub(crate) fn _calculate_rewards_for_ticket_id(
-        &self,
-        _lottery_id: LotteryId,
-        _ticket_id: TicketId,
-        _bracket: BracketPosition,
-    ) -> u128 {
-        // Retrieve the winning number combination
-        let lottery: Lottery = self
-            .data()
-            ._lotteries
-            .get(&_lottery_id)
-            .expect(ERR1_NOT_EXISTING_LOTTERY);
-        let user_number = lottery.final_number;
-
-        // Retrieve the user number combination from the ticketId
-        let ticket = self
-            .data()
-            ._tickets
-            .get(&_ticket_id)
-            .expect(ERR2_NOT_EXISTING_TICKET);
-        let winning_ticket_number = ticket.number;
-
-        // Apply transformation to verify the claim provided by the user is true
-        let bracket_number = self
-            .data()
-            ._bracket_calculator
-            .get(&_bracket)
-            .expect(ERR3_NOT_EXISTING_BRACKET);
-        let transformed_winning_number =
-            bracket_number + (winning_ticket_number % (10u32.pow(_bracket + 1)));
-
-        let transformed_user_number = bracket_number + (user_number % (10u32.pow(_bracket + 1)));
-
-        // Confirm that the two transformed numbers are the same, if not throw
-        if transformed_winning_number == transformed_user_number {
-            let lottery_brackets = lottery.near_per_bracket;
-            return lottery_brackets[_bracket as usize];
-        }
-
-        return 0;
     }
 }

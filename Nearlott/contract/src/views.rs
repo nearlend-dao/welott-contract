@@ -5,9 +5,21 @@ use near_sdk::serde::{Deserialize, Serialize};
 #[serde(crate = "near_sdk::serde")]
 pub struct LotteryUserData {
     pub lottery_ticket_ids: Vec<TicketId>,
-    pub ticket_numbers: Vec<u128>,
+    pub ticket_numbers: Vec<u32>,
     pub ticket_status: Vec<bool>,
     pub cursor: u32,
+}
+
+/// User account on this contract
+impl Default for LotteryUserData {
+    fn default() -> Self {
+        Self {
+            lottery_ticket_ids: vec![],
+            ticket_numbers: vec![],
+            ticket_status: vec![],
+            cursor: 0,
+        }
+    }
 }
 
 impl NearLott {
@@ -18,7 +30,7 @@ impl NearLott {
      * @param _number_tickets number of tickets to buy
      */
     pub fn calculate_total_price_for_bulk_tickets(
-        &self,
+        &mut self,
         _discount_divisor: u128,
         _price_ticket: u128,
         _number_tickets: u128,
@@ -32,16 +44,16 @@ impl NearLott {
 
         assert_ne!(_number_tickets, 0, "{}", ERR7_NUMBER_TICKETS_ZERO);
 
-        return self._calculate_total_price_for_bulk_tickets(
+        return _calculate_total_price_for_bulk_tickets(
             _discount_divisor,
             _price_ticket,
             _number_tickets,
         );
     }
     /**
-     * @notice View current lottery id
+     * @notice View latest lottery id
      */
-    pub fn view_current_lottery_id(&self) -> u32 {
+    pub fn view_latest_lottery_id(&self) -> u32 {
         self.data().current_lottery_id
     }
 
@@ -72,8 +84,8 @@ impl NearLott {
         _bracket: BracketPosition,
     ) -> u128 {
         // Check lottery is in claimable status
-        let lottery = self
-            .data()
+        let data = self.data();
+        let lottery = data
             ._lotteries
             .get(&_lottery_id)
             .expect(ERR1_NOT_EXISTING_LOTTERY);
@@ -88,7 +100,7 @@ impl NearLott {
             return 0;
         }
 
-        return self._calculate_rewards_for_ticket_id(_lottery_id, _ticket_id, _bracket);
+        return _calculate_rewards_for_ticket_id(data, _lottery_id, _ticket_id, _bracket);
     }
 
     /**
@@ -144,10 +156,19 @@ impl NearLott {
         }
 
         LotteryUserData {
-            lottery_ticket_ids: vec![],
-            ticket_numbers: vec![],
-            ticket_status: vec![],
+            lottery_ticket_ids: lottery_ticket_ids,
+            ticket_numbers: ticket_numbers,
+            ticket_status: ticket_statuses,
             cursor: _cursor,
         }
+    }
+
+    pub fn view_random(&self) -> u32 {
+        get_random_number()
+    }
+
+    pub fn view_random_result(&self) -> u32 {
+        let data = self.data();
+        data.random_result as u32
     }
 }

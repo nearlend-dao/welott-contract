@@ -26,7 +26,7 @@ impl NearLott {
      * @notice Set max number of tickets
      * @dev Only callable by owner
      */
-    pub fn set_max_number_tickets_per_buy(&mut self, _max_number_tickets_per_buy: u128) {
+    pub fn set_max_number_tickets_per_buy(&mut self, _max_number_tickets_per_buy: u64) {
         self.assert_owner_calling();
         let data = self.data_mut();
         data.max_number_tickets_per_buy_or_claim = _max_number_tickets_per_buy;
@@ -47,6 +47,7 @@ impl NearLott {
 
         assert!(
             _min_price_ticket_in_near <= _max_price_ticket_in_near,
+            "{}",
             ERR8_MIN_PRICE_MAX_PRICE
         );
 
