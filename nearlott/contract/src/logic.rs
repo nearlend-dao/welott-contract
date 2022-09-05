@@ -86,6 +86,7 @@ impl NearLott {
                     "first_ticket_id": data.current_ticket_id,
                     "first_ticket_id_next_lottery": data.current_ticket_id,
                     "pending_injection_next_lottery": U128(data.pending_injection_next_lottery),
+                    "_discount_divisor": U128(_discount_divisor),
                 }
             })
             .to_string(),
@@ -135,7 +136,6 @@ impl NearLott {
         // Calculate the amount to share post-treasury fee
         let _amount_to_share_to_winners =
             (lottery.amount_collected_in_near * (10000 - lottery.treasury_fee)) / 10000;
-
         // Initializes the amount to withdraw to treasury
         let mut _amount_to_withdraw_to_treasury: u128 = 0;
 
@@ -206,10 +206,10 @@ impl NearLott {
                 "params": {
                     "current_lottery_id": data.current_lottery_id,
                     "final_number":  _final_number,
-                    "number_address_in_previous_bracket": _number_addresses_in_previous_bracket,
-                    "amount_to_withdraw_to_treasury": _amount_to_withdraw_to_treasury,
-                    "amount_collected_in_near": lottery.amount_collected_in_near,
-                    "amount_to_share_to_winners": _amount_to_share_to_winners,
+                    "number_address_in_previous_bracket": U128(_number_addresses_in_previous_bracket),
+                    "amount_to_withdraw_to_treasury": U128(_amount_to_withdraw_to_treasury),
+                    "amount_collected_in_near": U128(lottery.amount_collected_in_near),
+                    "amount_to_share_to_winners": U128(_amount_to_share_to_winners),
                 }
             })
             .to_string(),
@@ -283,13 +283,15 @@ impl NearLott {
         let mut number_tickets_in_a_lottery = data
             ._number_tickers_per_lottery_id
             .get(&_lottery_id)
-            .unwrap_or(UnorderedMap::new(b"A".to_vec()));
-
+            .unwrap_or(UnorderedMap::new(StorageKey::NumberTickersPerLotteryId {
+                lottery_id: _lottery_id,
+            }));
         let mut user_lotteries = data
             ._user_ticket_ids_per_lottery_id
             .get(&env::predecessor_account_id())
-            .unwrap_or(UnorderedMap::new(b"A".to_vec()));
-
+            .unwrap_or(UnorderedMap::new(StorageKey::UserTicketsPerLottery {
+                account_id: env::predecessor_account_id(),
+            }));
         for i in 0.._ticket_numbers.len() {
             let ticket_number = _ticket_numbers[i];
             assert!(
@@ -319,10 +321,11 @@ impl NearLott {
             number_tickets_in_a_lottery.insert(&key_bracket5, &value_bracket5);
             number_tickets_in_a_lottery.insert(&key_bracket6, &value_bracket6);
 
+            // data of numbers element for this lotteryid.
             data._number_tickers_per_lottery_id
                 .insert(&_lottery_id, &number_tickets_in_a_lottery);
 
-            // push new ticket id
+            // push new ticket id to user_tickets
             let mut user_tickets_in_a_lottery = user_lotteries.get(&_lottery_id).unwrap_or(vec![]);
             user_tickets_in_a_lottery.push(data.current_ticket_id);
             user_lotteries.insert(&_lottery_id, &user_tickets_in_a_lottery);

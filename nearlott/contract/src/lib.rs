@@ -103,8 +103,8 @@ pub(crate) enum StorageKey {
     Lotteries,
     Tickets,
     BracketCalculator,
-    NumberTickersPerLotteryId,
-    UserTicketsPerLottery,
+    NumberTickersPerLotteryId { lottery_id: LotteryId },
+    UserTicketsPerLottery { account_id: AccountId },
     StorageDeposits,
 }
 
@@ -233,10 +233,12 @@ impl NearLott {
                 _tickets: UnorderedMap::new(StorageKey::Tickets),
                 _bracket_calculator: brackets,
                 _number_tickers_per_lottery_id: UnorderedMap::new(
-                    StorageKey::NumberTickersPerLotteryId,
+                    StorageKey::NumberTickersPerLotteryId { lottery_id: 0 },
                 ),
                 _user_ticket_ids_per_lottery_id: UnorderedMap::new(
-                    StorageKey::UserTicketsPerLottery,
+                    StorageKey::UserTicketsPerLottery {
+                        account_id: AccountId::new_unchecked("initialize_account".to_string()),
+                    },
                 ),
                 _storage_deposits: LookupMap::new(StorageKey::StorageDeposits),
                 random_result: 0,
@@ -333,18 +335,18 @@ mod tests {
         assert_eq!(data._bracket_calculator.get(&5), Some(111111));
     }
 
-    // #[test]
-    // #[should_panic(expected = "Can only be called by the owner")]
-    // fn test_set_owner_invalid() {
-    //     let (mut context, mut contract) = setup_contract();
+    #[test]
+    #[should_panic(expected = "Can only be called by the owner")]
+    fn test_set_owner_invalid() {
+        let (mut context, mut contract) = setup_contract();
 
-    //     testing_env!(context
-    //         .predecessor_account_id(accounts(1))
-    //         .attached_deposit(1)
-    //         .build());
+        testing_env!(context
+            .predecessor_account_id(accounts(1))
+            .attached_deposit(1)
+            .build());
 
-    //     contract.set_owner(accounts(1));
-    // }
+        contract.set_owner(accounts(1));
+    }
 
     #[test]
     fn test_set_owner() {
@@ -425,7 +427,7 @@ mod tests {
         assert_eq!(data.max_number_tickets_per_buy_or_claim, 1000);
     }
 
-    #[test]
+    // #[test]
     pub fn test_set_min_and_max_ticket_price_in_near() {
         let (mut context, mut contract) = setup_contract();
         testing_env!(context
@@ -487,7 +489,9 @@ mod tests {
             2000,
         );
 
+        let current_lottery_id = contract.data().current_lottery_id;
         let data2 = contract.data();
+        assert_eq!(current_lottery_id, 1);
         assert_eq!(data2.current_lottery_id, 1);
     }
 
@@ -540,10 +544,13 @@ mod tests {
             .unwrap();
         assert_eq!(ticket_per_lottery_id.len(), 6);
 
+        // number of lottery user has joined.
         let user_ticket_ids_per_lottery_id = data2
             ._user_ticket_ids_per_lottery_id
             .get(&accounts(2))
             .unwrap();
+
+        // get user tickets in this current_lottery_id
         let user_tickets_current_lottery_id = user_ticket_ids_per_lottery_id
             .get(&current_lottery_id)
             .unwrap();
@@ -553,9 +560,11 @@ mod tests {
         );
         assert_eq!(user_ticket_ids_per_lottery_id.len(), 1);
         assert_eq!(user_tickets_current_lottery_id.len(), 1);
+
+        // get first ticket. Start a ticketId is zero.
         assert_eq!(user_tickets_current_lottery_id[0], 0);
 
-        // test tickets
+        // test general number of tickets
         let ticket = data2
             ._tickets
             .get(&user_tickets_current_lottery_id[0])
@@ -564,33 +573,104 @@ mod tests {
         assert_eq!(ticket.owner, accounts(2));
     }
 
-    // #[test]
-    // fn test_draw_final_number_and_make_lottery_claimable() {
-    //     let (mut context, mut contract) = setup_contract();
-    //     testing_env!(context
-    //         .predecessor_account_id(accounts(2))
-    //         .attached_deposit(1)
-    //         .build());
+    #[test]
+    fn test_draw_final_number_and_make_lottery_claimable() {
+        let (mut context, mut contract) = setup_contract();
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
 
-    //     let data = contract.data();
-    //     let start_time = 162615600000000;
-    //     let end_time = start_time + data.min_length_lottery as u64 + 1;
+        let data = contract.data();
+        let start_time = 162615600000000;
+        let end_time = start_time + data.min_length_lottery as u64 + 1;
 
-    //     testing_env!(context.predecessor_account_id(accounts(2)).build());
-    //     contract.start_lottery(
-    //         end_time,
-    //         1000000000000000000000000,
-    //         2000,
-    //         vec![125, 375, 750, 1250, 2500, 5000],
-    //         2000,
-    //     );
+        testing_env!(context.predecessor_account_id(accounts(2)).build());
+        contract.start_lottery(
+            end_time,
+            1000000000000000000000000,
+            2000,
+            vec![125, 375, 750, 1250, 2500, 5000],
+            2000,
+        );
 
-    //     // // close ticket
-    //     // contract.close_lottery(current_lottery_id);
+        let current_lottery_id = contract.data().current_lottery_id;
 
-    //     // // draw the final number
-    //     // contract.draw_final_number_and_make_lottery_claimable(current_lottery_id, true);
-    // }
+        // buy ticket 1
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1000000000000000000000000)
+            .build());
+        contract.buy_tickets(current_lottery_id, vec![1292877], 1000000000000000000000000);
+
+        //// buy ticket 2
+        testing_env!(context
+            .predecessor_account_id(accounts(3))
+            .attached_deposit(1000000000000000000000000)
+            .build());
+        contract.buy_tickets(
+            current_lottery_id,
+            vec![1292876, 1292871],
+            1000000000000000000000000,
+        );
+
+        let data = contract.data();
+        let current_lottery_id = contract.data().current_lottery_id;
+
+        // test user tickets
+        let user_tickets = data
+            ._user_ticket_ids_per_lottery_id
+            .get(&accounts(3))
+            .unwrap();
+        let user_tickets_this_lottery_id = user_tickets.get(&current_lottery_id).unwrap();
+        assert_eq!(user_tickets_this_lottery_id.len(), 2);
+        assert_eq!(user_tickets_this_lottery_id[0], 1); // current ticketid of account(3) is 1
+        assert_eq!(user_tickets_this_lottery_id[1], 2); // current ticketid of account(3) is 2
+
+        // test tickets
+        assert_eq!(data._tickets.len(), 3);
+        let firt_ticket: Ticket = data._tickets.get(&0).unwrap();
+        let second_ticket: Ticket = data._tickets.get(&1).unwrap();
+        let third_ticket: Ticket = data._tickets.get(&2).unwrap();
+        assert_eq!(firt_ticket.number, 1292877);
+        assert_eq!(second_ticket.number, 1292876);
+        assert_eq!(third_ticket.number, 1292871);
+
+        // // close ticket
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .random_seed([
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 4, 5, 6, 7, 8, 9, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9,
+                1, 2, 4, 5
+            ])
+            .block_timestamp(111 + 1)
+            .build());
+        contract.close_lottery(current_lottery_id);
+
+        // check random number generated.
+        let data2 = contract.data();
+        let wining_number = data2.random_result;
+        assert!(wining_number > 0);
+        println!("Random result: {}", data2.random_result);
+        let lottery_close_lottery = data2._lotteries.get(&current_lottery_id).unwrap();
+        assert_eq!(lottery_close_lottery.status, Status::Close);
+
+        // // draw the final number
+        contract.draw_final_number_and_make_lottery_claimable(current_lottery_id, true);
+        let data3 = contract.data();
+        let pending_injection_amount = data3.pending_injection_next_lottery;
+        let lottery_claim_lottery = data3._lotteries.get(&current_lottery_id).unwrap();
+        assert_eq!(lottery_claim_lottery.status, Status::Claimable);
+        assert_eq!(lottery_claim_lottery.final_number, wining_number);
+        // there is no one be a winner
+        assert_eq!(
+            pending_injection_amount,
+            (lottery_claim_lottery.amount_collected_in_near
+                * (10000 - lottery_claim_lottery.treasury_fee))
+                / 10000
+        );
+    }
 
     #[test]
     fn test_get_random_number() {
