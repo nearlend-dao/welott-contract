@@ -37,5 +37,5 @@ pub const ERR31_TICKET_NUMBER_RANGE: &str =
 pub const ERR32_INSUFFICIENT_STORAGE: &str = "E32: insufficient $NEAR storage deposit";
 pub const ERR33_INSUFFICIENT_MINIMUM_REQUIRES: &str = "E33: Requires minimum deposit";
 pub const ERR34_RANDOM_NUMBER_INVALID: &str = "E34: Invalid random number";
-
 pub const ERR35_CONTRACT_PAUSED: &str = "E35: contract paused";
+pub const ERR36_STRING_NUMBER_INVALID: &str = "E36: Invalid string number";

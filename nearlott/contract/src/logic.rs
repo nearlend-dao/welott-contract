@@ -299,29 +299,11 @@ impl NearLott {
                 "{}",
                 ERR31_TICKET_NUMBER_RANGE
             );
-
-            let key_bracket1 = 1 + (ticket_number % 10);
-            let key_bracket2 = 11 + (ticket_number % 100);
-            let key_bracket3 = 111 + (ticket_number % 1000);
-            let key_bracket4 = 1111 + (ticket_number % 10000);
-            let key_bracket5 = 11111 + (ticket_number % 100000);
-            let key_bracket6 = 111111 + (ticket_number % 1000000);
-
-            let value_bracket1 = number_tickets_in_a_lottery.get(&key_bracket1).unwrap_or(0) + 1;
-            let value_bracket2 = number_tickets_in_a_lottery.get(&key_bracket2).unwrap_or(0) + 1;
-            let value_bracket3 = number_tickets_in_a_lottery.get(&key_bracket3).unwrap_or(0) + 1;
-            let value_bracket4 = number_tickets_in_a_lottery.get(&key_bracket4).unwrap_or(0) + 1;
-            let value_bracket5 = number_tickets_in_a_lottery.get(&key_bracket5).unwrap_or(0) + 1;
-            let value_bracket6 = number_tickets_in_a_lottery.get(&key_bracket6).unwrap_or(0) + 1;
-
-            number_tickets_in_a_lottery.insert(&key_bracket1, &value_bracket1);
-            number_tickets_in_a_lottery.insert(&key_bracket2, &value_bracket2);
-            number_tickets_in_a_lottery.insert(&key_bracket3, &value_bracket3);
-            number_tickets_in_a_lottery.insert(&key_bracket4, &value_bracket4);
-            number_tickets_in_a_lottery.insert(&key_bracket5, &value_bracket5);
-            number_tickets_in_a_lottery.insert(&key_bracket6, &value_bracket6);
-
-            // data of numbers element for this lotteryid.
+            let key_brackets: Vec<u32> = (1..=6 as u32).into_iter().map(|x|  create_number_one(x) + (ticket_number % 10u32.pow(x))).collect();
+            for key_bracket in key_brackets.into_iter() {
+                let value_bracket = number_tickets_in_a_lottery.get(&key_bracket).unwrap_or(0) + 1;
+                number_tickets_in_a_lottery.insert(&key_bracket, &value_bracket);
+            }
             data._number_tickers_per_lottery_id
                 .insert(&_lottery_id, &number_tickets_in_a_lottery);
 
