@@ -97,65 +97,21 @@ pub(crate) fn _calculate_rewards_for_ticket_id(
  */
 pub(crate) fn get_random_number() -> u32 {
     let mut rng = rand::thread_rng();
-    let random1 = rng.gen_range(1..=9);
-    let random2 = rng.gen_range(1..=9);
-    let random3 = rng.gen_range(1..=9);
-    let random4 = rng.gen_range(1..=9);
-    let random5 = rng.gen_range(1..=9);
-    let random6 = rng.gen_range(1..=9);
-    let random7 = rng.gen_range(1..=9);
-    let random8 = rng.gen_range(1..=9);
-    let random9 = rng.gen_range(1..=9);
-    let random10 = rng.gen_range(1..=9);
-    let random11 = rng.gen_range(1..=9);
-    let random12 = rng.gen_range(1..=9);
-    let random13 = rng.gen_range(1..=9);
-    let random14 = rng.gen_range(1..=9);
-    let random15 = rng.gen_range(1..=9);
-
-    let rand_array = [
-        *env::random_seed().get(random1).unwrap(),
-        *env::random_seed().get(random2).unwrap(),
-        *env::random_seed().get(random3).unwrap(),
-        *env::random_seed().get(random4).unwrap(),
-        *env::random_seed().get(random5).unwrap(),
-        *env::random_seed().get(random6).unwrap(),
-        *env::random_seed().get(random7).unwrap(),
-        *env::random_seed().get(random8).unwrap(),
-        *env::random_seed().get(random9).unwrap(),
-        *env::random_seed().get(random10).unwrap(),
-        *env::random_seed().get(random11).unwrap(),
-        *env::random_seed().get(random12).unwrap(),
-        *env::random_seed().get(random13).unwrap(),
-        *env::random_seed().get(random14).unwrap(),
-        *env::random_seed().get(random15).unwrap(),
-    ];
-
-    let randomness_instr = format!(
-        "{}{}{}{}{}{}{}{}{}{}{}{}{}{}{}",
-        rand_array[1],
-        rand_array[2],
-        rand_array[3],
-        rand_array[4],
-        rand_array[5],
-        rand_array[6],
-        rand_array[7],
-        rand_array[8],
-        rand_array[9],
-        rand_array[10],
-        rand_array[11],
-        rand_array[12],
-        rand_array[13],
-        rand_array[14],
-        rand_array[0]
-    )
-    .to_string();
-
+    let random: Vec<u32> = (0..15 as u32)
+        .into_iter()
+        .map(|_x| rng.gen_range(1..=9))
+        .collect();
+    let rand_array: Vec<u8> = random
+        .into_iter()
+        .map(|x| *env::random_seed().get(x as usize).unwrap())
+        .collect();
+    let randomness_instr = rand_array
+        .into_iter()
+        .map(|x| x.to_string())
+        .collect::<String>();
     let randomness = randomness_instr
         .parse::<u64>()
         .expect(ERR34_RANDOM_NUMBER_INVALID);
-
     let win_number = (1000000 + (randomness % 1000000)) as u32;
-
     win_number
 }
