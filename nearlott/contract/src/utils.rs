@@ -97,21 +97,29 @@ pub(crate) fn _calculate_rewards_for_ticket_id(
  */
 pub(crate) fn get_random_number() -> u32 {
     let mut rng = rand::thread_rng();
+    // generate 15 number position with random position from [1..9]
     let random: Vec<u32> = (0..15 as u32)
         .into_iter()
         .map(|_x| rng.gen_range(1..=9))
         .collect();
+    // Specific position to get values. Random_seeds defauls return to 32 number in a vector<u8>.
     let rand_array: Vec<u8> = random
         .into_iter()
         .map(|x| *env::random_seed().get(x as usize).unwrap())
         .collect();
+    // convert so tring
     let randomness_instr = rand_array
         .into_iter()
         .map(|x| x.to_string())
         .collect::<String>();
+    // comvert to u64 to prepare for final number
     let randomness = randomness_instr
         .parse::<u64>()
         .expect(ERR34_RANDOM_NUMBER_INVALID);
+
+    // determine final number
     let win_number = (1000000 + (randomness % 1000000)) as u32;
+
+    // return
     win_number
 }
