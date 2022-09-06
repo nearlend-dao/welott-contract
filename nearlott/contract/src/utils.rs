@@ -33,6 +33,10 @@ pub(crate) fn to_sec(timestamp: Timestamp) -> TimestampSec {
     (timestamp / 10u64.pow(9)) as u32
 }
 
+pub(crate) fn create_number_one(sequence: u32) -> u32 {
+    (1..=sequence).into_iter().map(|x| '1').collect::<String>().parse::<u32>().expect(ERR36_STRING_NUMBER_INVALID)
+}
+
 /**
  * @notice Calculate final price for bulk of tickets
  * @param _discount_divisor: divisor for the discount (the smaller it is, the greater the discount is)
