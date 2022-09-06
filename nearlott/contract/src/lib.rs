@@ -606,12 +606,12 @@ mod tests {
         //// buy ticket 2
         testing_env!(context
             .predecessor_account_id(accounts(3))
-            .attached_deposit(1000000000000000000000000)
+            .attached_deposit(2000000000000000000000000)
             .build());
         contract.buy_tickets(
             current_lottery_id,
             vec![1292876, 1292871],
-            1000000000000000000000000,
+            2000000000000000000000000,
         );
 
         let data = contract.data();
@@ -670,6 +670,241 @@ mod tests {
                 * (10000 - lottery_claim_lottery.treasury_fee))
                 / 10000
         );
+    }
+
+    #[test]
+    fn test_buy_tickets() {
+        let (mut context, mut contract) = setup_contract();
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
+
+        let data = contract.data();
+        let start_time = 162615600000000;
+        let end_time = start_time + data.min_length_lottery as u64 + 1;
+
+        testing_env!(context.predecessor_account_id(accounts(2)).build());
+        contract.start_lottery(
+            end_time,
+            1000000000000000000000000,
+            2000,
+            vec![125, 375, 750, 1250, 2500, 5000],
+            2000,
+        );
+
+        let current_lottery_id = contract.data().current_lottery_id;
+
+        // buy ticket 1
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1000000000000000000000000)
+            .build());
+        contract.buy_tickets(current_lottery_id, vec![1302877], 1000000000000000000000000);
+        // check amount_collected_in_near
+        let data2 = contract.data();
+        let lottery2 = data2._lotteries.get(&current_lottery_id).unwrap();
+        assert_eq!(lottery2.amount_collected_in_near, 1000000000000000000000000);
+
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(2000000000000000000000000)
+            .build());
+        contract.buy_tickets(
+            current_lottery_id,
+            vec![1292877, 1292837],
+            2000000000000000000000000,
+        );
+        let data3 = contract.data();
+        let lottery3 = data3._lotteries.get(&current_lottery_id).unwrap();
+        assert_eq!(lottery3.amount_collected_in_near, 2999000000000000000000000);
+        assert_eq!(
+            data3
+                ._number_tickers_per_lottery_id
+                .get(&current_lottery_id)
+                .unwrap()
+                .len(),
+            13
+        );
+        // number of ticket should be 3
+        assert_eq!(
+            data3
+                ._user_ticket_ids_per_lottery_id
+                .get(&accounts(2))
+                .unwrap()
+                .get(&current_lottery_id)
+                .unwrap()
+                .len(),
+            3
+        );
+
+        // check current tickets  assert_eq!(
+        assert_eq!(data3.current_ticket_id, 3);
+    }
+
+    #[test]
+    fn test_claim_tickets() {
+        let (mut context, mut contract) = setup_contract();
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
+
+        let data = contract.data();
+        let start_time = 162615600000000;
+        let end_time = start_time + data.min_length_lottery as u64 + 1;
+
+        testing_env!(context.predecessor_account_id(accounts(2)).build());
+        contract.start_lottery(
+            end_time,
+            1000000000000000000000000,
+            2000,
+            vec![125, 375, 750, 1250, 2500, 5000],
+            2000,
+        );
+
+        let current_lottery_id = contract.data().current_lottery_id;
+        // buy ticket 1
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(4000000000000000000000000)
+            .build());
+        contract.buy_tickets(
+            current_lottery_id,
+            vec![1039219, 1106409, 1192039, 1000699],
+            4000000000000000000000000,
+        );
+
+        // close lottery
+        contract.close_lottery(current_lottery_id);
+
+        // draw final number
+        contract.draw_final_number_and_make_lottery_claimable(current_lottery_id, true);
+
+        // view numbers and status for ticket ids
+        let tk_numbers = contract.view_numbers_and_statuses_for_ticket_ids(vec![0, 1, 2, 3]);
+        assert_eq!(tk_numbers.ticket_numbers.len(), 4);
+        assert!(tk_numbers.ticket_numbers.contains(&1192039));
+        assert_eq!(tk_numbers.ticket_status.len(), 4);
+        assert!(tk_numbers.ticket_status.contains(&false));
+        println!("Ticket numbers: {:?}", tk_numbers.ticket_numbers);
+        println!("Ticket statuses: {:?}", tk_numbers.ticket_status);
+
+        // view rewards for ticket: ticketId: 0, bracket: 0
+        let rewards_for_ticket = contract.view_rewards_for_ticket_id(current_lottery_id, 0, 0);
+        println!("rewards_for_ticket: {:?}", rewards_for_ticket);
+
+        //TODO: Check rewards for ticket. The result is not expected.
+        // contract.claim_tickets(current_lottery_id, vec![0, 1, 2, 3], vec![1, 0, 0, 0])
+
+        // check all status is owner of zero address
+        // let data2 = contract.data();
+        // for key in data2._tickets.keys_as_vector().iter() {
+        //     let ticket = data2._tickets.get(&key).unwrap();
+        //     assert_eq!(
+        //         ticket.owner,
+        //         AccountId::new_unchecked(ZERO_ADDRESS_WALLET.to_string())
+        //     )
+        // }
+    }
+
+    /// Test utiles functions
+    #[test]
+    fn test_create_number_one() {
+        let number = create_number_one(6);
+        assert_eq!(number, 111111);
+    }
+
+    #[test]
+    fn test_calculate_total_price_for_bulk_tickets() {
+        let final_price = _calculate_total_price_for_bulk_tickets(
+            2000,
+            1200000000000000000, //1.2 NEAR
+            1,
+        );
+        assert_eq!(final_price, 1200000000000000000);
+
+        // buy 10 tickets per time
+        let final_price2 = _calculate_total_price_for_bulk_tickets(
+            2000,
+            1200000000000000000, //1.2 NEAR
+            10,
+        );
+        assert_eq!(final_price2, 11946000000000000000); //~11.946 NEAR, 0.45% Bulk discount
+    }
+    #[test]
+    fn test_calculate_rewards_for_ticket_id() {
+        let (mut context, mut contract) = setup_contract();
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
+
+        let data = contract.data();
+        let start_time = 162615600000000;
+        let end_time = start_time + data.min_length_lottery as u64 + 1;
+
+        testing_env!(context.predecessor_account_id(accounts(2)).build());
+        contract.start_lottery(
+            end_time,
+            12u128 * 10u128.pow(23), //1.2 in NEAR
+            2000,
+            vec![125, 375, 750, 1250, 2500, 5000],
+            2000,
+        );
+        let current_lottery_id = contract.data().current_lottery_id;
+        // buy ticket 1
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(12u128 * 10u128.pow(23))
+            .build());
+
+        contract.buy_tickets(current_lottery_id, vec![1039219], 12u128 * 10u128.pow(23));
+
+        //// close lottery
+        contract.close_lottery(current_lottery_id);
+
+        //// draw final number
+        contract.data_mut().random_result = 1327419;
+        contract.draw_final_number_and_make_lottery_claimable(current_lottery_id, true);
+
+        // win two number 91, in the front end the string winner should be 91472. without 1.
+        let reward = _calculate_rewards_for_ticket_id(contract.data(), current_lottery_id, 0, 1);
+        assert_eq!(reward, 36000000000000000000000); // 375/10000*(1.2(total pool)-0.24 (treasury fee))
+        println!("Rewards: {}", reward);
+    }
+
+    #[test]
+    fn close_lottery() {
+        let (mut context, mut contract) = setup_contract();
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
+
+        let data = contract.data();
+        let start_time = 162615600000000;
+        let end_time = start_time + data.min_length_lottery as u64 + 1;
+
+        testing_env!(context.predecessor_account_id(accounts(2)).build());
+        contract.start_lottery(
+            end_time,
+            1000000000000000000000000,
+            2000,
+            vec![125, 375, 750, 1250, 2500, 5000],
+            2000,
+        );
+
+        // running close lottery
+        let current_lottery_id = contract.data().current_lottery_id;
+        contract.close_lottery(current_lottery_id);
+
+        let data2 = contract.data();
+        assert_eq!(
+            data2._lotteries.get(&current_lottery_id).unwrap().status,
+            Status::Close
+        );
+        assert!(data2.random_result > 0);
     }
 
     #[test]

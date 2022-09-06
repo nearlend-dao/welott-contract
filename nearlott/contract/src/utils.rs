@@ -33,8 +33,18 @@ pub(crate) fn to_sec(timestamp: Timestamp) -> TimestampSec {
     (timestamp / 10u64.pow(9)) as u32
 }
 
+/**
+* @notice Create a number generrated from number of '1'
+* @param sequence: the time repeats number generator
+* For example: 1, 11, 111, 1111, 1111...etc
+*/
 pub(crate) fn create_number_one(sequence: u32) -> u32 {
-    (1..=sequence).into_iter().map(|x| '1').collect::<String>().parse::<u32>().expect(ERR36_STRING_NUMBER_INVALID)
+    (1..=sequence)
+        .into_iter()
+        .map(|_| '1')
+        .collect::<String>()
+        .parse::<u32>()
+        .expect(ERR36_STRING_NUMBER_INVALID)
 }
 
 /**
@@ -84,9 +94,7 @@ pub(crate) fn _calculate_rewards_for_ticket_id(
         .expect(ERR3_NOT_EXISTING_BRACKET);
     let transformed_winning_number =
         bracket_number + (winning_ticket_number % (10u32.pow(_bracket + 1)));
-
     let transformed_user_number = bracket_number + (user_number % (10u32.pow(_bracket + 1)));
-
     // Confirm that the two transformed numbers are the same, if not throw
     if transformed_winning_number == transformed_user_number {
         let lottery_brackets = lottery.near_per_bracket;

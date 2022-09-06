@@ -10,6 +10,13 @@ pub struct LotteryUserData {
     pub cursor: u32,
 }
 
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct LotteryNumberAndStatusData {
+    pub ticket_numbers: Vec<u32>,
+    pub ticket_status: Vec<bool>,
+}
+
 /// User account on this contract
 impl Default for LotteryUserData {
     fn default() -> Self {
@@ -148,7 +155,7 @@ impl NearLott {
                 });
             ticket_numbers[i as usize] = ticket_number.number;
 
-            if ticket_number.owner == AccountId::new_unchecked("0".to_string()) {
+            if ticket_number.owner == AccountId::new_unchecked(ZERO_ADDRESS_WALLET.to_string()) {
                 ticket_statuses[i as usize] = true;
             } else {
                 ticket_statuses[i as usize] = false;
@@ -160,6 +167,42 @@ impl NearLott {
             ticket_numbers: ticket_numbers,
             ticket_status: ticket_statuses,
             cursor: _cursor,
+        }
+    }
+
+    /**
+     * @notice View ticker statuses and numbers for an array of ticket ids
+     * @param _ticketIds: array of _ticketId
+     */
+    pub fn view_numbers_and_statuses_for_ticket_ids(
+        &self,
+        _ticket_ids: Vec<TicketId>,
+    ) -> LotteryNumberAndStatusData {
+        let length = _ticket_ids.len();
+        let mut ticket_numbers = vec![0; length];
+        let mut ticket_statuses = vec![false; length];
+
+        for i in 0..length {
+            let ticket_number = self
+                .data()
+                ._tickets
+                .get(&_ticket_ids[i as usize])
+                .unwrap_or(Ticket {
+                    number: 0,
+                    owner: AccountId::new_unchecked("no_account".to_string()),
+                });
+
+            if ticket_number.owner == AccountId::new_unchecked(ZERO_ADDRESS_WALLET.to_string()) {
+                ticket_statuses[i as usize] = true;
+            } else {
+                ticket_statuses[i as usize] = false;
+            }
+            ticket_numbers[i as usize] = ticket_number.number;
+        }
+
+        LotteryNumberAndStatusData {
+            ticket_numbers: ticket_numbers,
+            ticket_status: ticket_statuses,
         }
     }
 
