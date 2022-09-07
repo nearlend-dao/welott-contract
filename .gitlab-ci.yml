@@ -1,4 +1,4 @@
-image: bbioinfocore/rust-node-ci
+image: vibbioinfocore/rust-node-ci
 stages:
   - build-node
   - build-contract
