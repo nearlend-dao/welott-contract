@@ -663,7 +663,7 @@ mod tests {
         assert_eq!(lottery_claim_lottery.final_number, wining_number);
         // there is no one be a winner
         assert_eq!(
-            pending_injection_amount,
+            2399200000000000000000000,
             (lottery_claim_lottery.amount_collected_in_near
                 * (10000 - lottery_claim_lottery.treasury_fee))
                 / 10000
