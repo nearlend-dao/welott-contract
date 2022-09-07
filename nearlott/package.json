@@ -7,7 +7,7 @@
     "build:contract": "cd contract && ./build.sh",
     "dev:deploy": "yarn build:contract && rm -rf neardev && (near dev-deploy || exit 0)",
     "test": "npm run test:unit && npm run test:integration",
-    "test:unit": "cd contract && cargo test --lib -- --nocapture",
+    "test:unit": "cd contract && cargo test -- --nocapture --test-threads=2",
     "test:integration": "cd contract && npm test -- -- \"./contract/target/wasm32-unknown-unknown/release/contract.wasm\"",
     "build:test-deploy": "sh ./scripts/0-dev_deploy.sh",
     "nct": "yarn build:local && yarn build:test-deploy", 
