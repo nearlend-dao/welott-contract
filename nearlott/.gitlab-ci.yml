@@ -1,0 +1,42 @@
+image: node:latest
+stages:
+  - build
+  - run
+  
+  # Job's name
+build-node:
+  # Define stage
+  stage: build
+  # What to run on the job.
+  script:
+    - npm install
+  artifacts:
+    paths:
+      - node_modules
+
+build-contract:
+  stage: run
+  script:
+    - npm run build
+  artifacts:
+    paths:
+      - node_modules
+
+test-unit:
+  stage: run
+  script:
+    - echo "Running unit test"
+    - npm run test:unit
+  artifacts:
+    paths:
+      - node_modules
+
+test-integration:
+  stage: run
+  script:
+    - echo "Running integration test"
+    - npm run test:integration
+  artifacts:
+    paths:
+      - node_modules
+      

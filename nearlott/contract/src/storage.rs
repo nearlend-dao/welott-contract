@@ -3,7 +3,7 @@ use near_contract_standards::storage_management::StorageBalanceBounds;
 use near_sdk::{env, near_bindgen, AccountId, Balance, StorageUsage};
 
 const U128_STORAGE: StorageUsage = 16;
-const U64_STORAGE: StorageUsage = 8;
+// const U64_STORAGE: StorageUsage = 8;
 const U32_STORAGE: StorageUsage = 4;
 
 /// max length of account id is 64 bytes. We charge per byte.
@@ -59,7 +59,7 @@ impl NearLott {
             .insert(&storage_account_id, &balance);
     }
 
-    fn storage_balance_bounds(&self) -> StorageBalanceBounds {
+    pub fn storage_balance_bounds(&self) -> StorageBalanceBounds {
         StorageBalanceBounds {
             min: U128(INIT_ACCOUNT_STORAGE),
             max: None,
@@ -75,7 +75,7 @@ impl NearLott {
             Promise::new(env::predecessor_account_id()).transfer(available_amount);
         }
 
-        let usage_data = self.storage_usage(env::predecessor_account_id());
+        let usage_data = self.account_storage_usage();
         if usage_data > 0 {
             self.data_mut()
                 ._storage_deposits
@@ -91,7 +91,7 @@ impl NearLott {
     /// Returns how much NEAR is available for storage.
     pub fn storage_available(&self, _account_id: AccountId) -> Balance {
         let deposited = self.data()._storage_deposits.get(&_account_id).unwrap_or(0);
-        let locked = self.storage_usage(_account_id);
+        let locked = self.account_storage_usage();
         if deposited > locked {
             deposited - locked
         } else {
@@ -103,18 +103,19 @@ impl NearLott {
     pub fn assert_storage_usage(&self, _account_id: AccountId) {
         let deposited = self.data()._storage_deposits.get(&_account_id).unwrap_or(0);
         assert!(
-            self.storage_usage(_account_id) <= deposited,
+            self.account_storage_usage() <= deposited,
             "{}",
             ERR32_INSUFFICIENT_STORAGE
         );
     }
 
     /// Returns amount of $NEAR necessary to cover storage used by this data structure.
-    pub fn storage_usage(&self, _account_id: AccountId) -> u128 {
+    pub fn account_storage_usage(&self) -> Balance {
+        let account_id = env::predecessor_account_id();
         let user_lotteries = self
             .data()
             ._user_ticket_ids_per_lottery_id
-            .get(&_account_id)
+            .get(&account_id)
             .unwrap_or(UnorderedMap::new(b"A".to_vec()));
 
         let values = user_lotteries

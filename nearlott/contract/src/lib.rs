@@ -5,7 +5,8 @@ use near_sdk::collections::{LookupMap, UnorderedMap};
 use near_sdk::json_types::U128;
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
-    env, near_bindgen, serde_json::json, AccountId, Balance, BorshStorageKey, Promise, Timestamp,
+    env, near_bindgen, serde_json::json, AccountId, Balance, BorshStorageKey, PanicOnDefault,
+    Promise, Timestamp,
 };
 use std::fmt;
 
@@ -39,9 +40,8 @@ pub type TicketElementNumber = u32;
 pub type CountTicketValue = u128;
 pub type BracketPosition = u32;
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Eq, PartialEq, Clone)]
+#[derive(Debug, BorshSerialize, BorshDeserialize, Serialize, Deserialize, Eq, PartialEq, Clone)]
 #[serde(crate = "near_sdk::serde")]
-#[cfg_attr(not(target_arch = "wasm32"), derive(Debug))]
 pub enum Status {
     Pending,
     Open,
@@ -116,7 +116,7 @@ pub enum RunningState {
     Paused,
 }
 
-#[derive(BorshDeserialize, BorshSerialize)]
+#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct ContractData {
     pub owner_id: AccountId,
     pub state: RunningState,
@@ -168,7 +168,7 @@ impl VersionedContractData {}
 
 // Define the contract structure
 #[near_bindgen]
-#[derive(BorshDeserialize, BorshSerialize)]
+#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct NearLott {
     data: VersionedContractData,
     pub web_app_url: Option<String>,
@@ -257,14 +257,12 @@ impl NearLott {
     fn data(&self) -> &ContractData {
         match &self.data {
             VersionedContractData::V0001(data) => data,
-            _ => unimplemented!(),
         }
     }
 
     fn data_mut(&mut self) -> &mut ContractData {
         match &mut self.data {
             VersionedContractData::V0001(data) => data,
-            _ => unimplemented!(),
         }
     }
 }
@@ -757,28 +755,29 @@ mod tests {
         testing_env!(context.predecessor_account_id(accounts(2)).build());
         contract.start_lottery(
             end_time,
-            1000000000000000000000000,
+            12 * 10u128.pow(23), //1.2 NEAR
             2000,
             vec![125, 375, 750, 1250, 2500, 5000],
             2000,
         );
 
         let current_lottery_id = contract.data().current_lottery_id;
-        // buy ticket 1
+        // buy 4 tickets
         testing_env!(context
             .predecessor_account_id(accounts(2))
-            .attached_deposit(4000000000000000000000000)
+            .attached_deposit(4 * 12 * 10u128.pow(23))
             .build());
         contract.buy_tickets(
             current_lottery_id,
             vec![1039219, 1106409, 1192039, 1000699],
-            4000000000000000000000000,
+            4 * 12 * 10u128.pow(23),
         );
 
         // close lottery
         contract.close_lottery(current_lottery_id);
 
         // draw final number
+        contract.data_mut().random_result = 1327419;
         contract.draw_final_number_and_make_lottery_claimable(current_lottery_id, true);
 
         // view numbers and status for ticket ids
@@ -787,25 +786,83 @@ mod tests {
         assert!(tk_numbers.ticket_numbers.contains(&1192039));
         assert_eq!(tk_numbers.ticket_status.len(), 4);
         assert!(tk_numbers.ticket_status.contains(&false));
+        println!("Winning number: {}", contract.data().random_result);
         println!("Ticket numbers: {:?}", tk_numbers.ticket_numbers);
         println!("Ticket statuses: {:?}", tk_numbers.ticket_status);
 
         // view rewards for ticket: ticketId: 0, bracket: 0
-        let rewards_for_ticket = contract.view_rewards_for_ticket_id(current_lottery_id, 0, 0);
+        let rewards_for_ticket = contract.view_rewards_for_ticket_id(current_lottery_id, 3, 0);
+        assert_eq!(rewards_for_ticket, 15976000000000000000000);
         println!("rewards_for_ticket: {:?}", rewards_for_ticket);
 
-        //TODO: Check rewards for ticket. The result is not expected.
-        // contract.claim_tickets(current_lottery_id, vec![0, 1, 2, 3], vec![1, 0, 0, 0])
+        // // check rewards per bracket
+        let data2 = contract.data();
+        let lottery: Lottery = data2._lotteries.get(&current_lottery_id).unwrap();
+        let rewards_brackets = lottery.near_per_bracket;
+        assert_eq!(rewards_brackets.len(), 6);
+        assert_eq!(rewards_brackets[0], 15976000000000000000000);
+        assert_eq!(rewards_brackets[1], 143784000000000000000000);
+        assert_eq!(rewards_brackets[2], 0);
+        assert_eq!(rewards_brackets[3], 0);
+        assert_eq!(rewards_brackets[4], 0);
+        assert_eq!(rewards_brackets[5], 0);
+        println!("Bracket 1 reward: {}", rewards_brackets[0]);
+        println!("Bracket 2 reward: {}", rewards_brackets[1]);
+        // number of winners per brackets
+        let couting_winners_brackets = lottery.count_winners_per_bracket;
+        assert_eq!(couting_winners_brackets.len(), 6);
+        assert_eq!(couting_winners_brackets[0], 3);
+        assert_eq!(couting_winners_brackets[1], 1);
+        assert_eq!(couting_winners_brackets[2], 0);
+        assert_eq!(couting_winners_brackets[3], 0);
+        assert_eq!(couting_winners_brackets[4], 0);
+        assert_eq!(couting_winners_brackets[5], 0);
+
+        //Claim tickets
+        contract.claim_tickets(current_lottery_id, vec![0, 1, 2, 3], vec![1, 0, 0, 0]);
+        // check rewards summary share share
+        let data3 = contract.data();
+
+        let amount_to_shared =
+            (lottery.amount_collected_in_near * (10000 - lottery.treasury_fee)) / 10000;
+
+        // there 3 tickets winning at bracket[0], 1: bracket[1], 0: bracket[2], 0: bracket[3], 0: bracket[4], 0: bracket[5]
+        // check pending_injection_next_lottery
+        assert_eq!(
+            data3.pending_injection_next_lottery,
+            3642528000000000000000000, //number of near in vauls add for the next turns
+        );
+        assert_eq!(
+            data3.pending_injection_next_lottery,
+            amount_to_shared
+                - ((couting_winners_brackets[0] * rewards_brackets[0])
+                    + (couting_winners_brackets[1] * rewards_brackets[1])
+                    + (couting_winners_brackets[2] * rewards_brackets[2])
+                    + (couting_winners_brackets[3] * rewards_brackets[3])
+                    + (couting_winners_brackets[4] * rewards_brackets[4])
+                    + (couting_winners_brackets[5] * rewards_brackets[5]))
+        );
+        // check total nears divides into each winners and treasury, pending next turns
+        assert_eq!(
+            (couting_winners_brackets[0] * rewards_brackets[0])
+                + (couting_winners_brackets[1] * rewards_brackets[1])
+                + (couting_winners_brackets[2] * rewards_brackets[2])
+                + (couting_winners_brackets[3] * rewards_brackets[3])
+                + (couting_winners_brackets[4] * rewards_brackets[4])
+                + (couting_winners_brackets[5] * rewards_brackets[5])
+                + data3.pending_injection_next_lottery, // number of Near left without any winners will send treasury
+            amount_to_shared
+        );
 
         // check all status is owner of zero address
-        // let data2 = contract.data();
-        // for key in data2._tickets.keys_as_vector().iter() {
-        //     let ticket = data2._tickets.get(&key).unwrap();
-        //     assert_eq!(
-        //         ticket.owner,
-        //         AccountId::new_unchecked(ZERO_ADDRESS_WALLET.to_string())
-        //     )
-        // }
+        let data2 = contract.data();
+        for key in data2._tickets.keys_as_vector().iter() {
+            let ticket = data2._tickets.get(&key).unwrap();
+            assert_eq!(
+                ticket.owner,
+                AccountId::new_unchecked(ZERO_ADDRESS_WALLET.to_string())
+            )
+        }
     }
 
     /// Test utiles functions

@@ -426,6 +426,7 @@ impl NearLott {
             // Check user is claiming the correct bracket
             assert_ne!(reward_for_ticket_id, 0, "{}", ERR28_LOTTERY_CLAIM_NO_PRIZE);
 
+            // check higher bracket if yes. the user should increase bracket value by 1
             if _brackets[i] != 5 {
                 assert_eq!(
                     _calculate_rewards_for_ticket_id(
@@ -451,7 +452,7 @@ impl NearLott {
                 "type": "claim_ticket",
                 "params": {
                     "claimer": env::predecessor_account_id(),
-                    "transfer_amount":  reward_in_near_to_transfer,
+                    "transfer_amount":  U128(reward_in_near_to_transfer),
                     "current_lottery_id": _lottery_id,
                     "ticket_ids_length": _ticket_ids.len(),
                     "brackets_length": _brackets.len(),

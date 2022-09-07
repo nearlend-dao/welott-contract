@@ -3,12 +3,12 @@
   "version": "0.0.1",
   "license": "(MIT AND Apache-2.0)",
   "scripts": {
-    "build": "yarn build:contract",
-    "build:contract": "make release",
-    "build:local": "./build.sh",
+    "build": "npm run build:contract",
+    "build:contract": "cd contract && ./build.sh",
     "dev:deploy": "yarn build:contract && rm -rf neardev && (near dev-deploy || exit 0)",
-    "test": "cargo test --all -- --nocapture --color always",
-    "test:mocha": "mocha",
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "cd contract && cargo test",
+    "test:integration": "cd integration-tests && npm test -- -- \"./contract/target/wasm32-unknown-unknown/release/contract.wasm\"",
     "build:test-deploy": "sh ./scripts/0-dev_deploy.sh",
     "nct": "yarn build:local && yarn build:test-deploy", 
     "nftlisting": "node ./test-scripts/test-trade.js"
@@ -17,5 +17,8 @@
     "assert": "^2.0.0",
     "mocha": "^9.2.2",
     "near-api-js": "^0.44.2"
+  },
+  "devDependencies": {
+    "near-cli": "^3.3.0"
   }
 }
