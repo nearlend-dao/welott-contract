@@ -9,6 +9,7 @@ build-node:
   stage: build
   # What to run on the job.
   script:
+    - cd nearlott
     - npm install
   artifacts:
     paths:
@@ -17,6 +18,7 @@ build-node:
 build-contract:
   stage: run
   script:
+    - cd nearlott
     - npm run build
   artifacts:
     paths:
@@ -25,6 +27,7 @@ build-contract:
 test-unit:
   stage: run
   script:
+    - cd nearlott
     - echo "Running unit test"
     - npm run test:unit
   artifacts:
@@ -34,6 +37,7 @@ test-unit:
 test-integration:
   stage: run
   script:
+    - cd nearlott
     - echo "Running integration test"
     - npm run test:integration
   artifacts:
