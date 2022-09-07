@@ -17,13 +17,12 @@ build-node:
     paths:
       - node_modules
 
-test-contract:
+contract-test-unit:
   stage: test-contract
   script:
     - cd nearlott
     - npm run build
     - npm run test:unit
-    - npm run test:integration
   artifacts:
     paths:
       - node_modules
