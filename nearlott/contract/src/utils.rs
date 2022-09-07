@@ -1,7 +1,7 @@
 use crate::callback::ext_ft_contract;
 use crate::gas::GAS_FOR_FT_TRANSFER;
 use crate::*;
-use rand::Rng; // 0.8.0
+// use rand::Rng; // 0.8.0
 
 use near_sdk::AccountId;
 
@@ -108,12 +108,9 @@ pub(crate) fn _calculate_rewards_for_ticket_id(
  * @param _seed: seed provided by the NearLott lottery
  */
 pub(crate) fn get_random_number() -> u32 {
-    let mut rng = rand::thread_rng();
     // generate 15 number position with random position from [1..9]
-    let random: Vec<u32> = (0..15 as u32)
-        .into_iter()
-        .map(|_x| rng.gen_range(1..=9))
-        .collect();
+    let random: Vec<u8> = random_position();
+    assert!(random.len() >= 15, "{}", ERR37_NOT_ENOUGH_RANDOM_NUMBERS);
     // Specific position to get values. Random_seeds defauls return to 32 number in a vector<u8>.
     let rand_array: Vec<u8> = random
         .into_iter()
@@ -134,4 +131,17 @@ pub(crate) fn get_random_number() -> u32 {
 
     // return
     win_number
+}
+
+/**
+ * @notice Random a number from 1..9
+ */
+pub(crate) fn random_position() -> Vec<u8> {
+    let positions = env::random_seed();
+    if positions.len() > 15 {
+        let slice: Vec<u8> = positions[0..15].iter().cloned().collect();
+        return slice;
+    }
+
+    positions
 }

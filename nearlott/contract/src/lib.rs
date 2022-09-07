@@ -944,7 +944,10 @@ mod tests {
         let start_time = 162615600000000;
         let end_time = start_time + data.min_length_lottery as u64 + 1;
 
-        testing_env!(context.predecessor_account_id(accounts(2)).build());
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .block_timestamp(1662562383)
+            .build());
         contract.start_lottery(
             end_time,
             1000000000000000000000000,
@@ -979,6 +982,43 @@ mod tests {
             .build());
 
         let result = contract.view_random();
-        println!("result: {:?}", result);
+        println!("random_number: {:?}", result);
+    }
+
+    #[test]
+    fn test_get_current_timestamp() {
+        let (mut context, contract) = setup_contract();
+        testing_env!(context
+            .predecessor_account_id(accounts(5))
+            .random_seed([
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 4, 5, 6, 7, 8, 9, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9,
+                1, 2, 4, 5
+            ])
+            .block_timestamp(1662562383)
+            .build());
+
+        let current_timestamp = contract.get_current_timestamp();
+        println!("current_timestamp: {:?}", current_timestamp);
+    }
+
+    #[test]
+    fn test_random_position() {
+        let (mut context, _) = setup_contract();
+        let random_seed: [u8; 32] = [
+            1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 4, 5, 6, 7, 8, 9, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9, 1,
+            2, 4, 5,
+        ];
+        testing_env!(context
+            .predecessor_account_id(accounts(5))
+            .random_seed(random_seed)
+            .block_timestamp(1662562383)
+            .build());
+
+        let random_positions = random_position();
+        println!("random_positions: {:?}", random_positions);
+        assert_eq!(
+            random_positions,
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 4, 5, 6, 7]
+        );
     }
 }

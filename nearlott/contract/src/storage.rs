@@ -100,8 +100,12 @@ impl NearLott {
     }
 
     /// Asserts there is sufficient amount of $NEAR to cover storage usage.
-    pub fn assert_storage_usage(&self, _account_id: AccountId) {
-        let deposited = self.data()._storage_deposits.get(&_account_id).unwrap_or(0);
+    pub fn assert_storage_usage(&self) {
+        let deposited = self
+            .data()
+            ._storage_deposits
+            .get(&env::predecessor_account_id())
+            .unwrap_or(0);
         assert!(
             self.account_storage_usage() <= deposited,
             "{}",

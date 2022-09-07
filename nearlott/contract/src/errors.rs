@@ -39,3 +39,4 @@ pub const ERR33_INSUFFICIENT_MINIMUM_REQUIRES: &str = "E33: Requires minimum dep
 pub const ERR34_RANDOM_NUMBER_INVALID: &str = "E34: Invalid random number";
 pub const ERR35_CONTRACT_PAUSED: &str = "E35: contract paused";
 pub const ERR36_STRING_NUMBER_INVALID: &str = "E36: Invalid string number";
+pub const ERR37_NOT_ENOUGH_RANDOM_NUMBERS: &str = "E37: Not enough random positions numbers";

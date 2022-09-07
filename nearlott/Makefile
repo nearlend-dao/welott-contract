@@ -1,8 +1,8 @@
 release:
 	$(call docker_build,_rust_setup.sh)
 	mkdir -p release
-	cp target/wasm32-unknown-unknown/release/nearlott.wasm release/nearlott.wasm
-	cp release/nearlott.wasm out/main.wasm
+	cp target/wasm32-unknown-unknown/release/contract.wasm release/contract.wasm
+	cp release/contract.wasm out/nearlott.wasm
 
 define docker_build
 	docker build -t my-contract-builder .

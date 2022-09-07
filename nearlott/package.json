@@ -4,8 +4,8 @@
   "license": "(MIT AND Apache-2.0)",
   "scripts": {
     "build": "npm run build:contract",
-    "build:contract": "cd contract && ./build.sh",
-    "dev:deploy": "yarn build:contract && rm -rf neardev && (near dev-deploy || exit 0)",
+    "build:contract": "./build.sh",
+    "dev:deploy": "yarn build:contract && rm -rf neardev && (near dev-deploy out/nearlott.wasm || exit 0)",
     "test": "npm run test:unit && npm run test:integration",
     "test:unit": "cd contract && cargo test -- --nocapture --test-threads=2",
     "build:test-deploy": "sh ./scripts/0-dev_deploy.sh",
