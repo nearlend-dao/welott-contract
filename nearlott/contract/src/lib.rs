@@ -425,7 +425,7 @@ mod tests {
         assert_eq!(data.max_number_tickets_per_buy_or_claim, 1000);
     }
 
-    // #[test]
+    #[test]
     pub fn test_set_min_and_max_ticket_price_in_near() {
         let (mut context, mut contract) = setup_contract();
         testing_env!(context
@@ -647,6 +647,7 @@ mod tests {
         contract.close_lottery(current_lottery_id);
 
         // check random number generated.
+        contract.data_mut().random_result = 1327419;
         let data2 = contract.data();
         let wining_number = data2.random_result;
         assert!(wining_number > 0);
@@ -663,7 +664,7 @@ mod tests {
         assert_eq!(lottery_claim_lottery.final_number, wining_number);
         // there is no one be a winner
         assert_eq!(
-            2399200000000000000000000,
+            pending_injection_amount,
             (lottery_claim_lottery.amount_collected_in_near
                 * (10000 - lottery_claim_lottery.treasury_fee))
                 / 10000
