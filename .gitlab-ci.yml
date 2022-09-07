@@ -1,12 +1,14 @@
 image: node:latest
 stages:
-  - build
-  - run
+  - build-node
+  - build-contract
+  - test-contract
+  - deploy
   
   # Job's name
 build-node:
   # Define stage
-  stage: build
+  stage: build-node
   # What to run on the job.
   script:
     - cd nearlott
@@ -16,7 +18,7 @@ build-node:
       - node_modules
 
 build-contract:
-  stage: run
+  stage: build-contract
   script:
     - cd nearlott
     - npm run build
@@ -25,7 +27,7 @@ build-contract:
       - node_modules
 
 test-unit:
-  stage: run
+  stage: test-contract
   script:
     - cd nearlott
     - echo "Running unit test"
@@ -35,7 +37,7 @@ test-unit:
       - node_modules
 
 test-integration:
-  stage: run
+  stage: test-contract
   script:
     - cd nearlott
     - echo "Running integration test"
