@@ -8,6 +8,7 @@
     "dev:deploy": "yarn build:contract && rm -rf neardev && (near dev-deploy out/nearlott.wasm || exit 0)",
     "test": "npm run test:unit && npm run test:integration",
     "test:unit": "cd contract && cargo test -- --nocapture --test-threads=2",
+    "test:simulation": "cd tests && cargo test -- --nocapture --test-threads=2",
     "build:test-deploy": "sh ./scripts/0-dev_deploy.sh",
     "nct": "yarn build:local && yarn build:test-deploy", 
     "nftlisting": "node ./test-scripts/test-trade.js"

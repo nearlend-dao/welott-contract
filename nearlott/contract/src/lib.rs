@@ -2,7 +2,7 @@ use crate::info::DEFAULT_AUDITOR_ACCOUNT_ID;
 use crate::info::DEFAULT_WEB_APP_URL;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LookupMap, UnorderedMap};
-use near_sdk::json_types::U128;
+use near_sdk::json_types::{U128, U64};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
     env, near_bindgen, serde_json::json, AccountId, Balance, BorshStorageKey, PanicOnDefault,
@@ -481,10 +481,10 @@ mod tests {
         testing_env!(context.predecessor_account_id(accounts(2)).build());
         contract.start_lottery(
             end_time,
-            1000000000000000000000000,
-            2000,
+            Some(U128(1000000000000000000000000)),
+            Some(U128(2000)),
             vec![125, 375, 750, 1250, 2500, 5000],
-            2000,
+            Some(U128(2000)),
         );
 
         let current_lottery_id = contract.data().current_lottery_id;
@@ -494,8 +494,15 @@ mod tests {
     }
 
     #[test]
-    fn buy_tickets() {
+    fn test_desposit_buy_tickets() {
         let (mut context, mut contract) = setup_contract();
+
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(25 * 10u128.pow(23))
+            .build());
+        contract.storage_deposit(Some(env::predecessor_account_id()));
+
         testing_env!(context
             .predecessor_account_id(accounts(2))
             .attached_deposit(1)
@@ -508,10 +515,10 @@ mod tests {
         testing_env!(context.predecessor_account_id(accounts(2)).build());
         contract.start_lottery(
             end_time,
-            1000000000000000000000000,
-            2000,
+            Some(U128(1000000000000000000000000)),
+            Some(U128(2000)),
             vec![125, 375, 750, 1250, 2500, 5000],
-            2000,
+            Some(U128(2000)),
         );
         let current_lottery_id = contract.data().current_lottery_id;
         // buy some tickets
@@ -519,7 +526,11 @@ mod tests {
             .predecessor_account_id(accounts(2))
             .attached_deposit(1000000000000000000000000)
             .build());
-        contract.buy_tickets(current_lottery_id, vec![1292877], 1000000000000000000000000);
+        contract.buy_tickets(
+            current_lottery_id,
+            vec![1292877],
+            Some(U128(1000000000000000000000000)),
+        );
 
         let ticket_number = 1292877;
         let key_bracket1 = 1 + (ticket_number % 10);
@@ -574,6 +585,14 @@ mod tests {
     #[test]
     fn test_draw_final_number_and_make_lottery_claimable() {
         let (mut context, mut contract) = setup_contract();
+
+        // add storage
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(25 * 10u128.pow(23))
+            .build());
+        contract.storage_deposit(Some(accounts(2)));
+
         testing_env!(context
             .predecessor_account_id(accounts(2))
             .attached_deposit(1)
@@ -586,10 +605,10 @@ mod tests {
         testing_env!(context.predecessor_account_id(accounts(2)).build());
         contract.start_lottery(
             end_time,
-            1000000000000000000000000,
-            2000,
+            Some(U128(1000000000000000000000000)),
+            Some(U128(2000)),
             vec![125, 375, 750, 1250, 2500, 5000],
-            2000,
+            Some(U128(2000)),
         );
 
         let current_lottery_id = contract.data().current_lottery_id;
@@ -599,9 +618,18 @@ mod tests {
             .predecessor_account_id(accounts(2))
             .attached_deposit(1000000000000000000000000)
             .build());
-        contract.buy_tickets(current_lottery_id, vec![1292877], 1000000000000000000000000);
+        contract.buy_tickets(
+            current_lottery_id,
+            vec![1292877],
+            Some(U128(1000000000000000000000000)),
+        );
 
         //// buy ticket 2
+        testing_env!(context
+            .predecessor_account_id(accounts(3))
+            .attached_deposit(25 * 10u128.pow(23))
+            .build());
+        contract.storage_deposit(Some(accounts(3)));
         testing_env!(context
             .predecessor_account_id(accounts(3))
             .attached_deposit(2000000000000000000000000)
@@ -609,7 +637,7 @@ mod tests {
         contract.buy_tickets(
             current_lottery_id,
             vec![1292876, 1292871],
-            2000000000000000000000000,
+            Some(U128(2000000000000000000000000)),
         );
 
         let data = contract.data();
@@ -656,6 +684,10 @@ mod tests {
         assert_eq!(lottery_close_lottery.status, Status::Close);
 
         // // draw the final number
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
         contract.draw_final_number_and_make_lottery_claimable(current_lottery_id, true);
         let data3 = contract.data();
         let pending_injection_amount = data3.pending_injection_next_lottery;
@@ -672,8 +704,35 @@ mod tests {
     }
 
     #[test]
+    fn test_get_user_cover_for_storage() {
+        let (mut context, mut contract) = setup_contract();
+
+        // add storage
+        testing_env!(context.predecessor_account_id(accounts(2)).build());
+        let necessary_near = contract.get_user_cover_for_storage(accounts(2));
+        assert_eq!(necessary_near, INIT_ACCOUNT_STORAGE);
+        // add storage
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(INIT_ACCOUNT_STORAGE)
+            .build());
+        contract.storage_deposit(Some(accounts(2)));
+
+        let necessary_near_after_deposit = contract.get_user_cover_for_storage(accounts(2));
+        assert_eq!(necessary_near_after_deposit, 0);
+    }
+
+    #[test]
     fn test_buy_tickets() {
         let (mut context, mut contract) = setup_contract();
+
+        // add storage
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(25 * 10u128.pow(23))
+            .build());
+        contract.storage_deposit(Some(accounts(2)));
+
         testing_env!(context
             .predecessor_account_id(accounts(2))
             .attached_deposit(1)
@@ -686,10 +745,10 @@ mod tests {
         testing_env!(context.predecessor_account_id(accounts(2)).build());
         contract.start_lottery(
             end_time,
-            1000000000000000000000000,
-            2000,
+            Some(U128(1000000000000000000000000)),
+            Some(U128(2000)),
             vec![125, 375, 750, 1250, 2500, 5000],
-            2000,
+            Some(U128(2000)),
         );
 
         let current_lottery_id = contract.data().current_lottery_id;
@@ -699,7 +758,11 @@ mod tests {
             .predecessor_account_id(accounts(2))
             .attached_deposit(1000000000000000000000000)
             .build());
-        contract.buy_tickets(current_lottery_id, vec![1302877], 1000000000000000000000000);
+        contract.buy_tickets(
+            current_lottery_id,
+            vec![1302877],
+            Some(U128(1000000000000000000000000)),
+        );
         // check amount_collected_in_near
         let data2 = contract.data();
         let lottery2 = data2._lotteries.get(&current_lottery_id).unwrap();
@@ -712,7 +775,7 @@ mod tests {
         contract.buy_tickets(
             current_lottery_id,
             vec![1292877, 1292837],
-            2000000000000000000000000,
+            Some(U128(2000000000000000000000000)),
         );
         let data3 = contract.data();
         let lottery3 = data3._lotteries.get(&current_lottery_id).unwrap();
@@ -744,6 +807,14 @@ mod tests {
     #[test]
     fn test_claim_tickets() {
         let (mut context, mut contract) = setup_contract();
+
+        // add storage
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(25 * 10u128.pow(23))
+            .build());
+        contract.storage_deposit(Some(env::predecessor_account_id()));
+
         testing_env!(context
             .predecessor_account_id(accounts(2))
             .attached_deposit(1)
@@ -753,13 +824,16 @@ mod tests {
         let start_time = 162615600000000;
         let end_time = start_time + data.min_length_lottery as u64 + 1;
 
-        testing_env!(context.predecessor_account_id(accounts(2)).build());
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
         contract.start_lottery(
             end_time,
-            12 * 10u128.pow(23), //1.2 NEAR
-            2000,
+            Some(U128(12 * 10u128.pow(23))), //1.2 NEAR
+            Some(U128(2000)),
             vec![125, 375, 750, 1250, 2500, 5000],
-            2000,
+            Some(U128(2000)),
         );
 
         let current_lottery_id = contract.data().current_lottery_id;
@@ -771,10 +845,14 @@ mod tests {
         contract.buy_tickets(
             current_lottery_id,
             vec![1039219, 1106409, 1192039, 1000699],
-            4 * 12 * 10u128.pow(23),
+            Some(U128(4 * 12 * 10u128.pow(23))),
         );
 
         // close lottery
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
         contract.close_lottery(current_lottery_id);
 
         // draw final number
@@ -893,6 +971,14 @@ mod tests {
     #[test]
     fn test_calculate_rewards_for_ticket_id() {
         let (mut context, mut contract) = setup_contract();
+
+        // add storage
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(25 * 10u128.pow(23))
+            .build());
+        contract.storage_deposit(Some(env::predecessor_account_id()));
+
         testing_env!(context
             .predecessor_account_id(accounts(2))
             .attached_deposit(1)
@@ -902,13 +988,16 @@ mod tests {
         let start_time = 162615600000000;
         let end_time = start_time + data.min_length_lottery as u64 + 1;
 
-        testing_env!(context.predecessor_account_id(accounts(2)).build());
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
         contract.start_lottery(
             end_time,
-            12u128 * 10u128.pow(23), //1.2 in NEAR
-            2000,
+            Some(U128(12u128 * 10u128.pow(23))), //1.2 in NEAR
+            Some(U128(2000)),
             vec![125, 375, 750, 1250, 2500, 5000],
-            2000,
+            Some(U128(2000)),
         );
         let current_lottery_id = contract.data().current_lottery_id;
         // buy ticket 1
@@ -917,13 +1006,27 @@ mod tests {
             .attached_deposit(12u128 * 10u128.pow(23))
             .build());
 
-        contract.buy_tickets(current_lottery_id, vec![1039219], 12u128 * 10u128.pow(23));
+        contract.buy_tickets(
+            current_lottery_id,
+            vec![1039219],
+            Some(U128(12u128 * 10u128.pow(23))),
+        );
 
         //// close lottery
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
         contract.close_lottery(current_lottery_id);
 
         //// draw final number
         contract.data_mut().random_result = 1327419;
+
+        // draw final number
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
         contract.draw_final_number_and_make_lottery_claimable(current_lottery_id, true);
 
         // win two number 91, in the front end the string winner should be 91472. without 1.
@@ -950,10 +1053,10 @@ mod tests {
             .build());
         contract.start_lottery(
             end_time,
-            1000000000000000000000000,
-            2000,
+            Some(U128(1000000000000000000000000)),
+            Some(U128(2000)),
             vec![125, 375, 750, 1250, 2500, 5000],
-            2000,
+            Some(U128(2000)),
         );
 
         // running close lottery
@@ -1020,5 +1123,54 @@ mod tests {
             random_positions,
             [1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 4, 5, 6, 7]
         );
+    }
+    #[test]
+    fn test_view_user_info_for_lottery_id() {
+        let (mut context, mut contract) = setup_contract();
+
+        // add storage
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(25 * 10u128.pow(23))
+            .build());
+        contract.storage_deposit(Some(env::predecessor_account_id()));
+
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
+
+        let data = contract.data();
+        let start_time = 162615600000000;
+        let end_time = start_time + data.min_length_lottery as u64 + 1;
+
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
+        contract.start_lottery(
+            end_time,
+            Some(U128(12u128 * 10u128.pow(23))), //1.2 in NEAR
+            Some(U128(2000)),
+            vec![125, 375, 750, 1250, 2500, 5000],
+            Some(U128(2000)),
+        );
+        let current_lottery_id = contract.data().current_lottery_id;
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(12u128 * 10u128.pow(23))
+            .build());
+
+        contract.buy_tickets(
+            current_lottery_id,
+            vec![1039219],
+            Some(U128(12u128 * 10u128.pow(23))),
+        );
+
+        let view_user_info =
+            contract.view_user_info_for_lottery_id(accounts(2), current_lottery_id, 0, 25);
+        assert_eq!(view_user_info.lottery_ticket_ids.len(), 1);
+        assert_eq!(view_user_info.ticket_numbers.len(), 1);
+        assert_eq!(view_user_info.ticket_status.len(), 1);
     }
 }

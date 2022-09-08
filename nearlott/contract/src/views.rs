@@ -1,7 +1,7 @@
 use crate::*;
 use near_sdk::serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct LotteryUserData {
     pub lottery_ticket_ids: Vec<TicketId>,
@@ -29,6 +29,7 @@ impl Default for LotteryUserData {
     }
 }
 
+#[near_bindgen]
 impl NearLott {
     /**
      * @notice Calculate price of a set of tickets
@@ -37,7 +38,7 @@ impl NearLott {
      * @param _number_tickets number of tickets to buy
      */
     pub fn calculate_total_price_for_bulk_tickets(
-        &mut self,
+        &self,
         _discount_divisor: u128,
         _price_ticket: u128,
         _number_tickets: u128,
@@ -133,18 +134,15 @@ impl NearLott {
         let tickets_in_a_lottery = lotteries_user_tickets
             .get(&_lottery_id)
             .expect(ERR1_NOT_EXISTING_LOTTERY);
-
         let number_tickets_bought_at_lottery_id = tickets_in_a_lottery.len() as u32;
         if length > (number_tickets_bought_at_lottery_id - _cursor) {
             length = number_tickets_bought_at_lottery_id - _cursor;
         }
-
-        let mut lottery_ticket_ids = vec![];
-        let mut ticket_numbers = vec![];
-        let mut ticket_statuses = vec![];
+        let mut lottery_ticket_ids = vec![0; length as usize];
+        let mut ticket_numbers = vec![0; length as usize];
+        let mut ticket_statuses = vec![false; length as usize];
         for i in 0..length {
             lottery_ticket_ids[i as usize] = tickets_in_a_lottery[(i + _cursor) as usize];
-
             let ticket_number = self
                 .data()
                 ._tickets

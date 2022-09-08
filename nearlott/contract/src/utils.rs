@@ -1,5 +1,7 @@
 use crate::callback::ext_ft_contract;
 use crate::gas::GAS_FOR_FT_TRANSFER;
+use near_sdk::StorageUsage;
+
 use crate::*;
 // use rand::Rng; // 0.8.0
 
@@ -144,4 +146,82 @@ pub(crate) fn random_position() -> Vec<u8> {
     }
 
     positions
+}
+
+/// Asserts there is sufficient amount of $NEAR to cover storage usage.
+pub(crate) fn assert_storage_usage_data(data: &ContractData) {
+    let deposited = data
+        ._storage_deposits
+        .get(&env::predecessor_account_id())
+        .unwrap_or(0);
+    assert!(
+        account_storage_usage_data(data) <= deposited,
+        "{}",
+        ERR32_INSUFFICIENT_STORAGE
+    );
+}
+
+/// Asserts there is sufficient amount of $NEAR to cover storage usage.
+pub(crate) fn assert_estimate_storage_usage_data(data: &ContractData, _number_of_ticket: u64) {
+    let deposited = data
+        ._storage_deposits
+        .get(&env::predecessor_account_id())
+        .unwrap_or(0);
+    let usage = account_storage_usage_data(data);
+    let estimate_storage = estimate_account_storage_usage_data(_number_of_ticket);
+    assert!(
+        deposited > (usage + estimate_storage),
+        "{}. Deposited: {}, used: {}, estimate nescessray NEAR should be deposited to cover fee: {}",
+        ERR32_INSUFFICIENT_STORAGE,
+        deposited,
+        usage,
+        estimate_storage
+    );
+}
+
+/// Returns amount of $NEAR necessary to cover storage used by this data structure.
+pub(crate) fn account_storage_usage_data(data: &ContractData) -> Balance {
+    let account_id = env::predecessor_account_id();
+    let user_lotteries = data
+        ._user_ticket_ids_per_lottery_id
+        .get(&account_id)
+        .unwrap_or(UnorderedMap::new(b"A".to_vec()));
+
+    let values = user_lotteries
+        .values()
+        .map(|user_tickets| user_tickets.len() as u64)
+        .collect::<Vec<_>>();
+    let number_of_tickets: u64 = values.iter().sum();
+    // number of lotteries x (each lottery including: list of ticket numbers and 4 bytes)
+    let storage_use_store_lotteries: StorageUsage =
+        user_lotteries.len() * (U32_STORAGE * number_of_tickets);
+
+    // storage using for list of _number_tickers_per_lottery_id
+    let storage_number_of_tickets_elements_numbers =
+        user_lotteries.len() * (U32_STORAGE + U128_STORAGE * 6);
+
+    INIT_ACCOUNT_STORAGE
+        + storage_use_store_lotteries as u128
+        + storage_number_of_tickets_elements_numbers as u128
+}
+
+/// Estimate the storage need for number of tickets
+pub(crate) fn estimate_account_storage_usage_data(number_of_tickets: u64) -> Balance {
+    // number of lotteries x (each lottery including: list of ticket numbers and 4 bytes)
+    let storage_use_store_lotteries: StorageUsage = 1 * (U32_STORAGE * number_of_tickets);
+
+    // storage using for list of _number_tickers_per_lottery_id
+    let storage_number_of_tickets_elements_numbers =
+        number_of_tickets * (U32_STORAGE + U128_STORAGE * 6);
+
+    storage_use_store_lotteries as u128 + storage_number_of_tickets_elements_numbers as u128
+}
+
+pub(crate) fn extract_data(value: Option<U128>) -> u128 {
+    let value_in_128 = if let Some(amount) = value.map(|a| a.0) {
+        amount
+    } else {
+        0
+    };
+    value_in_128
 }

@@ -2,12 +2,12 @@ use crate::*;
 use near_contract_standards::storage_management::StorageBalanceBounds;
 use near_sdk::{env, near_bindgen, AccountId, Balance, StorageUsage};
 
-const U128_STORAGE: StorageUsage = 16;
+pub const U128_STORAGE: StorageUsage = 16;
 // const U64_STORAGE: StorageUsage = 8;
-const U32_STORAGE: StorageUsage = 4;
+pub const U32_STORAGE: StorageUsage = 4;
 
 /// max length of account id is 64 bytes. We charge per byte.
-const ACC_ID_STORAGE: StorageUsage = 64;
+pub const ACC_ID_STORAGE: StorageUsage = 64;
 
 // key prefix of a collection takes 4 bytes;
 const COLLECTION_KEY_PREFIX: StorageUsage = 4;
@@ -99,45 +99,25 @@ impl NearLott {
         }
     }
 
+    /// Retuns how much NEAR need to cover for storage
+    pub fn get_user_cover_for_storage(&self, _account_id: AccountId) -> Balance {
+        let deposited = self.data()._storage_deposits.get(&_account_id).unwrap_or(0);
+        let locked = self.account_storage_usage();
+        if locked > deposited {
+            let cover_usage: u128 = locked - deposited;
+            return cover_usage;
+        }
+        0
+    }
+
     /// Asserts there is sufficient amount of $NEAR to cover storage usage.
     pub fn assert_storage_usage(&self) {
-        let deposited = self
-            .data()
-            ._storage_deposits
-            .get(&env::predecessor_account_id())
-            .unwrap_or(0);
-        assert!(
-            self.account_storage_usage() <= deposited,
-            "{}",
-            ERR32_INSUFFICIENT_STORAGE
-        );
+        assert_storage_usage_data(&self.data())
     }
 
     /// Returns amount of $NEAR necessary to cover storage used by this data structure.
     pub fn account_storage_usage(&self) -> Balance {
-        let account_id = env::predecessor_account_id();
-        let user_lotteries = self
-            .data()
-            ._user_ticket_ids_per_lottery_id
-            .get(&account_id)
-            .unwrap_or(UnorderedMap::new(b"A".to_vec()));
-
-        let values = user_lotteries
-            .values()
-            .map(|user_tickets| user_tickets.len() as u64)
-            .collect::<Vec<_>>();
-        let number_of_tickets: u64 = values.iter().sum();
-        // number of lotteries x (each lottery including: list of ticket numbers and 4 bytes)
-        let storage_use_store_lotteries: StorageUsage =
-            user_lotteries.len() * (U32_STORAGE * number_of_tickets);
-
-        // storage using for list of _number_tickers_per_lottery_id
-        let storage_number_of_tickets_elements_numbers =
-            user_lotteries.len() * (U32_STORAGE + U128_STORAGE * 6);
-
-        INIT_ACCOUNT_STORAGE
-            + storage_use_store_lotteries as u128
-            + storage_number_of_tickets_elements_numbers as u128
+        account_storage_usage_data(&self.data())
     }
 
     pub fn storage_balance_of(&self, account_id: AccountId) -> U128 {

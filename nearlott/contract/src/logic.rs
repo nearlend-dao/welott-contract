@@ -13,14 +13,16 @@ impl NearLott {
      * @param _rewards_breakdown: breakdown of rewards per bracket (must sum to 10,000)
      * @param _treasury_fee: treasury fee (10,000 = 100%, 100 = 1%)
      */
+    #[payable]
     pub fn start_lottery(
         &mut self,
         _end_time: Timestamp,
-        _price_ticket_in_near: u128,
-        _discount_divisor: u128,
+        _price_ticket_in_near: Option<U128>,
+        _discount_divisor: Option<U128>,
         _rewards_breakdown: Vec<u128>,
-        _treasury_fee: u128,
+        _treasury_fee: Option<U128>,
     ) {
+        self.assert_one_yoctor();
         self.assert_operator_calling();
         self.assert_contract_running();
 
@@ -33,24 +35,29 @@ impl NearLott {
             ERR11_LOTTERY_TIME_OUT_OF_RANGE
         );
 
+        // extract data
+        let price_ticket_in_near = extract_data(_price_ticket_in_near);
+        let discount_divisor = extract_data(_discount_divisor);
+        let treasury_fee = extract_data(_treasury_fee);
+
         assert!(
-            _price_ticket_in_near >= data.min_price_ticket_in_near
-                && _price_ticket_in_near <= data.max_price_ticket_in_near,
+            price_ticket_in_near >= data.min_price_ticket_in_near
+                && price_ticket_in_near <= data.max_price_ticket_in_near,
             "{}:{}: ({}-{})",
             ERR12_LOTTERY_PRICE_OUTSIDE_LIMIT,
-            _price_ticket_in_near,
+            price_ticket_in_near,
             data.min_price_ticket_in_near,
             data.max_price_ticket_in_near
         );
 
         assert!(
-            _discount_divisor >= data.min_discount_divisor,
+            discount_divisor >= data.min_discount_divisor,
             "{}",
             ERR13_LOTTERY_DISCOUNT_DIVISOR_TOO_LOW
         );
 
         assert!(
-            _treasury_fee <= data.max_treasury_fee,
+            treasury_fee <= data.max_treasury_fee,
             "{}",
             ERR15_LOTTERY_OVER_TREASURY_FEE
         );
@@ -67,10 +74,10 @@ impl NearLott {
                 status: Status::Open,
                 start_time: env::block_timestamp(),
                 end_time: _end_time,
-                price_ticket_in_near: _price_ticket_in_near,
-                discount_divisor: _discount_divisor,
+                price_ticket_in_near: price_ticket_in_near,
+                discount_divisor: discount_divisor,
                 rewards_breakdown: _rewards_breakdown,
-                treasury_fee: _treasury_fee,
+                treasury_fee: treasury_fee,
                 near_per_bracket: vec![0, 0, 0, 0, 0, 0],
                 count_winners_per_bracket: vec![0, 0, 0, 0, 0, 0],
                 first_ticket_id: data.current_ticket_id,
@@ -87,11 +94,11 @@ impl NearLott {
                     "current_lottery_id": next_lottery_id,
                     "start_time":  env::block_timestamp(),
                     "end_time": _end_time,
-                    "price_ticket_in_near": U128(_price_ticket_in_near),
+                    "price_ticket_in_near": _price_ticket_in_near,
                     "first_ticket_id": data.current_ticket_id,
                     "first_ticket_id_next_lottery": data.current_ticket_id,
                     "pending_injection_next_lottery": U128(data.pending_injection_next_lottery),
-                    "_discount_divisor": U128(_discount_divisor),
+                    "_discount_divisor": _discount_divisor,
                 }
             })
             .to_string(),
@@ -105,11 +112,13 @@ impl NearLott {
      * @param _autoInjection: re-injects funds into next lottery (vs. withdrawing all)
      * @dev Callable by operator
      */
+    #[payable]
     pub fn draw_final_number_and_make_lottery_claimable(
         &mut self,
         _lottery_id: LotteryId,
         _auto_injection: bool,
     ) {
+        self.assert_one_yoctor();
         self.assert_operator_calling();
         self.assert_contract_running();
 
@@ -230,16 +239,18 @@ impl NearLott {
         &mut self,
         _lottery_id: LotteryId,
         _ticket_numbers: Vec<TicketNumber>,
-        amount: u128,
+        _amount: Option<U128>,
     ) {
         self.assert_contract_running();
         assert!(_ticket_numbers.len() > 0, "{}", ERR21_TICKETS__LENGTH);
-
         let data = self.data_mut();
         let mut lottery = data
             ._lotteries
             .get(&_lottery_id)
             .expect(ERR1_NOT_EXISTING_LOTTERY);
+
+        // extract data
+        let amount = extract_data(_amount);
 
         assert!(
             _ticket_numbers.len() <= data.max_number_tickets_per_buy_or_claim as usize,
@@ -259,6 +270,9 @@ impl NearLott {
             "{}",
             ERR31_LOTTERY_IS_OVER
         );
+
+        // asert storage cover
+        assert_estimate_storage_usage_data(&data, _ticket_numbers.len() as u64);
 
         // Calculate number of NEAR to this contract
         let amount_near_to_transfer = _calculate_total_price_for_bulk_tickets(
@@ -332,13 +346,15 @@ impl NearLott {
             data.current_ticket_id = data.current_ticket_id + 1;
         }
 
+        // fire log
         env::log_str(
             &json!({
                 "type": "buy_tickets",
                 "params": {
                     "buyer": &env::predecessor_account_id(),
                     "current_lottery_id":  data.current_lottery_id,
-                    "ticket_numbers": _ticket_numbers.len()
+                    "ticket_numbers": _ticket_numbers.len(),
+                    "amount_paid": _amount
                 }
             })
             .to_string(),
@@ -352,12 +368,14 @@ impl NearLott {
      * @param _brackets: array of brackets for the ticket ids
      * @dev Callable by users only, not contract!
      */
+    #[payable]
     pub fn claim_tickets(
         &mut self,
         _lottery_id: LotteryId,
         _ticket_ids: Vec<TicketId>,
         _brackets: Vec<BracketPosition>,
     ) {
+        self.assert_one_yoctor();
         self.assert_contract_running();
         let data = self.data_mut();
         assert_eq!(
@@ -467,7 +485,9 @@ impl NearLott {
      * @param _lotteryId: lottery id
      * @dev Callable by operator
      */
+    #[payable]
     pub fn close_lottery(&mut self, _lottery_id: LotteryId) {
+        self.assert_one_yoctor();
         self.assert_operator_calling();
         self.assert_contract_running();
         let data = self.data_mut();

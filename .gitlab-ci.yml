@@ -26,3 +26,13 @@ contract-test-unit:
   artifacts:
     paths:
       - node_modules
+
+contract-simulation-test:
+  stage: test-contract
+  script:
+    - cd nearlott
+    - npm run build
+    - npm run test:simulation
+  artifacts:
+    paths:
+      - node_modules
