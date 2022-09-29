@@ -116,6 +116,14 @@ pub enum RunningState {
     Paused,
 }
 
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Eq, PartialEq, Clone)]
+#[serde(crate = "near_sdk::serde")]
+#[cfg_attr(not(target_arch = "wasm32"), derive(Debug))]
+pub enum PermissionUpdateState {
+    Allow,
+    Disallow,
+}
+
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
 pub struct ContractData {
     pub owner_id: AccountId,
@@ -158,6 +166,9 @@ pub struct ContractData {
 
     // the last random result
     pub random_result: u32,
+
+    // the permission to update any configure in lottery running
+    pub permission_update: PermissionUpdateState,
 }
 
 #[derive(BorshSerialize, BorshDeserialize)]
@@ -221,7 +232,7 @@ impl NearLott {
                 state: RunningState::Running,
                 current_lottery_id: 0,
                 current_ticket_id: 0,
-                max_number_tickets_per_buy_or_claim: 100,
+                max_number_tickets_per_buy_or_claim: 12,
                 max_price_ticket_in_near: 50 * 10u128.pow(24), // max: 50 x 1000
                 min_price_ticket_in_near: 5 * 10u128.pow(21),  // 0.005 x 1000
                 pending_injection_next_lottery: 0,
@@ -242,6 +253,7 @@ impl NearLott {
                 ),
                 _storage_deposits: LookupMap::new(StorageKey::StorageDeposits),
                 random_result: 0,
+                permission_update: PermissionUpdateState::Allow,
             }),
             web_app_url: Some(String::from(DEFAULT_WEB_APP_URL)),
             auditor_account_id: Some(AccountId::new_unchecked(String::from(
@@ -309,7 +321,7 @@ mod tests {
         assert_eq!(data.state, RunningState::Running);
         assert_eq!(data.current_lottery_id, 0);
         assert_eq!(data.current_ticket_id, 0);
-        assert_eq!(data.max_number_tickets_per_buy_or_claim, 100);
+        assert_eq!(data.max_number_tickets_per_buy_or_claim, 12);
         assert_eq!(data.max_price_ticket_in_near, 50000000000000000000000000);
         assert_eq!(data.min_price_ticket_in_near, 5000000000000000000000);
 

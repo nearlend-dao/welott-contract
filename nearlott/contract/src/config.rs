@@ -28,7 +28,17 @@ impl NearLott {
      */
     pub fn set_max_number_tickets_per_buy(&mut self, _max_number_tickets_per_buy: u64) {
         self.assert_owner_calling();
+
+        // get latest lotteryid
         let data = self.data_mut();
+
+        // check current status lottery. Only allow changing configuration number before a lottery running
+        assert!(
+            data.permission_update == PermissionUpdateState::Allow,
+            "{}",
+            ERR38_DISALLOW_UPDATE
+        );
+
         data.max_number_tickets_per_buy_or_claim = _max_number_tickets_per_buy;
     }
 
@@ -45,13 +55,22 @@ impl NearLott {
     ) {
         self.assert_owner_calling();
 
+        // check current status lottery. Only allow changing configuration number before a lottery running
+        let data = self.data_mut();
+        assert!(
+            data.permission_update == PermissionUpdateState::Allow,
+            "{}",
+            ERR38_DISALLOW_UPDATE
+        );
+
+        // min ticket should be less than the max ticket price.
         assert!(
             _min_price_ticket_in_near <= _max_price_ticket_in_near,
             "{}",
             ERR8_MIN_PRICE_MAX_PRICE
         );
 
-        let data = self.data_mut();
+        // update min/max price ticket
         data.min_price_ticket_in_near = _min_price_ticket_in_near;
         data.max_price_ticket_in_near = _max_price_ticket_in_near;
     }

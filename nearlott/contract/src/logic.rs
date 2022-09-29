@@ -67,7 +67,7 @@ impl NearLott {
 
         let next_lottery_id = data.current_lottery_id + 1;
         data.current_lottery_id = next_lottery_id;
-
+        data.permission_update = PermissionUpdateState::Disallow;
         data._lotteries.insert(
             &next_lottery_id,
             &Lottery {
@@ -262,7 +262,7 @@ impl NearLott {
             lottery.status,
             Status::Open,
             "{}",
-            ERR30_LOTTERY_IS_NOT_CLOSE
+            ERR17_LOTTERY_IS_NOT_OPEN
         );
 
         assert!(
@@ -291,7 +291,9 @@ impl NearLott {
         lottery.amount_collected_in_near =
             lottery.amount_collected_in_near + amount_near_to_transfer;
         data._lotteries.insert(&_lottery_id, &lottery);
+        data.permission_update = PermissionUpdateState::Allow;
 
+        // update lottery data
         let mut number_tickets_in_a_lottery = data
             ._number_tickers_per_lottery_id
             .get(&_lottery_id)
