@@ -42,5 +42,5 @@ pub const ERR35_CONTRACT_PAUSED: &str = "E35: contract paused";
 pub const ERR36_STRING_NUMBER_INVALID: &str = "E36: Invalid string number";
 pub const ERR37_NOT_ENOUGH_RANDOM_NUMBERS: &str = "E37: Not enough random positions numbers";
 pub const ERR38_DISALLOW_UPDATE: &str =
-    "E38: The lotteyr is running. Could not change any configuration.";
+    "E38: The lottery is running. Could not change any configuration.";
 pub const ERR39_ATTACHED_DEPOSIT_LESS_AMOUNT: &str = "E16: Attached deposit is less than amount";

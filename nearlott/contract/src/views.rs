@@ -179,8 +179,8 @@ impl NearLott {
         }
 
         LotteryUserData {
-            lottery_ticket_ids: lottery_ticket_ids,
-            ticket_numbers: ticket_numbers,
+            lottery_ticket_ids,
+            ticket_numbers,
             ticket_status: ticket_statuses,
             cursor: _cursor,
         }
@@ -217,7 +217,7 @@ impl NearLott {
         }
 
         LotteryNumberAndStatusData {
-            ticket_numbers: ticket_numbers,
+            ticket_numbers,
             ticket_status: ticket_statuses,
         }
     }

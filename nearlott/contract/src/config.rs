@@ -24,6 +24,7 @@ pub struct ConfigContractData {
     pub max_treasury_fee: u128,
 }
 
+#[near_bindgen]
 impl NearLott {
     /**
      * @notice Set operator, treasury, and injector addresses
