@@ -1,4 +1,4 @@
-image: vibbioinfocore/rust-node-ci
+image: cimg/rust:1.45.0
 stages:
   - build-node
   - build-contract
