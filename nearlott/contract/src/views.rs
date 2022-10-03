@@ -79,6 +79,19 @@ impl NearLott {
     }
 
     /**
+     * @notice: Get detail the running lottery
+     */
+    pub fn view_current_lottery_running(&self) -> Lottery {
+        let current_lottery_id = self.data().current_lottery_id;
+        let lottery = self
+            .data()
+            ._lotteries
+            .get(&current_lottery_id)
+            .expect(ERR1_NOT_EXISTING_LOTTERY);
+        lottery
+    }
+
+    /**
      * @notice View rewards for a given ticket, providing a bracket, and lottery id
      * @dev Computations are mostly off chain. This is used to verify a ticket!
      * @param _lottery_id: lottery id
@@ -204,15 +217,25 @@ impl NearLott {
         }
     }
 
+    /**
+     * Using for unit-test
+     */
+    #[private]
     pub fn view_random(&self) -> u32 {
         get_random_number()
     }
 
+    /**
+     * View the current lottery's  final winning number
+     */
     pub fn view_random_result(&self) -> u32 {
         let data = self.data();
         data.random_result as u32
     }
 
+    /**
+     * Get current blockt imestamp running in Near blockchain
+     */
     pub fn get_current_timestamp(&self) -> u64 {
         env::block_timestamp()
     }
