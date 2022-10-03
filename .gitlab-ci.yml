@@ -13,7 +13,9 @@ build-node:
   script:
     - cargo --version
     - node --version
+    - cd nearlott
     - npm install
+  
   artifacts:
       paths:
         - node_modules
