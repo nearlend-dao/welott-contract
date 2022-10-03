@@ -1,3 +1,4 @@
+image: cimg/rust:1.54.0
 stages:
   - build-node
   - build-contract
@@ -10,11 +11,12 @@ build-node:
   stage: build-node
   # What to run on the job.
   script:
-    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
-    - docker build -t registry.gitlab.com/nearlend/nearlott .
-    - docker push -t $CI_REGISTRY_IMAGE .
-    - docker push $CI_REGISTRY_IMAGE 
-    
+    - cargo --version
+    - node --version
+    - npm install
+  artifacts:
+      paths:
+        - node_modules
 
 contract-test-unit:
   stage: test-contract
