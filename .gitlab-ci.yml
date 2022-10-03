@@ -16,9 +16,6 @@ build-node:
     - docker push -t $CI_REGISTRY_IMAGE .
     - docker push $CI_REGISTRY_IMAGE 
     
-  artifacts:
-    paths:
-      - node_modules
 
 contract-test-unit:
   stage: test-contract
