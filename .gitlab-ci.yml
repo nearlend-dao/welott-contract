@@ -1,22 +1,27 @@
-image: cimg/rust:1.45.0
+image: cimg/rust:1.56.1-node
 stages:
   - build-node
-  - build-contract
   - test-contract
   - deploy
   
   # Job's name
 build-node:
   # Define stage
+  before_script:
+    - rustup target add wasm32-unknown-unknown
+    - apt-get update && apt-get install -y git less vim clang
+
   stage: build-node
   # What to run on the job.
   script:
+    - cargo --version
+    - node --version
     - cd nearlott
     - npm install
-    
+  
   artifacts:
-    paths:
-      - node_modules
+      paths:
+        - node_modules
 
 contract-test-unit:
   stage: test-contract
