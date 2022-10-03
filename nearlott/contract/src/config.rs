@@ -1,5 +1,29 @@
 use crate::*;
 
+#[derive(Serialize, Deserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct ConfigContractData {
+    pub owner_id: AccountId,
+    pub state: RunningState,
+    pub current_lottery_id: LotteryId,
+    pub current_ticket_id: TicketId,
+
+    pub injector_address: AccountId,
+    pub operator_address: AccountId,
+    pub treasury_address: AccountId,
+    pub max_number_tickets_per_buy_or_claim: u64,
+
+    pub max_price_ticket_in_near: u128,
+    pub min_price_ticket_in_near: u128,
+
+    pub pending_injection_next_lottery: u128,
+
+    pub min_discount_divisor: u128,
+    pub min_length_lottery: u32,
+    pub max_length_lottery: u32,
+    pub max_treasury_fee: u128,
+}
+
 impl NearLott {
     /**
      * @notice Set operator, treasury, and injector addresses
@@ -73,5 +97,29 @@ impl NearLott {
         // update min/max price ticket
         data.min_price_ticket_in_near = _min_price_ticket_in_near;
         data.max_price_ticket_in_near = _max_price_ticket_in_near;
+    }
+
+    /**
+     * Get current config
+     */
+    pub fn _get_config(&self) -> ConfigContractData {
+        let data = self.data();
+        ConfigContractData {
+            owner_id: data.owner_id.clone(),
+            injector_address: data.injector_address.clone(),
+            operator_address: data.operator_address.clone(),
+            treasury_address: data.treasury_address.clone(),
+            state: data.state.clone(),
+            current_lottery_id: data.current_lottery_id,
+            current_ticket_id: data.current_ticket_id,
+            max_number_tickets_per_buy_or_claim: data.max_number_tickets_per_buy_or_claim,
+            max_price_ticket_in_near: data.max_price_ticket_in_near,
+            min_price_ticket_in_near: data.min_price_ticket_in_near,
+            pending_injection_next_lottery: data.pending_injection_next_lottery,
+            min_discount_divisor: data.min_discount_divisor,
+            min_length_lottery: data.min_length_lottery,
+            max_length_lottery: data.max_length_lottery,
+            max_treasury_fee: data.max_treasury_fee,
+        }
     }
 }

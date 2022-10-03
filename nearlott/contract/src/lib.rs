@@ -167,7 +167,7 @@ pub struct ContractData {
     // the last random result
     pub random_result: u32,
 
-    // the permission to update any configure in lottery running
+    // a flag permission to update any configuration if a lottery running
     pub permission_update: PermissionUpdateState,
 }
 
@@ -312,25 +312,26 @@ mod tests {
         let contract = NearLott::new(accounts(0), accounts(1), accounts(2), accounts(3));
         testing_env!(context.is_view(true).build());
 
-        let data = contract.data();
+        let config = contract.get_config();
         assert_eq!(contract.get_owner(), accounts(0));
-        assert_eq!(data.injector_address, accounts(1));
-        assert_eq!(data.operator_address, accounts(2));
-        assert_eq!(data.treasury_address, accounts(3));
+        assert_eq!(config.injector_address, accounts(1));
+        assert_eq!(config.operator_address, accounts(2));
+        assert_eq!(config.treasury_address, accounts(3));
 
-        assert_eq!(data.state, RunningState::Running);
-        assert_eq!(data.current_lottery_id, 0);
-        assert_eq!(data.current_ticket_id, 0);
-        assert_eq!(data.max_number_tickets_per_buy_or_claim, 12);
-        assert_eq!(data.max_price_ticket_in_near, 50000000000000000000000000);
-        assert_eq!(data.min_price_ticket_in_near, 5000000000000000000000);
+        assert_eq!(config.state, RunningState::Running);
+        assert_eq!(config.current_lottery_id, 0);
+        assert_eq!(config.current_ticket_id, 0);
+        assert_eq!(config.max_number_tickets_per_buy_or_claim, 12);
+        assert_eq!(config.max_price_ticket_in_near, 50000000000000000000000000);
+        assert_eq!(config.min_price_ticket_in_near, 5000000000000000000000);
 
-        assert_eq!(data.pending_injection_next_lottery, 0);
-        assert_eq!(data.min_discount_divisor, 300);
-        assert_eq!(data.min_length_lottery, 14100);
-        assert_eq!(data.max_length_lottery, 345900);
-        assert_eq!(data.max_treasury_fee, 3000);
+        assert_eq!(config.pending_injection_next_lottery, 0);
+        assert_eq!(config.min_discount_divisor, 300);
+        assert_eq!(config.min_length_lottery, 14100);
+        assert_eq!(config.max_length_lottery, 345900);
+        assert_eq!(config.max_treasury_fee, 3000);
 
+        let data = contract.data();
         assert_eq!(data._lotteries.len(), 0);
         assert_eq!(data._tickets.len(), 0);
         assert_eq!(data._number_tickers_per_lottery_id.len(), 0);

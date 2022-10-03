@@ -1,3 +1,4 @@
+use crate::config::ConfigContractData;
 use crate::*;
 use near_sdk::serde::{Deserialize, Serialize};
 
@@ -238,5 +239,13 @@ impl NearLott {
      */
     pub fn get_current_timestamp(&self) -> u64 {
         env::block_timestamp()
+    }
+
+    /**
+     * Get current config
+     */
+    pub fn get_config(&self) -> ConfigContractData {
+        let config = self._get_config();
+        return config;
     }
 }
