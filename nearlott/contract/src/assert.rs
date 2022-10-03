@@ -54,4 +54,14 @@ impl NearLott {
             _ => env::panic_str(ERR35_CONTRACT_PAUSED),
         };
     }
+
+    // Assert a lottery running
+    pub fn assert_lottery_running(&self) {
+        let data = self.data();
+        assert!(
+            data.permission_update == PermissionUpdateState::Allow,
+            "{}",
+            ERR38_DISALLOW_UPDATE
+        );
+    }
 }

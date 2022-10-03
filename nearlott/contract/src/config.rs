@@ -51,18 +51,14 @@ impl NearLott {
      * @dev Only callable by owner
      */
     pub fn set_max_number_tickets_per_buy(&mut self, _max_number_tickets_per_buy: u64) {
+        // only owner can call
         self.assert_owner_calling();
-
+        // Only update if has allow permission.
+        self.assert_lottery_running();
         // get latest lotteryid
         let data = self.data_mut();
 
-        // check current status lottery. Only allow changing configuration number before a lottery running
-        assert!(
-            data.permission_update == PermissionUpdateState::Allow,
-            "{}",
-            ERR38_DISALLOW_UPDATE
-        );
-
+        // update
         data.max_number_tickets_per_buy_or_claim = _max_number_tickets_per_buy;
     }
 
@@ -77,15 +73,10 @@ impl NearLott {
         _min_price_ticket_in_near: u128,
         _max_price_ticket_in_near: u128,
     ) {
+        // only owner can call
         self.assert_owner_calling();
-
-        // check current status lottery. Only allow changing configuration number before a lottery running
-        let data = self.data_mut();
-        assert!(
-            data.permission_update == PermissionUpdateState::Allow,
-            "{}",
-            ERR38_DISALLOW_UPDATE
-        );
+        // Only update if has allow permission.
+        self.assert_lottery_running();
 
         // min ticket should be less than the max ticket price.
         assert!(

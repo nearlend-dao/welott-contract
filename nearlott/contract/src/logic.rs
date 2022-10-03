@@ -25,6 +25,7 @@ impl NearLott {
         self.assert_one_yoctor();
         self.assert_operator_calling();
         self.assert_contract_running();
+        self.assert_lottery_running();
 
         let mut data = self.data_mut();
         // after 4 hours - 5 minutes since now to  4 days + 5 minutes
