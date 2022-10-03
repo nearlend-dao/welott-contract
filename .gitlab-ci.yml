@@ -1,4 +1,4 @@
-image: cimg/rust:1.54.0
+image: cimg/rust:1.54.0-node
 stages:
   - build-node
   - build-contract
