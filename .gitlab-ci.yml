@@ -10,9 +10,13 @@ build-node:
   # Define stage
   stage: build-node
   # What to run on the job.
+  before_script:
+    - apt-get update
+    - apt-get install -y --no-install-recommends clang build-essential cmake libbz2-dev libclang-dev liblz4-dev librocksdb-dev libsnappy-dev libzstd-dev
   script:
     - cd nearlott
     - npm install
+    
   artifacts:
     paths:
       - node_modules
