@@ -14,7 +14,8 @@ pub const ERR12_LOTTERY_PRICE_OUTSIDE_LIMIT: &str = "E12: Price ticket in near -
 pub const ERR13_LOTTERY_DISCOUNT_DIVISOR_TOO_LOW: &str = "E13: Discount divisor too low";
 pub const ERR14_LOTTERY_OVER_RANGE_REWARDS: &str = "E14: Rewards must equal 10000";
 pub const ERR15_LOTTERY_OVER_TREASURY_FEE: &str = "E15: Treasury fee too high";
-pub const ERR16_ATTACHED_DEPOSIT_LESS_AMOUNT: &str = "E16: Attached deposit is less than amount";
+pub const ERR16_ATTACHED_DEPOSIT_NOT_EQUAL_AMOUNT: &str =
+    "E16: Attached deposit should equal to amount";
 pub const ERR17_LOTTERY_IS_NOT_OPEN: &str = "E17: Lottery not open";
 pub const ERR18_LOTTERY_FINAL_NUMBER_NOT_DRAWN: &str = "E18: Numbers not drawn";
 pub const ERR19_LOTTERY_NO_TICKERS_NUMBERS: &str = "E19: No number tickets per lottery_id";
@@ -42,3 +43,4 @@ pub const ERR36_STRING_NUMBER_INVALID: &str = "E36: Invalid string number";
 pub const ERR37_NOT_ENOUGH_RANDOM_NUMBERS: &str = "E37: Not enough random positions numbers";
 pub const ERR38_DISALLOW_UPDATE: &str =
     "E38: The lotteyr is running. Could not change any configuration.";
+pub const ERR39_ATTACHED_DEPOSIT_LESS_AMOUNT: &str = "E16: Attached deposit is less than amount";

@@ -15,7 +15,7 @@ impl NearLott {
         assert!(
             env::attached_deposit() >= _amount,
             "{}",
-            ERR16_ATTACHED_DEPOSIT_LESS_AMOUNT
+            ERR39_ATTACHED_DEPOSIT_LESS_AMOUNT
         );
 
         let data = self.data_mut();

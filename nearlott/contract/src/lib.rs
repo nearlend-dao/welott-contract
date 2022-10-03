@@ -644,12 +644,12 @@ mod tests {
         contract.storage_deposit(Some(accounts(3)));
         testing_env!(context
             .predecessor_account_id(accounts(3))
-            .attached_deposit(2000000000000000000000000)
+            .attached_deposit(1999000000000000000000000)
             .build());
         contract.buy_tickets(
             current_lottery_id,
             vec![1292876, 1292871],
-            Some(U128(2000000000000000000000000)),
+            Some(U128(1999000000000000000000000)),
         );
 
         let data = contract.data();
@@ -782,12 +782,12 @@ mod tests {
 
         testing_env!(context
             .predecessor_account_id(accounts(2))
-            .attached_deposit(2000000000000000000000000)
+            .attached_deposit(1999000000000000000000000)
             .build());
         contract.buy_tickets(
             current_lottery_id,
             vec![1292877, 1292837],
-            Some(U128(2000000000000000000000000)),
+            Some(U128(1999000000000000000000000)),
         );
         let data3 = contract.data();
         let lottery3 = data3._lotteries.get(&current_lottery_id).unwrap();
@@ -852,12 +852,12 @@ mod tests {
         // buy 4 tickets
         testing_env!(context
             .predecessor_account_id(accounts(2))
-            .attached_deposit(4 * 12 * 10u128.pow(23))
+            .attached_deposit(4792800000000000000000000)
             .build());
         contract.buy_tickets(
             current_lottery_id,
             vec![1039219, 1106409, 1192039, 1000699],
-            Some(U128(4 * 12 * 10u128.pow(23))),
+            Some(U128(4792800000000000000000000)),
         );
 
         // close lottery

@@ -281,9 +281,9 @@ impl NearLott {
             _ticket_numbers.len() as u128,
         );
         assert!(
-            env::attached_deposit() >= amount_near_to_transfer && env::attached_deposit() >= amount,
+            env::attached_deposit() == amount_near_to_transfer && env::attached_deposit() == amount,
             "{}: {}",
-            ERR16_ATTACHED_DEPOSIT_LESS_AMOUNT,
+            ERR16_ATTACHED_DEPOSIT_NOT_EQUAL_AMOUNT,
             amount_near_to_transfer
         );
 
