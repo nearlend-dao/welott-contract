@@ -11,8 +11,10 @@ build-node:
   stage: build-node
   # What to run on the job.
   script:
-    - cd nearlott
-    - npm install
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
+    - docker build -t registry.gitlab.com/nearlend/nearlott .
+    - docker push -t $CI_REGISTRY_IMAGE .
+    - docker push $CI_REGISTRY_IMAGE 
     
   artifacts:
     paths:
