@@ -40,22 +40,26 @@ impl NearLott {
      */
     pub fn calculate_total_price_for_bulk_tickets(
         &self,
-        _discount_divisor: u128,
-        _price_ticket: u128,
+        _lottery_id: LotteryId,
         _number_tickets: u128,
     ) -> u128 {
+        // check existing lottery
         let data = self.data();
-        assert!(
-            _discount_divisor >= data.min_discount_divisor,
-            "{}",
-            ERR6_MIN_DISCOUNT_DIVISOR
-        );
+        let lottery = data
+            ._lotteries
+            .get(&_lottery_id)
+            .expect(ERR1_NOT_EXISTING_LOTTERY);
 
+        // check number of tickets
         assert_ne!(_number_tickets, 0, "{}", ERR7_NUMBER_TICKETS_ZERO);
 
+        // get discount divisor and ticket price
+        let discount_divisor = lottery.discount_divisor;
+        let ticket_price = lottery.price_ticket_in_near;
+
         return _calculate_total_price_for_bulk_tickets(
-            _discount_divisor,
-            _price_ticket,
+            discount_divisor,
+            ticket_price,
             _number_tickets,
         );
     }

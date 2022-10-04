@@ -981,6 +981,7 @@ mod tests {
         );
         assert_eq!(final_price2, 11946000000000000000); //~11.946 NEAR, 0.45% Bulk discount
     }
+
     #[test]
     fn test_calculate_rewards_for_ticket_id() {
         let (mut context, mut contract) = setup_contract();
@@ -1185,5 +1186,109 @@ mod tests {
         assert_eq!(view_user_info.lottery_ticket_ids.len(), 1);
         assert_eq!(view_user_info.ticket_numbers.len(), 1);
         assert_eq!(view_user_info.ticket_status.len(), 1);
+    }
+
+    #[test]
+    fn test_view_calculate_total_price_for_bulk_tickets_include_discount() {
+        let (mut context, mut contract) = setup_contract();
+
+        // add storage
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(25 * 10u128.pow(23))
+            .build());
+        contract.storage_deposit(Some(env::predecessor_account_id()));
+
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
+
+        let data = contract.data();
+        let start_time = 162615600000000;
+        let end_time = start_time + data.min_length_lottery as u64 + 1;
+
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
+        contract.start_lottery(
+            end_time,
+            Some(U128(12u128 * 10u128.pow(23))), //1.2 in NEAR
+            Some(U128(2000)),
+            vec![125, 375, 750, 1250, 2500, 5000],
+            Some(U128(2000)),
+        );
+        let current_lottery_id = contract.data().current_lottery_id;
+        // buy 1 ticket
+        let final_price = contract.calculate_total_price_for_bulk_tickets(current_lottery_id, 1);
+        assert_eq!(final_price, 12 * 10u128.pow(23)); //~1.2 NEAR
+
+        // buy 2 ticket
+        let final_2_ticket_price =
+            contract.calculate_total_price_for_bulk_tickets(current_lottery_id, 10);
+        println!("Final price: {:}", final_2_ticket_price);
+        assert_eq!(
+            final_2_ticket_price,
+            (12 * 10u128.pow(23) * 10 * (2000 + 1 - 10)) / 2000
+        );
+    }
+
+    #[test]
+    fn test_view_calculate_total_price_for_bulk_tickets_no_discount() {
+        let (mut context, mut contract) = setup_contract();
+        // call owner
+        testing_env!(context
+            .predecessor_account_id(accounts(0))
+            .attached_deposit(1)
+            .build());
+
+        // set no discount
+        contract.set_min_discount_divisor(0);
+
+        // add storage and switch to user2
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(25 * 10u128.pow(23))
+            .build());
+        contract.storage_deposit(Some(env::predecessor_account_id()));
+
+        let data = contract.data();
+        let start_time = 162615600000000;
+        let end_time = start_time + data.min_length_lottery as u64 + 1;
+
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
+
+        // get current config
+        let current_config = contract.get_config();
+        println!(
+            "min_discount_divisor: {:?}",
+            current_config.min_discount_divisor
+        );
+        assert_eq!(current_config.min_discount_divisor, 0);
+
+        // start lottery
+        contract.start_lottery(
+            end_time,
+            Some(U128(12u128 * 10u128.pow(23))), //1.2 in NEAR
+            Some(U128(0)),
+            vec![125, 375, 750, 1250, 2500, 5000],
+            Some(U128(2000)),
+        );
+
+        // get current lottery id
+        let current_lottery_id = contract.data().current_lottery_id;
+
+        // buy 1 ticket
+        let final_price = contract.calculate_total_price_for_bulk_tickets(current_lottery_id, 1);
+        assert_eq!(final_price, 12 * 10u128.pow(23)); //~1.2 NEAR
+
+        // buy 2 ticket should be the price x number of ticket
+        let final_2_ticket_price =
+            contract.calculate_total_price_for_bulk_tickets(current_lottery_id, 10);
+        assert_eq!(final_2_ticket_price, (12 * 10u128.pow(23) * 10)); // 12 Near
     }
 }

@@ -86,8 +86,24 @@ impl NearLott {
         );
 
         // update min/max price ticket
+        let data = self.data_mut();
         data.min_price_ticket_in_near = _min_price_ticket_in_near;
         data.max_price_ticket_in_near = _max_price_ticket_in_near;
+    }
+
+    /**
+     * @notice Set min discount divisor value
+     * @param _min_discount_divisor: minimum divisor might be set for a lottery
+     */
+    pub fn set_min_discount_divisor(&mut self, _min_discount_divisor: u128) {
+        // only owner can call
+        self.assert_owner_calling();
+        // Only update if has allow permission.
+        self.assert_lottery_running();
+
+        // update min/max price ticket
+        let data = self.data_mut();
+        data.min_discount_divisor = _min_discount_divisor;
     }
 
     /**

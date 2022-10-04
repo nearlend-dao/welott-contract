@@ -60,6 +60,9 @@ pub(crate) fn _calculate_total_price_for_bulk_tickets(
     _price_ticket: u128,
     _number_ticket: u128,
 ) -> u128 {
+    if _discount_divisor == 0 {
+        return _price_ticket * _number_ticket;
+    }
     (_price_ticket * _number_ticket * (_discount_divisor + 1 - _number_ticket)) / _discount_divisor
 }
 
