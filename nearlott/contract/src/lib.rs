@@ -253,7 +253,7 @@ impl NearLott {
                 ),
                 _storage_deposits: LookupMap::new(StorageKey::StorageDeposits),
                 random_result: 0,
-                permission_update: PermissionUpdateState::Allow,
+                permission_update: PermissionUpdateState::Disallow,
             }),
             web_app_url: Some(String::from(DEFAULT_WEB_APP_URL)),
             auditor_account_id: Some(AccountId::new_unchecked(String::from(
@@ -542,7 +542,6 @@ mod tests {
         contract.buy_tickets(
             current_lottery_id,
             vec![1292877],
-            Some(U128(1000000000000000000000000)),
         );
 
         let ticket_number = 1292877;
@@ -634,7 +633,6 @@ mod tests {
         contract.buy_tickets(
             current_lottery_id,
             vec![1292877],
-            Some(U128(1000000000000000000000000)),
         );
 
         //// buy ticket 2
@@ -650,7 +648,6 @@ mod tests {
         contract.buy_tickets(
             current_lottery_id,
             vec![1292876, 1292871],
-            Some(U128(1999000000000000000000000)),
         );
 
         let data = contract.data();
@@ -774,7 +771,6 @@ mod tests {
         contract.buy_tickets(
             current_lottery_id,
             vec![1302877],
-            Some(U128(1000000000000000000000000)),
         );
         // check amount_collected_in_near
         let data2 = contract.data();
@@ -788,7 +784,6 @@ mod tests {
         contract.buy_tickets(
             current_lottery_id,
             vec![1292877, 1292837],
-            Some(U128(1999000000000000000000000)),
         );
         let data3 = contract.data();
         let lottery3 = data3._lotteries.get(&current_lottery_id).unwrap();
@@ -858,7 +853,6 @@ mod tests {
         contract.buy_tickets(
             current_lottery_id,
             vec![1039219, 1106409, 1192039, 1000699],
-            Some(U128(4792800000000000000000000)),
         );
 
         // close lottery
@@ -1023,7 +1017,6 @@ mod tests {
         contract.buy_tickets(
             current_lottery_id,
             vec![1039219],
-            Some(U128(12u128 * 10u128.pow(23))),
         );
 
         //// close lottery
@@ -1178,7 +1171,6 @@ mod tests {
         contract.buy_tickets(
             current_lottery_id,
             vec![1039219],
-            Some(U128(12u128 * 10u128.pow(23))),
         );
 
         let view_user_info =

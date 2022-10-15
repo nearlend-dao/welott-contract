@@ -75,10 +75,10 @@ impl NearLott {
                 status: Status::Open,
                 start_time: env::block_timestamp(),
                 end_time: _end_time,
-                price_ticket_in_near: price_ticket_in_near,
-                discount_divisor: discount_divisor,
+                price_ticket_in_near,
+                discount_divisor,
                 rewards_breakdown: _rewards_breakdown,
-                treasury_fee: treasury_fee,
+                treasury_fee,
                 near_per_bracket: vec![0, 0, 0, 0, 0, 0],
                 count_winners_per_bracket: vec![0, 0, 0, 0, 0, 0],
                 first_ticket_id: data.current_ticket_id,
@@ -239,8 +239,7 @@ impl NearLott {
     pub fn buy_tickets(
         &mut self,
         _lottery_id: LotteryId,
-        _ticket_numbers: Vec<TicketNumber>,
-        _amount: Option<U128>,
+        _ticket_numbers: Vec<TicketNumber>
     ) {
         self.assert_contract_running();
         assert!(_ticket_numbers.len() > 0, "{}", ERR21_TICKETS__LENGTH);
@@ -249,9 +248,6 @@ impl NearLott {
             ._lotteries
             .get(&_lottery_id)
             .expect(ERR1_NOT_EXISTING_LOTTERY);
-
-        // extract data
-        let amount = extract_data(_amount);
 
         assert!(
             _ticket_numbers.len() <= data.max_number_tickets_per_buy_or_claim as usize,
@@ -282,7 +278,7 @@ impl NearLott {
             _ticket_numbers.len() as u128,
         );
         assert!(
-            env::attached_deposit() == amount_near_to_transfer && env::attached_deposit() == amount,
+            env::attached_deposit() == amount_near_to_transfer,
             "{}: {}",
             ERR16_ATTACHED_DEPOSIT_NOT_EQUAL_AMOUNT,
             amount_near_to_transfer
@@ -356,8 +352,7 @@ impl NearLott {
                 "params": {
                     "buyer": &env::predecessor_account_id(),
                     "current_lottery_id":  data.current_lottery_id,
-                    "ticket_numbers": _ticket_numbers.len(),
-                    "amount_paid": _amount
+                    "ticket_numbers": _ticket_numbers.len()
                 }
             })
             .to_string(),
