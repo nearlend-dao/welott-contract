@@ -128,7 +128,7 @@ pub(crate) fn get_random_number() -> u32 {
         .collect::<String>();
     // comvert to u64 to prepare for final number
     let randomness = randomness_instr
-        .parse::<u64>()
+        .parse::<u128>()
         .expect(ERR34_RANDOM_NUMBER_INVALID);
 
     // determine final number
@@ -144,10 +144,11 @@ pub(crate) fn get_random_number() -> u32 {
 pub(crate) fn random_position() -> Vec<u8> {
     let positions = env::random_seed();
     if positions.len() > 15 {
-        let slice: Vec<u8> = positions[0..15].iter().cloned().collect();
-        return slice;
+        let slice: Vec<u8> = positions[0..15].iter()
+        .map(|x| x%9)
+        .collect();
+       return slice;
     }
-
     positions
 }
 

@@ -35,6 +35,9 @@ near call $CONTRACT_ACC --accountId=$OWNER new '{
 echo "####################### GET CONFIG CONTRACT #########################"
 near view $CONTRACT_ACC get_config ''
 
+echo "####################### GET CONFIG CONTRACT #########################"
+near view $CONTRACT_ACC --accountId=$CONTRACT_ACC view_random '' 
+
 echo "######################## GET LATEST ID ROUND #########################"
 near view $CONTRACT_ACC view_latest_lottery_id ''
 

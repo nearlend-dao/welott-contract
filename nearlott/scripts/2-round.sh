@@ -61,7 +61,7 @@ near view $CONTRACT_ACC view_current_lottery_running ''
 # }' 
 
 
-# echo "######################## CLOSE ROUND #############################"
-# near call $CONTRACT_ACC --accountId=$OWNER close_lottery '{
-#     "_lottery_id": 0
-# }' --depositYocto=1
+echo "######################## CLOSE ROUND #############################"
+near call $CONTRACT_ACC --accountId=$OWNER close_lottery '{
+    "_lottery_id": 1
+}' --depositYocto=1
