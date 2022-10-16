@@ -84,6 +84,19 @@ impl NearLott {
     }
 
     /**
+     * @notice View lottery information
+     * @param _lottery_id: lottery id
+     */
+    pub fn view_number_tickets_per_lottery(&self, _lottery_id: LotteryId) -> usize {
+        let number_tickets_per_lottery = self
+            .data()
+            ._number_tickers_per_lottery_id
+            .get(&_lottery_id)
+            .expect(ERR1_NOT_EXISTING_LOTTERY);
+        number_tickets_per_lottery.len() as usize
+    }
+
+    /**
      * @notice: Get detail the running lottery
      */
     pub fn view_current_lottery_running(&self) -> Lottery {

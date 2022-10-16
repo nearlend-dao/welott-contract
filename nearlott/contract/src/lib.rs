@@ -135,15 +135,9 @@ pub struct ContractData {
     pub operator_address: AccountId,
     pub treasury_address: AccountId,
     pub max_number_tickets_per_buy_or_claim: u64,
-
-    pub max_price_ticket_in_near: u128,
-    pub min_price_ticket_in_near: u128,
-
     pub pending_injection_next_lottery: u128,
 
     pub min_discount_divisor: u128,
-    pub min_length_lottery: u32,
-    pub max_length_lottery: u32,
     pub max_treasury_fee: u128,
 
     // mapping are cheaper than arrays
@@ -233,12 +227,8 @@ impl NearLott {
                 current_lottery_id: 0,
                 current_ticket_id: 0,
                 max_number_tickets_per_buy_or_claim: 12,
-                max_price_ticket_in_near: 50 * 10u128.pow(24), // max: 50 x 1000
-                min_price_ticket_in_near: 5 * 10u128.pow(21),  // 0.005 x 1000
                 pending_injection_next_lottery: 0,
                 min_discount_divisor: 300,
-                min_length_lottery: 14100,  // 4 hours - 5 minutes;
-                max_length_lottery: 345900, //4 days + 5 minutes;
                 max_treasury_fee: 3000,     // 30%
                 _lotteries: UnorderedMap::new(StorageKey::Lotteries),
                 _tickets: UnorderedMap::new(StorageKey::Tickets),
@@ -253,7 +243,7 @@ impl NearLott {
                 ),
                 _storage_deposits: LookupMap::new(StorageKey::StorageDeposits),
                 random_result: 0,
-                permission_update: PermissionUpdateState::Disallow,
+                permission_update: PermissionUpdateState::Allow,
             }),
             web_app_url: Some(String::from(DEFAULT_WEB_APP_URL)),
             auditor_account_id: Some(AccountId::new_unchecked(String::from(
@@ -322,13 +312,9 @@ mod tests {
         assert_eq!(config.current_lottery_id, 0);
         assert_eq!(config.current_ticket_id, 0);
         assert_eq!(config.max_number_tickets_per_buy_or_claim, 12);
-        assert_eq!(config.max_price_ticket_in_near, 50000000000000000000000000);
-        assert_eq!(config.min_price_ticket_in_near, 5000000000000000000000);
 
         assert_eq!(config.pending_injection_next_lottery, 0);
         assert_eq!(config.min_discount_divisor, 300);
-        assert_eq!(config.min_length_lottery, 14100);
-        assert_eq!(config.max_length_lottery, 345900);
         assert_eq!(config.max_treasury_fee, 3000);
 
         let data = contract.data();
@@ -438,19 +424,6 @@ mod tests {
         assert_eq!(data.max_number_tickets_per_buy_or_claim, 1000);
     }
 
-    #[test]
-    pub fn test_set_min_and_max_ticket_price_in_near() {
-        let (mut context, mut contract) = setup_contract();
-        testing_env!(context
-            .predecessor_account_id(accounts(0))
-            .attached_deposit(1)
-            .build());
-
-        contract.set_min_and_max_ticket_price_in_near(500, 1000);
-        let data = contract.data();
-        assert_eq!(data.min_price_ticket_in_near, 500);
-        assert_eq!(data.max_price_ticket_in_near, 1000);
-    }
 
     #[test]
     pub fn test_get_contract_info() {
@@ -489,7 +462,7 @@ mod tests {
 
         let data = contract.data();
         let start_time = 162615600000000;
-        let end_time = start_time + data.min_length_lottery as u64 + 1;
+        let end_time = start_time + 8150000 as u64 + 1;
 
         testing_env!(context.predecessor_account_id(accounts(2)).build());
         contract.start_lottery(
@@ -523,7 +496,7 @@ mod tests {
 
         let data = contract.data();
         let start_time = 162615600000000;
-        let end_time = start_time + data.min_length_lottery as u64 + 1;
+        let end_time = start_time + 12345678 as u64 + 1;
 
         testing_env!(context.predecessor_account_id(accounts(2)).build());
         contract.start_lottery(
@@ -612,7 +585,7 @@ mod tests {
 
         let data = contract.data();
         let start_time = 162615600000000;
-        let end_time = start_time + data.min_length_lottery as u64 + 1;
+        let end_time = start_time + 123456788 as u64 + 1;
 
         testing_env!(context.predecessor_account_id(accounts(2)).build());
         contract.start_lottery(
@@ -750,7 +723,7 @@ mod tests {
 
         let data = contract.data();
         let start_time = 162615600000000;
-        let end_time = start_time + data.min_length_lottery as u64 + 1;
+        let end_time = start_time + 12345678 as u64 + 1;
 
         testing_env!(context.predecessor_account_id(accounts(2)).build());
         contract.start_lottery(
@@ -830,7 +803,7 @@ mod tests {
 
         let data = contract.data();
         let start_time = 162615600000000;
-        let end_time = start_time + data.min_length_lottery as u64 + 1;
+        let end_time = start_time + 12345678 as u64 + 1;
 
         testing_env!(context
             .predecessor_account_id(accounts(2))
@@ -994,7 +967,7 @@ mod tests {
 
         let data = contract.data();
         let start_time = 162615600000000;
-        let end_time = start_time + data.min_length_lottery as u64 + 1;
+        let end_time = start_time + 12345678 as u64 + 1;
 
         testing_env!(context
             .predecessor_account_id(accounts(2))
@@ -1052,7 +1025,7 @@ mod tests {
 
         let data = contract.data();
         let start_time = 162615600000000;
-        let end_time = start_time + data.min_length_lottery as u64 + 1;
+        let end_time = start_time + 12345678 as u64 + 1;
 
         testing_env!(context
             .predecessor_account_id(accounts(2))
@@ -1149,7 +1122,7 @@ mod tests {
 
         let data = contract.data();
         let start_time = 162615600000000;
-        let end_time = start_time + data.min_length_lottery as u64 + 1;
+        let end_time = start_time + 12345678 as u64 + 1;
 
         testing_env!(context
             .predecessor_account_id(accounts(2))
@@ -1198,7 +1171,7 @@ mod tests {
 
         let data = contract.data();
         let start_time = 162615600000000;
-        let end_time = start_time + data.min_length_lottery as u64 + 1;
+        let end_time = start_time + 12345678 as u64 + 1;
 
         testing_env!(context
             .predecessor_account_id(accounts(2))
@@ -1247,7 +1220,7 @@ mod tests {
 
         let data = contract.data();
         let start_time = 162615600000000;
-        let end_time = start_time + data.min_length_lottery as u64 + 1;
+        let end_time = start_time + 12345678 as u64 + 1;
 
         testing_env!(context
             .predecessor_account_id(accounts(2))
