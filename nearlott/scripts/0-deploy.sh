@@ -3,7 +3,7 @@ NETWORK=testnet
 SUFFIX=testnet
 
 MASTER_ACC=lamns1.$NETWORK
-CONTRACT_ACC=welott.$MASTER_ACC
+CONTRACT_ACC=welott4.$MASTER_ACC
 OWNER=$MASTER_ACC
 TREASURY_ACC=lamns1.$NETWORK
 INJECTOR_ACC=lamns1.$NETWORK
@@ -15,8 +15,8 @@ export NEAR_ENV=$NETWORK
 # echo "################ DELETE THE ACCOUNT #########################"
 # near delete $CONTRACT_ACC $MASTER_ACC
 
-# echo "################ CREATE NEW ACCOUNT #########################"
-# near create-account $CONTRACT_ACC --masterAccount $MASTER_ACC --initialBalance 10
+echo "################ CREATE NEW ACCOUNT #########################"
+near create-account $CONTRACT_ACC --masterAccount $MASTER_ACC --initialBalance 10
 
 echo "################ BUILD CONTRACT #########################"
 ../build.sh
@@ -35,11 +35,14 @@ near call $CONTRACT_ACC --accountId=$OWNER new '{
 echo "####################### GET CONFIG CONTRACT #########################"
 near view $CONTRACT_ACC get_config ''
 
+# echo "####################### GET CONFIG CONTRACT #########################"
+# near view $CONTRACT_ACC --accountId=$CONTRACT_ACC view_random '' 
+
 echo "######################## GET LATEST ID ROUND #########################"
 near view $CONTRACT_ACC view_latest_lottery_id ''
 
-echo "######################## GET DETAIL CURRENT ROUND #########################"
-near view $CONTRACT_ACC view_current_lottery_running ''
+# echo "######################## GET DETAIL CURRENT ROUND #########################"
+# near view $CONTRACT_ACC view_current_lottery_running ''
 
 echo "################# DEPOSIT STORAGE #########################"
 near call $CONTRACT_ACC --accountId=$OWNER storage_deposit '{

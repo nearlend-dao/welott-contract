@@ -64,4 +64,5 @@ impl NearLott {
             ERR38_DISALLOW_UPDATE
         );
     }
+
 }

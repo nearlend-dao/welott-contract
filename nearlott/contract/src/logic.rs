@@ -29,27 +29,11 @@ impl NearLott {
 
         let mut data = self.data_mut();
         // after 4 hours - 5 minutes since now to  4 days + 5 minutes
-        assert!(
-            to_sec(_end_time - env::block_timestamp()) > data.min_length_lottery
-                && to_sec(_end_time - env::block_timestamp()) < data.max_length_lottery,
-            "{}",
-            ERR11_LOTTERY_TIME_OUT_OF_RANGE
-        );
 
         // extract data
         let price_ticket_in_near = extract_data(_price_ticket_in_near);
         let discount_divisor = extract_data(_discount_divisor);
         let treasury_fee = extract_data(_treasury_fee);
-
-        assert!(
-            price_ticket_in_near >= data.min_price_ticket_in_near
-                && price_ticket_in_near <= data.max_price_ticket_in_near,
-            "{}:{}: ({}-{})",
-            ERR12_LOTTERY_PRICE_OUTSIDE_LIMIT,
-            price_ticket_in_near,
-            data.min_price_ticket_in_near,
-            data.max_price_ticket_in_near
-        );
 
         assert!(
             discount_divisor >= data.min_discount_divisor,
@@ -236,11 +220,7 @@ impl NearLott {
      * @dev Callable by users
      */
     #[payable]
-    pub fn buy_tickets(
-        &mut self,
-        _lottery_id: LotteryId,
-        _ticket_numbers: Vec<TicketNumber>
-    ) {
+    pub fn buy_tickets(&mut self, _lottery_id: LotteryId, _ticket_numbers: Vec<TicketNumber>) {
         self.assert_contract_running();
         assert!(_ticket_numbers.len() > 0, "{}", ERR21_TICKETS__LENGTH);
         let data = self.data_mut();
@@ -263,7 +243,7 @@ impl NearLott {
         );
 
         assert!(
-            to_sec(env::block_timestamp()) < lottery.end_time as u32,
+            env::block_timestamp() < lottery.end_time,
             "{}",
             ERR31_LOTTERY_IS_OVER
         );
@@ -501,12 +481,19 @@ impl NearLott {
             ERR17_LOTTERY_IS_NOT_OPEN
         );
 
+        assert!(
+            env::block_timestamp() >= lottery.end_time,
+            "{}",
+            ERR40_CURRENTY_TIME_LESS_END_TIME
+        );
+
         // mark the next id
         lottery.first_ticket_id_next_lottery = data.current_ticket_id;
 
         // random winning number
         let final_number = get_random_number();
         data.random_result = final_number;
+        data.permission_update = PermissionUpdateState::Allow;
         lottery.status = Status::Close;
         data._lotteries.insert(&_lottery_id, &lottery);
 
