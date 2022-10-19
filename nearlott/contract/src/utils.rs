@@ -67,6 +67,18 @@ pub(crate) fn _calculate_total_price_for_bulk_tickets(
 }
 
 /**
+ * @notice Calculate the number of ticket in a lottery id
+ * @param _discount_divisor: divisor for the discount (the smaller it is, the greater the discount is)
+ * @param _price_ticket: price of a ticket
+ */
+pub(crate) fn _calculate_number_of_tickets(
+    _number_tickets_per_lottery: u128,
+    near_per_bracket: u128,
+) -> u128 {
+    _number_tickets_per_lottery / near_per_bracket
+}
+
+/**
  * @notice Calculate rewards for a given ticket
  * @param _lottery_id: lottery id
  * @param _ticket_id: ticket id
@@ -144,10 +156,8 @@ pub(crate) fn get_random_number() -> u32 {
 pub(crate) fn random_position() -> Vec<u8> {
     let positions = env::random_seed();
     if positions.len() > 15 {
-        let slice: Vec<u8> = positions[0..15].iter()
-        .map(|x| x%9)
-        .collect();
-       return slice;
+        let slice: Vec<u8> = positions[0..15].iter().map(|x| x % 9).collect();
+        return slice;
     }
     positions
 }

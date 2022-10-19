@@ -229,7 +229,7 @@ impl NearLott {
                 max_number_tickets_per_buy_or_claim: 12,
                 pending_injection_next_lottery: 0,
                 min_discount_divisor: 300,
-                max_treasury_fee: 3000,     // 30%
+                max_treasury_fee: 3000, // 30%
                 _lotteries: UnorderedMap::new(StorageKey::Lotteries),
                 _tickets: UnorderedMap::new(StorageKey::Tickets),
                 _bracket_calculator: brackets,
@@ -424,7 +424,6 @@ mod tests {
         assert_eq!(data.max_number_tickets_per_buy_or_claim, 1000);
     }
 
-
     #[test]
     pub fn test_get_contract_info() {
         let (_, contract) = setup_contract();
@@ -512,10 +511,10 @@ mod tests {
             .predecessor_account_id(accounts(2))
             .attached_deposit(1000000000000000000000000)
             .build());
-        contract.buy_tickets(
-            current_lottery_id,
-            vec![1292877],
-        );
+        contract.buy_tickets(current_lottery_id, vec![1292877]);
+
+        let number_of_tickets = contract.view_number_tickets_per_lottery(current_lottery_id);
+        assert_eq!(number_of_tickets, 1);
 
         let ticket_number = 1292877;
         let key_bracket1 = 1 + (ticket_number % 10);
@@ -584,7 +583,7 @@ mod tests {
             .build());
 
         let data = contract.data();
-        let start_time = 162615600000000;
+        let start_time = env::block_timestamp();
         let end_time = start_time + 123456788 as u64 + 1;
 
         testing_env!(context.predecessor_account_id(accounts(2)).build());
@@ -603,10 +602,7 @@ mod tests {
             .predecessor_account_id(accounts(2))
             .attached_deposit(1000000000000000000000000)
             .build());
-        contract.buy_tickets(
-            current_lottery_id,
-            vec![1292877],
-        );
+        contract.buy_tickets(current_lottery_id, vec![1292877]);
 
         //// buy ticket 2
         testing_env!(context
@@ -618,10 +614,7 @@ mod tests {
             .predecessor_account_id(accounts(3))
             .attached_deposit(1999000000000000000000000)
             .build());
-        contract.buy_tickets(
-            current_lottery_id,
-            vec![1292876, 1292871],
-        );
+        contract.buy_tickets(current_lottery_id, vec![1292876, 1292871]);
 
         let data = contract.data();
         let current_lottery_id = contract.data().current_lottery_id;
@@ -653,7 +646,7 @@ mod tests {
                 1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 4, 5, 6, 7, 8, 9, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9,
                 1, 2, 4, 5
             ])
-            .block_timestamp(111 + 1)
+            .block_timestamp(end_time + 5000)
             .build());
         contract.close_lottery(current_lottery_id);
 
@@ -727,7 +720,7 @@ mod tests {
 
         testing_env!(context.predecessor_account_id(accounts(2)).build());
         contract.start_lottery(
-            end_time,
+            start_time,
             Some(U128(1000000000000000000000000)),
             Some(U128(2000)),
             vec![125, 375, 750, 1250, 2500, 5000],
@@ -741,10 +734,7 @@ mod tests {
             .predecessor_account_id(accounts(2))
             .attached_deposit(1000000000000000000000000)
             .build());
-        contract.buy_tickets(
-            current_lottery_id,
-            vec![1302877],
-        );
+        contract.buy_tickets(current_lottery_id, vec![1302877]);
         // check amount_collected_in_near
         let data2 = contract.data();
         let lottery2 = data2._lotteries.get(&current_lottery_id).unwrap();
@@ -754,10 +744,7 @@ mod tests {
             .predecessor_account_id(accounts(2))
             .attached_deposit(1999000000000000000000000)
             .build());
-        contract.buy_tickets(
-            current_lottery_id,
-            vec![1292877, 1292837],
-        );
+        contract.buy_tickets(current_lottery_id, vec![1292877, 1292837]);
         let data3 = contract.data();
         let lottery3 = data3._lotteries.get(&current_lottery_id).unwrap();
         assert_eq!(lottery3.amount_collected_in_near, 2999000000000000000000000);
@@ -802,11 +789,12 @@ mod tests {
             .build());
 
         let data = contract.data();
-        let start_time = 162615600000000;
+        let start_time = env::block_timestamp();
         let end_time = start_time + 12345678 as u64 + 1;
 
         testing_env!(context
             .predecessor_account_id(accounts(2))
+            .block_timestamp(start_time)
             .attached_deposit(1)
             .build());
         contract.start_lottery(
@@ -823,14 +811,12 @@ mod tests {
             .predecessor_account_id(accounts(2))
             .attached_deposit(4792800000000000000000000)
             .build());
-        contract.buy_tickets(
-            current_lottery_id,
-            vec![1039219, 1106409, 1192039, 1000699],
-        );
+        contract.buy_tickets(current_lottery_id, vec![1039219, 1106409, 1192039, 1000699]);
 
         // close lottery
         testing_env!(context
             .predecessor_account_id(accounts(2))
+            .block_timestamp(end_time + 5000)
             .attached_deposit(1)
             .build());
         contract.close_lottery(current_lottery_id);
@@ -966,11 +952,12 @@ mod tests {
             .build());
 
         let data = contract.data();
-        let start_time = 162615600000000;
-        let end_time = start_time + 12345678 as u64 + 1;
+        let start_time = env::block_timestamp();
+        let end_time = start_time + 123456789 as u64 + 1;
 
         testing_env!(context
             .predecessor_account_id(accounts(2))
+            .block_timestamp(start_time)
             .attached_deposit(1)
             .build());
         contract.start_lottery(
@@ -984,17 +971,16 @@ mod tests {
         // buy ticket 1
         testing_env!(context
             .predecessor_account_id(accounts(2))
+            .block_timestamp(start_time + 5000)
             .attached_deposit(12u128 * 10u128.pow(23))
             .build());
 
-        contract.buy_tickets(
-            current_lottery_id,
-            vec![1039219],
-        );
+        contract.buy_tickets(current_lottery_id, vec![1039219]);
 
         //// close lottery
         testing_env!(context
             .predecessor_account_id(accounts(2))
+            .block_timestamp(end_time)
             .attached_deposit(1)
             .build());
         contract.close_lottery(current_lottery_id);
@@ -1024,12 +1010,12 @@ mod tests {
             .build());
 
         let data = contract.data();
-        let start_time = 162615600000000;
+        let start_time = env::block_timestamp();
         let end_time = start_time + 12345678 as u64 + 1;
 
         testing_env!(context
             .predecessor_account_id(accounts(2))
-            .block_timestamp(1662562383)
+            .block_timestamp(start_time + 5000)
             .build());
         contract.start_lottery(
             end_time,
@@ -1040,6 +1026,10 @@ mod tests {
         );
 
         // running close lottery
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .block_timestamp(end_time + 5000)
+            .build());
         let current_lottery_id = contract.data().current_lottery_id;
         contract.close_lottery(current_lottery_id);
 
@@ -1101,7 +1091,7 @@ mod tests {
         println!("random_positions: {:?}", random_positions);
         assert_eq!(
             random_positions,
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 4, 5, 6, 7]
+            [1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 4, 5, 6, 7]
         );
     }
     #[test]
@@ -1141,10 +1131,7 @@ mod tests {
             .attached_deposit(12u128 * 10u128.pow(23))
             .build());
 
-        contract.buy_tickets(
-            current_lottery_id,
-            vec![1039219],
-        );
+        contract.buy_tickets(current_lottery_id, vec![1039219]);
 
         let view_user_info =
             contract.view_user_info_for_lottery_id(accounts(2), current_lottery_id, 0, 25);
