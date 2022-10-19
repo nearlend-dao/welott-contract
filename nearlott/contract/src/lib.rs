@@ -1243,4 +1243,41 @@ mod tests {
             contract.calculate_total_price_for_bulk_tickets(current_lottery_id, 10);
         assert_eq!(final_2_ticket_price, (12 * 10u128.pow(23) * 10)); // 12 Near
     }
+
+    #[test]
+    #[should_panic(expected = "E38: The lottery is running. Could not change any configuration.")]
+    fn test_permission_running() {
+        let (mut context, mut contract) = setup_contract();
+        // call owner
+        testing_env!(context
+            .predecessor_account_id(accounts(0))
+            .attached_deposit(1)
+            .build());
+
+        let data = contract.data();
+        let start_time = env::block_timestamp();
+        let end_time = start_time + 12345678 as u64 + 1;
+
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
+        // start lottery
+        contract.start_lottery(
+            end_time,
+            Some(U128(12u128 * 10u128.pow(23))), //1.2 in NEAR
+            Some(U128(2000)),
+            vec![125, 375, 750, 1250, 2500, 5000],
+            Some(U128(2000)),
+        );
+
+        // start lottery the seconds time
+        contract.start_lottery(
+            end_time,
+            Some(U128(12u128 * 10u128.pow(23))), //1.2 in NEAR
+            Some(U128(0)),
+            vec![125, 375, 750, 1250, 2500, 5000],
+            Some(U128(2000)),
+        );
+    }
 }
