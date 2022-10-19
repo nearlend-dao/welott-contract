@@ -3,7 +3,7 @@ NETWORK=testnet
 SUFFIX=testnet
 
 MASTER_ACC=lamns1.$NETWORK
-CONTRACT_ACC=welott.$MASTER_ACC
+CONTRACT_ACC=welott4.$MASTER_ACC
 OWNER=$MASTER_ACC
 TREASURY_ACC=lamns1.$NETWORK
 INJECTOR_ACC=lamns1.$NETWORK
@@ -18,12 +18,6 @@ export NEAR_ENV=$NETWORK
 # echo "########################### GET CURRENT TIMESTAMP #########################"
 # near view $CONTRACT_ACC get_current_timestamp ''
 
-echo "######################## CLOSE ROUND #############################"
-near call $CONTRACT_ACC --accountId=$OWNER close_lottery '{
-    "_lottery_id": 1
-}' --depositYocto=1
-
-
 echo "########################### START ROUND #########################"
 # end_time=$(($(date +%s) + 24*60*60))
 end_time=$(($(date +%s) + 6*60*60))
@@ -35,42 +29,42 @@ near call $CONTRACT_ACC --accountId=$OWNER start_lottery '{
     "_treasury_fee": "2000"
 }' --depositYocto=1
 
-echo "####################### GET CURRENT ROUND ID #########################"
-near view $CONTRACT_ACC view_latest_lottery_id ''
+# echo "####################### GET CURRENT ROUND ID #########################"
+# near view $CONTRACT_ACC view_latest_lottery_id ''
 
-echo "######################## GET DETAIL CURRENT ROUND #########################"
-near view $CONTRACT_ACC view_current_lottery_running ''
+# echo "######################## GET DETAIL CURRENT ROUND #########################"
+# near view $CONTRACT_ACC view_current_lottery_running ''
 
-echo "####################### GET CURRENT ROUND ID #########################"
-near view $CONTRACT_ACC view_lottery '{
-    "_lottery_id": 2
-}'
+# echo "####################### GET CURRENT ROUND ID #########################"
+# near view $CONTRACT_ACC view_lottery '{
+#     "_lottery_id": 2
+# }'
 
 
-echo "######################## CHECK PRICES FOR BUY TICKETS #################################"
-near view $CONTRACT_ACC calculate_total_price_for_bulk_tickets '{
-    "_lottery_id": 2,
-    "_number_tickets": 5
-}'
+# echo "######################## CHECK PRICES FOR BUY TICKETS #################################"
+# near view $CONTRACT_ACC calculate_total_price_for_bulk_tickets '{
+#     "_lottery_id": 2,
+#     "_number_tickets": 5
+# }'
 
-echo "######################## BUY TICKETS #################################"
-near call $CONTRACT_ACC --accountId=$OWNER buy_tickets '{
-    "_lottery_id": 2,
-    "_ticket_numbers":[1233145,1233146,1233141,1233142,1233143]
-}' --deposit=4.99
+# echo "######################## BUY TICKETS #################################"
+# near call $CONTRACT_ACC --accountId=$OWNER buy_tickets '{
+#     "_lottery_id": 2,
+#     "_ticket_numbers":[1233145,1233146,1233141,1233142,1233143]
+# }' --deposit=4.99
 
-echo "######################## GET DETAIL CURRENT ROUND #########################"
-near view $CONTRACT_ACC view_number_tickets_per_lottery '{
-    "_lottery_id": 2
-}'
+# echo "######################## GET DETAIL CURRENT ROUND #########################"
+# near view $CONTRACT_ACC view_number_tickets_per_lottery '{
+#     "_lottery_id": 2
+# }'
 
-echo "####################### VIEW TICKETS #################################"
-near view $CONTRACT_ACC  view_user_info_for_lottery_id '{
-    "_user": "'$OWNER'",
-    "_lottery_id": 2,
-    "_cursor": 0,
-    "_size": 100
-}' 
+# echo "####################### VIEW TICKETS #################################"
+# near view $CONTRACT_ACC  view_user_info_for_lottery_id '{
+#     "_user": "'$OWNER'",
+#     "_lottery_id": 2,
+#     "_cursor": 0,
+#     "_size": 100
+# }' 
 
 
 # echo "######################## CLOSE ROUND #############################"
