@@ -43,7 +43,6 @@ pub type BracketPosition = u32;
 #[derive(Debug, BorshSerialize, BorshDeserialize, Serialize, Deserialize, Eq, PartialEq, Clone)]
 #[serde(crate = "near_sdk::serde")]
 pub enum Status {
-    Pending,
     Open,
     Close,
     Claimable,
@@ -52,7 +51,6 @@ pub enum Status {
 impl fmt::Display for Status {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Status::Pending => write!(f, "Pending"),
             Status::Open => write!(f, "Open"),
             Status::Close => write!(f, "Close"),
             Status::Claimable => write!(f, "Claimable"),
@@ -63,6 +61,7 @@ impl fmt::Display for Status {
 #[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Lottery {
+    pub lottery_id: LotteryId,
     pub status: Status,
     pub start_time: Timestamp,
     pub end_time: Timestamp,
@@ -81,6 +80,7 @@ pub struct Lottery {
 impl Default for Lottery {
     fn default() -> Self {
         Self {
+            lottery_id: 0,
             status: Status::Open,
             start_time: 0,
             end_time: 0,

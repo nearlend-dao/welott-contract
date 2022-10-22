@@ -58,11 +58,13 @@ impl NearLott {
     // Assert a lottery running
     pub fn assert_lottery_running(&self) {
         let data = self.data();
-        assert!(
-            data.permission_update == PermissionUpdateState::Allow,
-            "{}",
-            ERR38_DISALLOW_UPDATE
-        );
-    }
+        if data.current_lottery_id != 0 {
+            let lottery = data
+                ._lotteries
+                .get(&data.current_lottery_id)
+                .expect(ERR1_NOT_EXISTING_LOTTERY);
 
+            assert!(lottery.status != Status::Open, "{}", ERR38_DISALLOW_UPDATE);
+        }
+    }
 }

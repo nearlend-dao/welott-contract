@@ -127,7 +127,7 @@ pub(crate) fn _calculate_rewards_for_ticket_id(
 pub(crate) fn get_random_number() -> u32 {
     // generate 15 number position with random position from [1..9]
     let random: Vec<u8> = random_position();
-    assert!(random.len() >= 15, "{}", ERR37_NOT_ENOUGH_RANDOM_NUMBERS);
+    assert!(random.len() >= 10, "{}", ERR37_NOT_ENOUGH_RANDOM_NUMBERS);
     // Specific position to get values. Random_seeds defauls return to 32 number in a vector<u8>.
     let rand_array: Vec<u8> = random
         .into_iter()
@@ -155,8 +155,8 @@ pub(crate) fn get_random_number() -> u32 {
  */
 pub(crate) fn random_position() -> Vec<u8> {
     let positions = env::random_seed();
-    if positions.len() > 15 {
-        let slice: Vec<u8> = positions[0..15].iter().map(|x| x % 9).collect();
+    if positions.len() > 10 {
+        let slice: Vec<u8> = positions[0..10].iter().map(|x| x % 9).collect();
         return slice;
     }
     positions
