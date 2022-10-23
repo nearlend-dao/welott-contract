@@ -826,11 +826,11 @@ mod tests {
         contract.draw_final_number_and_make_lottery_claimable(current_lottery_id, true);
 
         // view numbers and status for ticket ids
-        let tk_numbers = contract.view_numbers_and_statuses_for_ticket_ids(vec![0, 1, 2, 3]);
+        let tk_numbers =
+            contract.view_numbers_and_statuses_for_ticket_ids(vec![0, 1, 2, 3], current_lottery_id);
         assert_eq!(tk_numbers.ticket_numbers.len(), 4);
         assert!(tk_numbers.ticket_numbers.contains(&1192039));
         assert_eq!(tk_numbers.ticket_status.len(), 4);
-        assert!(tk_numbers.ticket_status.contains(&false));
         println!("Winning number: {}", contract.data().random_result);
         println!("Ticket numbers: {:?}", tk_numbers.ticket_numbers);
         println!("Ticket statuses: {:?}", tk_numbers.ticket_status);
@@ -864,7 +864,8 @@ mod tests {
         assert_eq!(couting_winners_brackets[5], 0);
 
         // view status a list of tickets
-        let status_tickets = contract.view_numbers_and_statuses_for_ticket_ids(vec![0, 1, 2, 3]);
+        let status_tickets =
+            contract.view_numbers_and_statuses_for_ticket_ids(vec![0, 1, 2, 3], current_lottery_id);
         println!("status_tickets: {:?}", status_tickets);
 
         //Claim tickets
@@ -914,8 +915,15 @@ mod tests {
         }
 
         // view status ticket after claimed
-        let status_tickets = contract.view_numbers_and_statuses_for_ticket_ids(vec![0, 1, 2, 3]);
+        let status_tickets =
+            contract.view_numbers_and_statuses_for_ticket_ids(vec![0, 1, 2, 3], current_lottery_id);
+        let view_user_info_for_lottery_id =
+            contract.view_user_info_for_lottery_id(accounts(2), current_lottery_id, 0, 100);
         println!("status_tickets: {:?}", status_tickets);
+        println!(
+            "view_user_info_for_lottery_id: {:?}",
+            view_user_info_for_lottery_id
+        );
     }
 
     /// Test utiles functions

@@ -146,6 +146,21 @@ pub(crate) fn get_random_number() -> u32 {
     // determine final number
     let win_number = (1000000 + (randomness % 1000000)) as u32;
 
+    // write log
+    env::log_str(
+        &json!({
+            "type": "draw_final_number_process",
+            "params": {
+                "block_height": env::block_height(),
+                "vrf_numbers": env::random_seed(),
+                "current_timestamp": env::block_timestamp(),
+                "ten_vrf_numbers": randomness_instr,
+                "logic": "(1000000 + (vrf_final_string % 1000000))",
+                "final_number":  win_number,
+            }
+        })
+        .to_string(),
+    );
     // return
     win_number
 }

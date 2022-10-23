@@ -7,7 +7,7 @@ use near_sdk::serde::{Deserialize, Serialize};
 pub struct LotteryUserData {
     pub lottery_ticket_ids: Vec<TicketId>,
     pub ticket_numbers: Vec<u32>,
-    pub ticket_status: Vec<bool>,
+    pub ticket_status: Vec<TicketStatus>,
     pub cursor: u32,
 }
 
@@ -15,7 +15,16 @@ pub struct LotteryUserData {
 #[serde(crate = "near_sdk::serde")]
 pub struct LotteryNumberAndStatusData {
     pub ticket_numbers: Vec<u32>,
-    pub ticket_status: Vec<bool>,
+    pub ticket_status: Vec<TicketStatus>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(crate = "near_sdk::serde")]
+pub enum TicketStatus {
+    Undetermined,
+    Lose,
+    Claimable,
+    Claimed,
 }
 
 /// User account on this contract
@@ -189,7 +198,9 @@ impl NearLott {
         }
         let mut lottery_ticket_ids = vec![0; length as usize];
         let mut ticket_numbers = vec![0; length as usize];
-        let mut ticket_statuses = vec![false; length as usize];
+        let mut ticket_statuses = vec![TicketStatus::Undetermined; length as usize];
+
+        let _brackets = vec![5, 4, 3, 2, 1, 0];
         for i in 0..length {
             lottery_ticket_ids[i as usize] = tickets_in_a_lottery[(i + _cursor) as usize];
             let ticket_number = self
@@ -203,9 +214,25 @@ impl NearLott {
             ticket_numbers[i as usize] = ticket_number.number;
 
             if ticket_number.owner == AccountId::new_unchecked(ZERO_ADDRESS_WALLET.to_string()) {
-                ticket_statuses[i as usize] = true;
+                ticket_statuses[i as usize] = TicketStatus::Claimed;
             } else {
-                ticket_statuses[i as usize] = false;
+                // check win or lose
+                // get reward for speficic ticketid and each bracket
+                let mut rewards_per_bracket = 0;
+                for bracket_position in 0.._brackets.len() {
+                    let reward_for_ticket_id = _calculate_rewards_for_ticket_id(
+                        self.data(),
+                        _lottery_id,
+                        lottery_ticket_ids[i as usize],
+                        _brackets[bracket_position],
+                    );
+                    rewards_per_bracket += reward_for_ticket_id;
+                }
+                if rewards_per_bracket > 0 {
+                    ticket_statuses[i as usize] = TicketStatus::Claimable;
+                } else {
+                    ticket_statuses[i as usize] = TicketStatus::Lose;
+                }
             }
         }
 
@@ -224,11 +251,13 @@ impl NearLott {
     pub fn view_numbers_and_statuses_for_ticket_ids(
         &self,
         _ticket_ids: Vec<TicketId>,
+        _lottery_id: LotteryId,
     ) -> LotteryNumberAndStatusData {
         let length = _ticket_ids.len();
         let mut ticket_numbers = vec![0; length];
-        let mut ticket_statuses = vec![false; length];
+        let mut ticket_statuses = vec![TicketStatus::Undetermined; length];
 
+        let _brackets = vec![5, 4, 3, 2, 1, 0];
         for i in 0..length {
             let ticket_number = self
                 .data()
@@ -240,9 +269,23 @@ impl NearLott {
                 });
 
             if ticket_number.owner == AccountId::new_unchecked(ZERO_ADDRESS_WALLET.to_string()) {
-                ticket_statuses[i as usize] = true;
+                ticket_statuses[i as usize] = TicketStatus::Claimed;
             } else {
-                ticket_statuses[i as usize] = false;
+                let mut rewards_per_bracket = 0;
+                for bracket_position in 0.._brackets.len() {
+                    let reward_for_ticket_id = _calculate_rewards_for_ticket_id(
+                        self.data(),
+                        _lottery_id,
+                        _ticket_ids[i as usize],
+                        _brackets[bracket_position],
+                    );
+                    rewards_per_bracket += reward_for_ticket_id;
+                }
+                if rewards_per_bracket > 0 {
+                    ticket_statuses[i as usize] = TicketStatus::Claimable;
+                } else {
+                    ticket_statuses[i as usize] = TicketStatus::Lose;
+                }
             }
             ticket_numbers[i as usize] = ticket_number.number;
         }

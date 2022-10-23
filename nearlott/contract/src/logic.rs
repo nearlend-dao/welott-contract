@@ -119,6 +119,9 @@ impl NearLott {
             "{}",
             ERR30_LOTTERY_IS_NOT_CLOSE
         );
+        let mut final_number = get_random_number();
+        final_number = 1327419u32;
+        data.random_result = final_number;
 
         // Calculate the finalNumber based on the randomResult generated
         let _final_number = data.random_result as u32;
@@ -186,10 +189,12 @@ impl NearLott {
         data._lotteries.insert(&_lottery_id, &lottery);
 
         if _auto_injection {
+            // incase there is no one won, we automatically get the number of shares winner per breakdown to pending injector next lottery
             data.pending_injection_next_lottery = _amount_to_withdraw_to_treasury;
             _amount_to_withdraw_to_treasury = 0;
         }
 
+        // the fee of the protocol is calcualted by colllected in near minus the amount to share to winners.
         _amount_to_withdraw_to_treasury = _amount_to_withdraw_to_treasury
             + (lottery.amount_collected_in_near - _amount_to_share_to_winners);
 
@@ -200,7 +205,6 @@ impl NearLott {
             &json!({
                 "type": "draw_final_number_and_make_lottery_claimable",
                 "params": {
-                    "current_lottery_id": data.current_lottery_id,
                     "final_number":  _final_number,
                     "number_address_in_previous_bracket": U128(_number_addresses_in_previous_bracket),
                     "amount_to_withdraw_to_treasury": U128(_amount_to_withdraw_to_treasury),
@@ -383,10 +387,8 @@ impl NearLott {
 
         // Initializes the reward_in_near_to_transfer
         let mut reward_in_near_to_transfer = 0;
-        let _brackets = vec![0, 1, 2, 3, 4, 5];
+        let _brackets = vec![5, 4, 3, 2, 1, 0];
         for i in 0..user_lottery_tickets_ids.len() {
-            assert!(_brackets[i] < 6, "{}", ERR24_BRACKETS_OUT_RANGE); // Must be between 0 and 5
-
             let this_ticket_id = user_lottery_tickets_ids[i];
 
             assert!(
@@ -411,16 +413,27 @@ impl NearLott {
                 ERR27_LOTTERY_CLAIM_TICKET_NOT_OWNER
             );
 
-            // Update the lottery ticket owner to 0x address
-            ticket.owner = AccountId::new_unchecked(ZERO_ADDRESS_WALLET.to_string());
-            data._tickets.insert(&this_ticket_id, &ticket);
+            for j in 0.._brackets.len() {
+                assert!(_brackets[j] < 6, "{}", ERR24_BRACKETS_OUT_RANGE); // Must be between 0 and 5
 
-            // get reward for speficic ticketid and each bracket
-            let reward_for_ticket_id =
-                _calculate_rewards_for_ticket_id(data, _lottery_id, this_ticket_id, _brackets[i]);
+                // Update the lottery ticket owner to 0x address
+                ticket.owner = AccountId::new_unchecked(ZERO_ADDRESS_WALLET.to_string());
+                data._tickets.insert(&this_ticket_id, &ticket);
 
-            // Increment the reward to transfer
-            reward_in_near_to_transfer += reward_for_ticket_id;
+                // get reward for speficic ticketid and each bracket
+                let reward_for_ticket_id = _calculate_rewards_for_ticket_id(
+                    data,
+                    _lottery_id,
+                    this_ticket_id,
+                    _brackets[i],
+                );
+
+                // Increment the reward to transfer
+                if reward_for_ticket_id > 0 {
+                    reward_in_near_to_transfer += reward_for_ticket_id;
+                    break;
+                }
+            }
         }
 
         // Transfer money to msg.sender
@@ -475,9 +488,6 @@ impl NearLott {
         lottery.first_ticket_id_next_lottery = data.current_ticket_id;
 
         // random winning number
-        // let final_number = get_random_number();
-        let final_number = 1123456u32;
-        data.random_result = final_number;
         data.permission_update = PermissionUpdateState::Allow;
         lottery.status = Status::Close;
         data._lotteries.insert(&_lottery_id, &lottery);
