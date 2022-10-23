@@ -56,6 +56,7 @@ impl NearLott {
         data._lotteries.insert(
             &next_lottery_id,
             &Lottery {
+                lottery_id: data.current_lottery_id,
                 status: Status::Open,
                 start_time: env::block_timestamp(),
                 end_time: _end_time,
@@ -110,20 +111,14 @@ impl NearLott {
         let data = self.data_mut();
         let mut lottery = data
             ._lotteries
-            .get(&data.current_lottery_id)
+            .get(&_lottery_id)
             .expect(ERR1_NOT_EXISTING_LOTTERY);
-
+    
         assert_eq!(
             lottery.status,
             Status::Close,
             "{}",
             ERR30_LOTTERY_IS_NOT_CLOSE
-        );
-
-        assert_eq!(
-            _lottery_id, data.current_lottery_id,
-            "{}",
-            ERR18_LOTTERY_FINAL_NUMBER_NOT_DRAWN
         );
 
         // Calculate the finalNumber based on the randomResult generated
@@ -137,45 +132,50 @@ impl NearLott {
         // Initializes the amount to withdraw to treasury
         let mut _amount_to_withdraw_to_treasury: u128 = 0;
 
-        // Calculate prizes in NEAR for each bracket by starting from the highest one
-        for i in 0..6 {
-            let j = 5 - i;
-
-            let bracket_number = data
-                ._bracket_calculator
-                .get(&j)
-                .expect(ERR3_NOT_EXISTING_BRACKET);
-            let _transformed_winning_number = bracket_number + (_final_number % (10u32.pow(j + 1)));
+        if lottery.first_ticket_id_next_lottery - lottery.first_ticket_id > 0 {
             let number_tickets_per_lottery = data
                 ._number_tickers_per_lottery_id
                 .get(&_lottery_id)
                 .expect(ERR19_LOTTERY_NO_TICKERS_NUMBERS);
 
-            let number_ticket_in_winning_number = number_tickets_per_lottery
-                .get(&_transformed_winning_number)
-                .unwrap_or(0);
+            // Calculate prizes in NEAR for each bracket by starting from the highest one
+            for i in 0..6 {
+                let j = 5 - i;
 
-            lottery.count_winners_per_bracket[j as usize] =
-                number_ticket_in_winning_number - _number_addresses_in_previous_bracket;
+                let bracket_number = data
+                    ._bracket_calculator
+                    .get(&j)
+                    .expect(ERR3_NOT_EXISTING_BRACKET);
+                let _transformed_winning_number =
+                    bracket_number + (_final_number % (10u32.pow(j + 1)));
 
-            // A. If number of users for this _bracket number is superior to 0
-            if (number_ticket_in_winning_number - _number_addresses_in_previous_bracket) != 0 {
-                // B. If rewards at this bracket are > 0, calculate, else, report the numberAddresses from previous bracket
-                // rewardsBreakdown / total (10000) * amount_to_shared_to_winner / (total bracket winner - previous bracket received. Winner lower bracket does not calculate in higher bracket
-                if lottery.rewards_breakdown[j as usize] != 0 {
-                    lottery.near_per_bracket[j as usize] =
-                        ((lottery.rewards_breakdown[j as usize] * _amount_to_share_to_winners)
-                            / (number_ticket_in_winning_number
-                                - _number_addresses_in_previous_bracket))
+                let number_ticket_in_winning_number = number_tickets_per_lottery
+                    .get(&_transformed_winning_number)
+                    .unwrap_or(0);
+
+                lottery.count_winners_per_bracket[j as usize] =
+                    number_ticket_in_winning_number - _number_addresses_in_previous_bracket;
+
+                // A. If number of users for this _bracket number is superior to 0
+                if (number_ticket_in_winning_number - _number_addresses_in_previous_bracket) != 0 {
+                    // B. If rewards at this bracket are > 0, calculate, else, report the numberAddresses from previous bracket
+                    // rewardsBreakdown / total (10000) * amount_to_shared_to_winner / (total bracket winner - previous bracket received. Winner lower bracket does not calculate in higher bracket
+                    if lottery.rewards_breakdown[j as usize] != 0 {
+                        lottery.near_per_bracket[j as usize] =
+                            ((lottery.rewards_breakdown[j as usize] * _amount_to_share_to_winners)
+                                / (number_ticket_in_winning_number
+                                    - _number_addresses_in_previous_bracket))
+                                / 10000;
+                        // Update numberAddressesInPreviousBracket
+                        _number_addresses_in_previous_bracket = number_ticket_in_winning_number;
+                    }
+                    // A. No NEAR to distribute, they are added to the amount to withdraw to treasury address
+                } else {
+                    lottery.near_per_bracket[j as usize] = 0;
+                    _amount_to_withdraw_to_treasury = _amount_to_withdraw_to_treasury
+                        + (lottery.rewards_breakdown[j as usize] * _amount_to_share_to_winners)
                             / 10000;
-                    // Update numberAddressesInPreviousBracket
-                    _number_addresses_in_previous_bracket = number_ticket_in_winning_number;
                 }
-                // A. No NEAR to distribute, they are added to the amount to withdraw to treasury address
-            } else {
-                lottery.near_per_bracket[j as usize] = 0;
-                _amount_to_withdraw_to_treasury = _amount_to_withdraw_to_treasury
-                    + (lottery.rewards_breakdown[j as usize] * _amount_to_share_to_winners) / 10000;
             }
         }
 
@@ -491,7 +491,8 @@ impl NearLott {
         lottery.first_ticket_id_next_lottery = data.current_ticket_id;
 
         // random winning number
-        let final_number = get_random_number();
+        // let final_number = get_random_number();
+        let final_number = 1123456u32;
         data.random_result = final_number;
         data.permission_update = PermissionUpdateState::Allow;
         lottery.status = Status::Close;

@@ -83,6 +83,20 @@ impl NearLott {
         lottery
     }
 
+    pub fn view_lotteries(
+        &self,
+        _cursor: Option<u64>,
+        _size: Option<u64>,
+    ) -> Vec<Lottery> {
+        let values = self.data()
+        ._lotteries.values_as_vector();
+        let from_index = _cursor.unwrap_or(0);
+        let limit = _size.unwrap_or(values.len());
+        (from_index..std::cmp::min(values.len(), from_index + limit))
+            .map(|index| values.get(index).unwrap().into())
+            .collect()
+    }
+
     /**
      * @notice View lottery information
      * @param _lottery_id: lottery id
