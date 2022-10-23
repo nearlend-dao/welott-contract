@@ -20,7 +20,7 @@ export NEAR_ENV=$NETWORK
 
 # near view $CONTRACT_ACC view_number_tickets_per_lottery '{"_lottery_id": 1}'
 
-near view $CONTRACT_ACC view_lotteries '{"_cursor": 0, "_size": 10}'
+near view $CONTRACT_ACC view_lotteries '{"_cursor": 0, "_size": 50}'
 
 
 near view $CONTRACT_ACC get_current_timestamp ''
