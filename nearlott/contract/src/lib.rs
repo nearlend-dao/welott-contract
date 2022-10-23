@@ -835,7 +835,7 @@ mod tests {
         println!("Ticket numbers: {:?}", tk_numbers.ticket_numbers);
         println!("Ticket statuses: {:?}", tk_numbers.ticket_status);
 
-        // view rewards for ticket: ticketId: 0, bracket: 0
+        // view rewards for ticket: ticketId: 3, bracket: 0
         let rewards_for_ticket = contract.view_rewards_for_ticket_id(current_lottery_id, 3, 0);
         assert_eq!(rewards_for_ticket, 15976000000000000000000);
         println!("rewards_for_ticket: {:?}", rewards_for_ticket);
@@ -856,15 +856,19 @@ mod tests {
         // number of winners per brackets
         let couting_winners_brackets = lottery.count_winners_per_bracket;
         assert_eq!(couting_winners_brackets.len(), 6);
-        assert_eq!(couting_winners_brackets[0], 3);
-        assert_eq!(couting_winners_brackets[1], 1);
+        assert_eq!(couting_winners_brackets[0], 3); // 1106409, 1192039, 1000699
+        assert_eq!(couting_winners_brackets[1], 1); // 1039219
         assert_eq!(couting_winners_brackets[2], 0);
         assert_eq!(couting_winners_brackets[3], 0);
         assert_eq!(couting_winners_brackets[4], 0);
         assert_eq!(couting_winners_brackets[5], 0);
 
+        // view status a list of tickets
+        let status_tickets = contract.view_numbers_and_statuses_for_ticket_ids(vec![0, 1, 2, 3]);
+        println!("status_tickets: {:?}", status_tickets);
+
         //Claim tickets
-        contract.claim_tickets(current_lottery_id, vec![0, 1, 2, 3], vec![1, 0, 0, 0]);
+        contract.claim_tickets(current_lottery_id);
         // check rewards summary share share
         let data3 = contract.data();
 
@@ -908,6 +912,10 @@ mod tests {
                 AccountId::new_unchecked(ZERO_ADDRESS_WALLET.to_string())
             )
         }
+
+        // view status ticket after claimed
+        let status_tickets = contract.view_numbers_and_statuses_for_ticket_ids(vec![0, 1, 2, 3]);
+        println!("status_tickets: {:?}", status_tickets);
     }
 
     /// Test utiles functions

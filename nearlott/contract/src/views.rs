@@ -11,7 +11,7 @@ pub struct LotteryUserData {
     pub cursor: u32,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct LotteryNumberAndStatusData {
     pub ticket_numbers: Vec<u32>,

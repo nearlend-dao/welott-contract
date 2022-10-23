@@ -113,7 +113,6 @@ impl NearLott {
             ._lotteries
             .get(&_lottery_id)
             .expect(ERR1_NOT_EXISTING_LOTTERY);
-    
         assert_eq!(
             lottery.status,
             Status::Close,
@@ -347,48 +346,48 @@ impl NearLott {
      * @dev Callable by users only, not contract!
      */
     #[payable]
-    pub fn claim_tickets(
-        &mut self,
-        _lottery_id: LotteryId,
-        _ticket_ids: Vec<TicketId>,
-        _brackets: Vec<BracketPosition>,
-    ) {
+    pub fn claim_tickets(&mut self, _lottery_id: LotteryId) {
         self.assert_one_yoctor();
         self.assert_contract_running();
         let data = self.data_mut();
-        assert_eq!(
-            _ticket_ids.len(),
-            _brackets.len(),
-            "{}",
-            ERR20_LOTTERY_CLAIM_NOT_SAME_LENGTH
-        );
-
-        assert_ne!(_ticket_ids.len(), 0, "{}", ERR21_TICKETS__LENGTH);
-
-        assert!(
-            _ticket_ids.len() <= data.max_number_tickets_per_buy_or_claim as usize,
-            "{}",
-            ERR22_LOTTERY_CLAIM_TOO_MANY_TICKETS
-        );
-
+        // check lottery existing
         let lottery = data
             ._lotteries
             .get(&_lottery_id)
             .expect(ERR1_NOT_EXISTING_LOTTERY);
 
+        // Only allow claimming after drawing a winning number
         assert_eq!(
             lottery.status,
             Status::Claimable,
             "{}",
-            ERR23_LOTTERY_CLAIM_TOO_MANY_TICKETS
+            ERR23_LOTTERY_NOT_CLAMABLE
+        );
+
+        // get full tickets ids of a user
+        let account_id = env::predecessor_account_id();
+        let lotteries_user_list = data
+            ._user_ticket_ids_per_lottery_id
+            .get(&account_id)
+            .expect(ERR4_NOT_EXISTING_LOTTERIES_PER_USER);
+        let user_lottery_tickets_ids = lotteries_user_list
+            .get(&_lottery_id)
+            .expect(ERR2_NOT_EXISTING_TICKET);
+
+        assert_ne!(
+            user_lottery_tickets_ids.len(),
+            0,
+            "{}",
+            ERR21_TICKETS__LENGTH
         );
 
         // Initializes the reward_in_near_to_transfer
         let mut reward_in_near_to_transfer = 0;
-        for i in 0.._ticket_ids.len() {
+        let _brackets = vec![0, 1, 2, 3, 4, 5];
+        for i in 0..user_lottery_tickets_ids.len() {
             assert!(_brackets[i] < 6, "{}", ERR24_BRACKETS_OUT_RANGE); // Must be between 0 and 5
 
-            let this_ticket_id = _ticket_ids[i];
+            let this_ticket_id = user_lottery_tickets_ids[i];
 
             assert!(
                 lottery.first_ticket_id_next_lottery > this_ticket_id,
@@ -409,33 +408,17 @@ impl NearLott {
                 env::predecessor_account_id(),
                 ticket.owner,
                 "{}",
-                ERR25_LOTTERY_CLAIM_TICKET_TOO_HIGH
+                ERR27_LOTTERY_CLAIM_TICKET_NOT_OWNER
             );
 
             // Update the lottery ticket owner to 0x address
             ticket.owner = AccountId::new_unchecked(ZERO_ADDRESS_WALLET.to_string());
             data._tickets.insert(&this_ticket_id, &ticket);
 
+            // get reward for speficic ticketid and each bracket
             let reward_for_ticket_id =
                 _calculate_rewards_for_ticket_id(data, _lottery_id, this_ticket_id, _brackets[i]);
 
-            // Check user is claiming the correct bracket
-            assert_ne!(reward_for_ticket_id, 0, "{}", ERR28_LOTTERY_CLAIM_NO_PRIZE);
-
-            // check higher bracket if yes. the user should increase bracket value by 1
-            if _brackets[i] != 5 {
-                assert_eq!(
-                    _calculate_rewards_for_ticket_id(
-                        data,
-                        _lottery_id,
-                        this_ticket_id,
-                        _brackets[i] + 1
-                    ),
-                    0,
-                    "{}",
-                    ERR29_LOTTERY_CLAIM_BRACKET_MUST_BE_HIGHER
-                );
-            }
             // Increment the reward to transfer
             reward_in_near_to_transfer += reward_for_ticket_id;
         }
@@ -448,9 +431,10 @@ impl NearLott {
                 "type": "claim_ticket",
                 "params": {
                     "claimer": env::predecessor_account_id(),
-                    "transfer_amount":  U128(reward_in_near_to_transfer),
+                    "transfer_amount_in_reward":  U128(reward_in_near_to_transfer),
                     "current_lottery_id": _lottery_id,
-                    "ticket_ids_length": _ticket_ids.len(),
+                    "ticket_ids_length": user_lottery_tickets_ids.len(),
+                    "ticket_ids": user_lottery_tickets_ids,
                     "brackets_length": _brackets.len(),
                 }
             })
