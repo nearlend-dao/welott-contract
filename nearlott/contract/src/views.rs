@@ -83,13 +83,8 @@ impl NearLott {
         lottery
     }
 
-    pub fn view_lotteries(
-        &self,
-        _cursor: Option<u64>,
-        _size: Option<u64>,
-    ) -> Vec<Lottery> {
-        let values = self.data()
-        ._lotteries.values_as_vector();
+    pub fn view_lotteries(&self, _cursor: Option<u64>, _size: Option<u64>) -> Vec<Lottery> {
+        let values = self.data()._lotteries.values_as_vector();
         let from_index = _cursor.unwrap_or(0);
         let limit = _size.unwrap_or(values.len());
         (from_index..std::cmp::min(values.len(), from_index + limit))
@@ -171,14 +166,28 @@ impl NearLott {
         _size: u32,
     ) -> LotteryUserData {
         let mut length: u32 = _size;
-        let lotteries_user_tickets = self
-            .data()
-            ._user_ticket_ids_per_lottery_id
-            .get(&_user)
-            .expect(ERR4_NOT_EXISTING_LOTTERIES_PER_USER);
-        let tickets_in_a_lottery = lotteries_user_tickets
-            .get(&_lottery_id)
-            .expect(ERR1_NOT_EXISTING_LOTTERY);
+
+        let lotteries_user_tickets = self.data()._user_ticket_ids_per_lottery_id.get(&_user);
+        if lotteries_user_tickets.is_none() {
+            return LotteryUserData {
+                lottery_ticket_ids: vec![],
+                ticket_numbers: vec![],
+                ticket_status: vec![],
+                cursor: _cursor,
+            };
+        }
+
+        let user_tickets = lotteries_user_tickets.unwrap().get(&_lottery_id);
+        if user_tickets.is_none() {
+            return LotteryUserData {
+                lottery_ticket_ids: vec![],
+                ticket_numbers: vec![],
+                ticket_status: vec![],
+                cursor: _cursor,
+            };
+        }
+
+        let tickets_in_a_lottery = user_tickets.unwrap();
         let number_tickets_bought_at_lottery_id = tickets_in_a_lottery.len() as u32;
         if length > (number_tickets_bought_at_lottery_id - _cursor) {
             length = number_tickets_bought_at_lottery_id - _cursor;
