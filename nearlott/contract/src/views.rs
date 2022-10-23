@@ -166,25 +166,20 @@ impl NearLott {
         _size: u32,
     ) -> LotteryUserData {
         let mut length: u32 = _size;
-
+        let empty_user_info = LotteryUserData {
+            lottery_ticket_ids: vec![],
+            ticket_numbers: vec![],
+            ticket_status: vec![],
+            cursor: _cursor,
+        };
         let lotteries_user_tickets = self.data()._user_ticket_ids_per_lottery_id.get(&_user);
         if lotteries_user_tickets.is_none() {
-            return LotteryUserData {
-                lottery_ticket_ids: vec![],
-                ticket_numbers: vec![],
-                ticket_status: vec![],
-                cursor: _cursor,
-            };
+            return empty_user_info;
         }
 
         let user_tickets = lotteries_user_tickets.unwrap().get(&_lottery_id);
         if user_tickets.is_none() {
-            return LotteryUserData {
-                lottery_ticket_ids: vec![],
-                ticket_numbers: vec![],
-                ticket_status: vec![],
-                cursor: _cursor,
-            };
+            return empty_user_info;
         }
 
         let tickets_in_a_lottery = user_tickets.unwrap();
