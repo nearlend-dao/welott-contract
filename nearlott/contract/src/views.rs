@@ -88,7 +88,7 @@ impl NearLott {
         let from_index = _cursor.unwrap_or(0);
         let limit = _size.unwrap_or(values.len());
         (from_index..std::cmp::min(values.len(), from_index + limit))
-            .map(|index| values.get(index).unwrap().into())
+            .map(|index| values.get(values.len() - index - 1).unwrap().into())
             .collect()
     }
 
