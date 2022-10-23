@@ -1089,10 +1089,7 @@ mod tests {
 
         let random_positions = random_position();
         println!("random_positions: {:?}", random_positions);
-        assert_eq!(
-            random_positions,
-            [1, 2, 3, 4, 5, 6, 7, 8, 0, 1, 2, 4, 5, 6, 7]
-        );
+        assert_eq!(random_positions, [1, 2, 3, 4, 5, 6, 7, 8, 0, 1]);
     }
     #[test]
     fn test_view_user_info_for_lottery_id() {
@@ -1279,5 +1276,68 @@ mod tests {
             vec![125, 375, 750, 1250, 2500, 5000],
             Some(U128(2000)),
         );
+    }
+
+    #[test]
+    fn test_view_lotteries() {
+        let (mut context, mut contract) = setup_contract();
+
+        // add storage
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(25 * 10u128.pow(23))
+            .build());
+        contract.storage_deposit(Some(env::predecessor_account_id()));
+
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
+
+        let data = contract.data();
+        let start_time = env::block_timestamp();
+        let end_time = start_time + 123456789 as u64 + 1;
+
+        let price_per_ticket = 12u128 * 10u128.pow(23);
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .block_timestamp(start_time)
+            .attached_deposit(1)
+            .build());
+        contract.start_lottery(
+            end_time,
+            Some(U128(price_per_ticket)), //1.2 in NEAR
+            Some(U128(2000)),
+            vec![125, 375, 750, 1250, 2500, 5000],
+            Some(U128(2000)),
+        );
+        let current_lottery_id = contract.data().current_lottery_id;
+        // buy ticket 1
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .block_timestamp(start_time + 5000)
+            .attached_deposit(price_per_ticket)
+            .build());
+
+        contract.buy_tickets(current_lottery_id, vec![1039219]);
+
+        // check
+        let lotteries = contract.view_lotteries(Some(0), Some(1000));
+        assert_eq!(1, lotteries.len());
+        let lottery = lotteries.get(0).unwrap();
+        assert_eq!(1, lottery.lottery_id);
+        assert_eq!(Status::Open, lottery.status);
+        assert_eq!(0, lottery.start_time);
+        assert_eq!(123456790, lottery.end_time);
+        assert_eq!(price_per_ticket, lottery.price_ticket_in_near);
+        assert_eq!(2000, lottery.discount_divisor);
+        assert_eq!(6, lottery.rewards_breakdown.len());
+        assert_eq!(2000, lottery.treasury_fee);
+        assert_eq!(vec![0, 0, 0, 0, 0, 0], lottery.near_per_bracket);
+        assert_eq!(vec![0, 0, 0, 0, 0, 0], lottery.count_winners_per_bracket);
+        assert_eq!(0, lottery.first_ticket_id);
+        assert_eq!(0, lottery.first_ticket_id_next_lottery);
+        assert_eq!(price_per_ticket, lottery.amount_collected_in_near);
+        assert_eq!(0, lottery.final_number);
     }
 }
