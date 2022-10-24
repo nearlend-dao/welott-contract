@@ -1050,11 +1050,13 @@ mod tests {
         contract.close_lottery(current_lottery_id);
 
         let data2 = contract.data();
+        let lottery = data2._lotteries.get(&current_lottery_id).unwrap();
+        assert_eq!(lottery.status, Status::Close);
         assert_eq!(
-            data2._lotteries.get(&current_lottery_id).unwrap().status,
-            Status::Close
+            lottery.first_ticket_id_next_lottery,
+            data2.current_ticket_id
         );
-        assert!(data2.random_result > 0);
+        assert_eq!(data2.permission_update, PermissionUpdateState::Allow);
     }
 
     #[test]
