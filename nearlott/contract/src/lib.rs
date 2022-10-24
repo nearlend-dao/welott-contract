@@ -154,7 +154,6 @@ pub struct ContractData {
     // keep track of user ticket ids for a given lotteryId
     pub _user_ticket_ids_per_lottery_id:
         UnorderedMap<AccountId, UnorderedMap<LotteryId, Vec<TicketId>>>,
-
     // keep track of user deposit storage
     pub _storage_deposits: LookupMap<AccountId, Balance>,
 
@@ -1129,6 +1128,7 @@ mod tests {
         let start_time = 162615600000000;
         let end_time = start_time + 12345678 as u64 + 1;
 
+        // start lottery 1
         testing_env!(context
             .predecessor_account_id(accounts(2))
             .attached_deposit(1)
@@ -1148,11 +1148,44 @@ mod tests {
 
         contract.buy_tickets(current_lottery_id, vec![1039219]);
 
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .block_timestamp(end_time)
+            .build());
+        contract.close_lottery(current_lottery_id);
+
+        // start lottery 2
+        let start_time2 = 262615600000000;
+        let end_time2 = start_time2 + 12345678 as u64 + 1;
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
+        contract.start_lottery(
+            end_time2,
+            Some(U128(12u128 * 10u128.pow(23))), //1.2 in NEAR
+            Some(U128(2000)),
+            vec![125, 375, 750, 1250, 2500, 5000],
+            Some(U128(2000)),
+        );
+        let current_lottery_id = contract.data().current_lottery_id;
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(12u128 * 10u128.pow(23))
+            .build());
+        contract.buy_tickets(current_lottery_id, vec![1039219]);
+
+        // view user info
         let view_user_info =
             contract.view_user_info_for_lottery_id(accounts(2), current_lottery_id, 0, 25);
         assert_eq!(view_user_info.lottery_ticket_ids.len(), 1);
         assert_eq!(view_user_info.ticket_numbers.len(), 1);
         assert_eq!(view_user_info.ticket_status.len(), 1);
+        println!("view user info: {:?}", view_user_info);
+        let view_lotteries =
+            contract.view_all_lotteries_by_user(accounts(2), current_lottery_id, 0, 25);
+        println!("view_lotteries {:?}", view_lotteries);
     }
 
     #[test]

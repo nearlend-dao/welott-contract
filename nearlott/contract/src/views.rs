@@ -5,6 +5,8 @@ use near_sdk::serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct LotteryUserData {
+    pub winning_number: u32,
+    pub lottery_id: LotteryId,
     pub lottery_ticket_ids: Vec<TicketId>,
     pub ticket_numbers: Vec<u32>,
     pub ticket_status: Vec<TicketStatus>,
@@ -31,6 +33,8 @@ pub enum TicketStatus {
 impl Default for LotteryUserData {
     fn default() -> Self {
         Self {
+            winning_number: 0,
+            lottery_id: 0,
             lottery_ticket_ids: vec![],
             ticket_numbers: vec![],
             ticket_status: vec![],
@@ -159,6 +163,42 @@ impl NearLott {
 
         return _calculate_rewards_for_ticket_id(data, _lottery_id, _ticket_id, _bracket);
     }
+    /**
+     * @notice View user ticket ids, numbers, and statuses of user for a all lottery joined
+     * @param _user: user address
+     * @param _lottery_id: lottery id
+     * @param _cursor: cursor to start where to retrieve the tickets
+     * @param _size: the number of tickets to retrieve
+     */
+    pub fn view_all_lotteries_by_user(
+        &self,
+        _user: AccountId,
+        _lottery_id: LotteryId,
+        _cursor: u32,
+        _size: u32,
+    ) -> Vec<LotteryUserData> {
+        let lotteries_user_tickets = self.data()._user_ticket_ids_per_lottery_id.get(&_user);
+        if lotteries_user_tickets.is_none() {
+            return vec![];
+        }
+
+        let lotteries = lotteries_user_tickets.unwrap();
+        let lottery_key_ids = lotteries.keys_as_vector();
+
+        let lotteries: Vec<LotteryUserData> = (0..lottery_key_ids.len())
+            .map(|idx| {
+                let lottery_id: LotteryId = lottery_key_ids.get(idx).unwrap_or(0);
+
+                println!("lottery_id: {:?}", lottery_id);
+                let lottery_data =
+                    self.view_user_info_for_lottery_id(_user.clone(), lottery_id, 0, 10000);
+                println!("lottery_data: {:?}", lottery_data);
+                return lottery_data;
+            })
+            .collect::<Vec<LotteryUserData>>();
+
+        return lotteries;
+    }
 
     /**
      * @notice View user ticket ids, numbers, and statuses of user for a given lottery
@@ -176,11 +216,21 @@ impl NearLott {
     ) -> LotteryUserData {
         let mut length: u32 = _size;
         let empty_user_info = LotteryUserData {
+            winning_number: 0,
+            lottery_id: 0,
             lottery_ticket_ids: vec![],
             ticket_numbers: vec![],
             ticket_status: vec![],
             cursor: _cursor,
         };
+        // get lottery status
+        let lottery = self.data()._lotteries.get(&_lottery_id);
+        if lottery.is_none() {
+            return empty_user_info;
+        }
+
+        // check any ticket ids by this lotteryid
+        // if there is no tickets. Return as a default value
         let lotteries_user_tickets = self.data()._user_ticket_ids_per_lottery_id.get(&_user);
         if lotteries_user_tickets.is_none() {
             return empty_user_info;
@@ -201,6 +251,7 @@ impl NearLott {
         let mut ticket_statuses = vec![TicketStatus::Undetermined; length as usize];
 
         let _brackets = vec![5, 4, 3, 2, 1, 0];
+        let current_lottery = lottery.unwrap();
         for i in 0..length {
             lottery_ticket_ids[i as usize] = tickets_in_a_lottery[(i + _cursor) as usize];
             let ticket_number = self
@@ -228,15 +279,23 @@ impl NearLott {
                     );
                     rewards_per_bracket += reward_for_ticket_id;
                 }
-                if rewards_per_bracket > 0 {
-                    ticket_statuses[i as usize] = TicketStatus::Claimable;
+
+                if current_lottery.status == Status::Close {
+                    if rewards_per_bracket > 0 {
+                        ticket_statuses[i as usize] = TicketStatus::Claimable;
+                    } else {
+                        // if the lottery has been closed. We will determine the status of it
+                        ticket_statuses[i as usize] = TicketStatus::Lose;
+                    }
                 } else {
-                    ticket_statuses[i as usize] = TicketStatus::Lose;
+                    ticket_statuses[i as usize] = TicketStatus::Undetermined;
                 }
             }
         }
 
         LotteryUserData {
+            winning_number: current_lottery.final_number,
+            lottery_id: current_lottery.lottery_id,
             lottery_ticket_ids,
             ticket_numbers,
             ticket_status: ticket_statuses,
