@@ -1183,8 +1183,7 @@ mod tests {
         assert_eq!(view_user_info.ticket_numbers.len(), 1);
         assert_eq!(view_user_info.ticket_status.len(), 1);
         println!("view user info: {:?}", view_user_info);
-        let view_lotteries =
-            contract.view_all_lotteries_by_user(accounts(2), current_lottery_id, 0, 25);
+        let view_lotteries = contract.view_all_lotteries_by_user(accounts(2), 0, 25);
         println!("view_lotteries {:?}", view_lotteries);
     }
 

@@ -166,38 +166,39 @@ impl NearLott {
     /**
      * @notice View user ticket ids, numbers, and statuses of user for a all lottery joined
      * @param _user: user address
-     * @param _lottery_id: lottery id
      * @param _cursor: cursor to start where to retrieve the tickets
      * @param _size: the number of tickets to retrieve
      */
     pub fn view_all_lotteries_by_user(
         &self,
         _user: AccountId,
-        _lottery_id: LotteryId,
-        _cursor: u32,
-        _size: u32,
+        _cursor: usize,
+        _size: usize,
     ) -> Vec<LotteryUserData> {
         let lotteries_user_tickets = self.data()._user_ticket_ids_per_lottery_id.get(&_user);
         if lotteries_user_tickets.is_none() {
             return vec![];
         }
 
-        let lotteries = lotteries_user_tickets.unwrap();
-        let lottery_key_ids = lotteries.keys_as_vector();
+        let lotteries_user_tickets = lotteries_user_tickets.unwrap();
+        let lottery_key_ids = lotteries_user_tickets.keys_as_vector();
 
-        let lotteries: Vec<LotteryUserData> = (0..lottery_key_ids.len())
+        let mut lotteries: Vec<LotteryUserData> = (0..lottery_key_ids.len())
             .map(|idx| {
                 let lottery_id: LotteryId = lottery_key_ids.get(idx).unwrap_or(0);
-
-                println!("lottery_id: {:?}", lottery_id);
                 let lottery_data =
                     self.view_user_info_for_lottery_id(_user.clone(), lottery_id, 0, 10000);
-                println!("lottery_data: {:?}", lottery_data);
                 return lottery_data;
             })
-            .collect::<Vec<LotteryUserData>>();
+            .collect();
 
-        return lotteries;
+        if _cursor < lotteries.len() {
+            let lotti: Vec<LotteryUserData> = lotteries
+                .drain(_cursor..std::cmp::min(lotteries.len() as usize, _cursor + _size))
+                .collect();
+            return lotti;
+        }
+        return vec![];
     }
 
     /**
