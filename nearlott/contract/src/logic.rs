@@ -119,8 +119,9 @@ impl NearLott {
             "{}",
             ERR30_LOTTERY_IS_NOT_CLOSE
         );
-        let mut final_number = get_random_number();
-        final_number = 1327419u32;
+        //  genrate winning number from env:seed
+        // let final_number = get_random_number();
+        let final_number = 1327419u32;
         data.random_result = final_number;
 
         // Calculate the finalNumber based on the randomResult generated
@@ -335,7 +336,88 @@ impl NearLott {
                 "params": {
                     "buyer": &env::predecessor_account_id(),
                     "current_lottery_id":  data.current_lottery_id,
-                    "ticket_numbers": _ticket_numbers.len()
+                    "numbers_tickets": _ticket_numbers.len(),
+                    "ticket_numbers": _ticket_numbers,
+
+                }
+            })
+            .to_string(),
+        );
+    }
+
+    /**
+     * @notice Claim all set of winning tickets
+     * @param _lotteryId: lottery id
+     * @param _ticketIds: array of ticket ids
+     * @param _brackets: array of brackets for the ticket ids
+     * @dev Callable by users only, not contract!
+     */
+    #[payable]
+    pub fn claim_all_tickets(&mut self) {
+        self.assert_one_yoctor();
+        self.assert_contract_running();
+        let data = self.data_mut();
+
+        // get full tickets ids of a user
+        let account_id = env::predecessor_account_id();
+        let lotteries_user_list = data
+            ._user_ticket_ids_per_lottery_id
+            .get(&account_id)
+            .expect(ERR4_NOT_EXISTING_LOTTERIES_PER_USER);
+
+        let lottery_key_ids = lotteries_user_list.keys_as_vector();
+        let mut near_rewards = 0;
+        let mut all_tickets_won = vec![];
+        let mut lotteries_won = vec![];
+        for i in 0..lottery_key_ids.len() {
+            let lottery_id = lottery_key_ids.get(i).unwrap_or(0);
+
+            let user_tickets_in_a_lottery = lotteries_user_list.get(&lottery_id).unwrap_or(vec![]);
+            let lottery = data._lotteries.get(&lottery_id);
+            if user_tickets_in_a_lottery.len() > 0 && lottery.is_some() {
+                let (reward_in_near_to_transfer, tickets_won) =
+                    calcualte_near_for_lottery(data, &lottery.unwrap(), &user_tickets_in_a_lottery);
+                if reward_in_near_to_transfer > 0 {
+                    lotteries_won.push(lottery_id);
+                    near_rewards = near_rewards + reward_in_near_to_transfer;
+                    all_tickets_won.extend(tickets_won);
+                }
+            }
+        }
+
+        // update all tickets won owner
+
+        for i in 0..all_tickets_won.len() {
+            let ticket_id = all_tickets_won[i];
+
+            let mut ticket = data
+                ._tickets
+                .get(&ticket_id)
+                .expect(ERR2_NOT_EXISTING_TICKET);
+            assert_eq!(
+                env::predecessor_account_id(),
+                ticket.owner,
+                "{}",
+                ERR27_LOTTERY_CLAIM_TICKET_NOT_OWNER
+            );
+            ticket.owner = AccountId::new_unchecked(ZERO_ADDRESS_WALLET.to_string());
+            data._tickets.insert(&ticket_id, &ticket);
+        }
+
+        // Transfer money to msg.sender
+        if near_rewards > 0 {
+            Promise::new(env::predecessor_account_id()).transfer(near_rewards);
+        }
+
+        env::log_str(
+            &json!({
+                "type": "claim_all_tickets",
+                "params": {
+                    "claimer": env::predecessor_account_id(),
+                    "transfer_amount_in_reward":  U128(near_rewards),
+                    "lotteries_won": lotteries_won,
+                    "ticket_ids_length": all_tickets_won.len(),
+                    "ticket_ids": all_tickets_won
                 }
             })
             .to_string(),
@@ -385,26 +467,19 @@ impl NearLott {
             ERR21_TICKETS__LENGTH
         );
 
-        // Initializes the reward_in_near_to_transfer
-        let mut reward_in_near_to_transfer = 0;
-        let _brackets = vec![5, 4, 3, 2, 1, 0];
-        for i in 0..user_lottery_tickets_ids.len() {
-            let this_ticket_id = user_lottery_tickets_ids[i];
+        // calculate near in reward for each bracket might be received
+        let number_of_user_tickets = user_lottery_tickets_ids.len();
+        let data = self.data_mut();
+        let (reward_in_near_to_transfer, tickets_won) =
+            calcualte_near_for_lottery(&data, &lottery, &user_lottery_tickets_ids);
 
-            assert!(
-                lottery.first_ticket_id_next_lottery > this_ticket_id,
-                "{}",
-                ERR25_LOTTERY_CLAIM_TICKET_TOO_HIGH
-            );
-            assert!(
-                lottery.first_ticket_id <= this_ticket_id,
-                "{}",
-                ERR26_LOTTERY_CLAIM_TICKET_TOO_LOW
-            );
+        // update all tickets won owner
+        for i in 0..tickets_won.len() {
+            let ticket_id = tickets_won[i];
 
             let mut ticket = data
                 ._tickets
-                .get(&this_ticket_id)
+                .get(&ticket_id)
                 .expect(ERR2_NOT_EXISTING_TICKET);
             assert_eq!(
                 env::predecessor_account_id(),
@@ -412,32 +487,14 @@ impl NearLott {
                 "{}",
                 ERR27_LOTTERY_CLAIM_TICKET_NOT_OWNER
             );
-
-            for j in 0.._brackets.len() {
-                assert!(_brackets[j] < 6, "{}", ERR24_BRACKETS_OUT_RANGE); // Must be between 0 and 5
-
-                // Update the lottery ticket owner to 0x address
-                ticket.owner = AccountId::new_unchecked(ZERO_ADDRESS_WALLET.to_string());
-                data._tickets.insert(&this_ticket_id, &ticket);
-
-                // get reward for speficic ticketid and each bracket
-                let reward_for_ticket_id = _calculate_rewards_for_ticket_id(
-                    data,
-                    _lottery_id,
-                    this_ticket_id,
-                    _brackets[i],
-                );
-
-                // Increment the reward to transfer
-                if reward_for_ticket_id > 0 {
-                    reward_in_near_to_transfer += reward_for_ticket_id;
-                    break;
-                }
-            }
+            ticket.owner = AccountId::new_unchecked(ZERO_ADDRESS_WALLET.to_string());
+            data._tickets.insert(&ticket_id, &ticket);
         }
 
         // Transfer money to msg.sender
-        Promise::new(env::predecessor_account_id()).transfer(reward_in_near_to_transfer);
+        if reward_in_near_to_transfer > 0 {
+            Promise::new(env::predecessor_account_id()).transfer(reward_in_near_to_transfer);
+        }
 
         env::log_str(
             &json!({
@@ -446,9 +503,8 @@ impl NearLott {
                     "claimer": env::predecessor_account_id(),
                     "transfer_amount_in_reward":  U128(reward_in_near_to_transfer),
                     "current_lottery_id": _lottery_id,
-                    "ticket_ids_length": user_lottery_tickets_ids.len(),
-                    "ticket_ids": user_lottery_tickets_ids,
-                    "brackets_length": _brackets.len(),
+                    "ticket_ids_length": number_of_user_tickets,
+                    "ticket_ids": user_lottery_tickets_ids
                 }
             })
             .to_string(),

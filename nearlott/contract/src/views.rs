@@ -253,6 +253,7 @@ impl NearLott {
 
         let _brackets = vec![5, 4, 3, 2, 1, 0];
         let current_lottery = lottery.unwrap();
+
         for i in 0..length {
             lottery_ticket_ids[i as usize] = tickets_in_a_lottery[(i + _cursor) as usize];
             let ticket_number = self
@@ -281,7 +282,9 @@ impl NearLott {
                     rewards_per_bracket += reward_for_ticket_id;
                 }
 
-                if current_lottery.status == Status::Close {
+                if current_lottery.status == Status::Close
+                    || current_lottery.status == Status::Claimable
+                {
                     if rewards_per_bracket > 0 {
                         ticket_statuses[i as usize] = TicketStatus::Claimable;
                     } else {

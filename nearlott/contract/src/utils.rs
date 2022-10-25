@@ -49,6 +49,49 @@ pub(crate) fn create_number_one(sequence: u32) -> u32 {
         .expect(ERR36_STRING_NUMBER_INVALID)
 }
 
+pub(crate) fn calcualte_near_for_lottery(
+    data: &ContractData,
+    _lottery: &Lottery,
+    _ticket_ids: &Vec<TicketId>,
+) -> (u128, Vec<TicketId>) {
+    // Initializes the reward_in_near_to_transfer
+    let mut reward_in_near_to_transfer = 0;
+    let _brackets = vec![5, 4, 3, 2, 1, 0];
+    let mut tickets_won = vec![];
+
+    for i in 0.._ticket_ids.len() {
+        let this_ticket_id = _ticket_ids[i];
+
+        if _lottery.first_ticket_id_next_lottery > this_ticket_id
+            && _lottery.first_ticket_id <= this_ticket_id
+        {
+            let ticket = data._tickets.get(&this_ticket_id);
+            if ticket.is_some() {
+                let m_ticket = ticket.unwrap();
+                if m_ticket.owner == env::predecessor_account_id() && _brackets[i] < 6 {
+                    for j in 0.._brackets.len() {
+                        // get reward for speficic ticketid and each bracket
+                        let reward_for_ticket_id = _calculate_rewards_for_ticket_id(
+                            data,
+                            _lottery.lottery_id,
+                            this_ticket_id,
+                            _brackets[j],
+                        );
+                        // Increment the reward to transfer
+                        if reward_for_ticket_id > 0 {
+                            // add ticket to return
+                            tickets_won.push(this_ticket_id);
+                            reward_in_near_to_transfer += reward_for_ticket_id;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    (reward_in_near_to_transfer, tickets_won)
+}
+
 /**
  * @notice Calculate final price for bulk of tickets
  * @param _discount_divisor: divisor for the discount (the smaller it is, the greater the discount is)
@@ -128,6 +171,7 @@ pub(crate) fn get_random_number() -> u32 {
     // generate 15 number position with random position from [1..9]
     let random: Vec<u8> = random_position();
     assert!(random.len() >= 10, "{}", ERR37_NOT_ENOUGH_RANDOM_NUMBERS);
+    let rand_array_str = format!("{:?}", &random);
     // Specific position to get values. Random_seeds defauls return to 32 number in a vector<u8>.
     let rand_array: Vec<u8> = random
         .into_iter()
@@ -153,10 +197,11 @@ pub(crate) fn get_random_number() -> u32 {
             "params": {
                 "block_height": env::block_height(),
                 "vrf_numbers": env::random_seed(),
+                "ten_selected_positions": rand_array_str,
+                "number_generated_by_ten_positions":randomness_instr,
                 "current_timestamp": env::block_timestamp(),
-                "ten_vrf_numbers": randomness_instr,
-                "logic": "(1000000 + (vrf_final_string % 1000000))",
-                "final_number":  win_number,
+                "logic": format!("(1000000 + ({} % 1000000))", &randomness),
+                "final_number":  &win_number
             }
         })
         .to_string(),

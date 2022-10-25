@@ -58,7 +58,7 @@ impl fmt::Display for Status {
     }
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Lottery {
     pub lottery_id: LotteryId,
@@ -650,25 +650,25 @@ mod tests {
         contract.close_lottery(current_lottery_id);
 
         // check random number generated.
-        contract.data_mut().random_result = 1327419;
         let data2 = contract.data();
         let wining_number = data2.random_result;
-        assert!(wining_number > 0);
+        assert_eq!(wining_number, 0);
         println!("Random result: {}", data2.random_result);
         let lottery_close_lottery = data2._lotteries.get(&current_lottery_id).unwrap();
         assert_eq!(lottery_close_lottery.status, Status::Close);
-
         // // draw the final number
         testing_env!(context
             .predecessor_account_id(accounts(2))
             .attached_deposit(1)
             .build());
         contract.draw_final_number_and_make_lottery_claimable(current_lottery_id, true);
+        contract.data_mut().random_result = 1327419;
         let data3 = contract.data();
         let pending_injection_amount = data3.pending_injection_next_lottery;
         let lottery_claim_lottery = data3._lotteries.get(&current_lottery_id).unwrap();
         assert_eq!(lottery_claim_lottery.status, Status::Claimable);
-        assert_eq!(lottery_claim_lottery.final_number, wining_number);
+        assert_eq!(lottery_claim_lottery.final_number, 1327419);
+        assert_eq!(data3.random_result, 1327419);
         // there is no one be a winner
         assert_eq!(
             pending_injection_amount,
@@ -1000,15 +1000,14 @@ mod tests {
             .build());
         contract.close_lottery(current_lottery_id);
 
-        //// draw final number
-        contract.data_mut().random_result = 1327419;
-
         // draw final number
         testing_env!(context
             .predecessor_account_id(accounts(2))
             .attached_deposit(1)
             .build());
         contract.draw_final_number_and_make_lottery_claimable(current_lottery_id, true);
+        //// draw final number
+        contract.data_mut().random_result = 1327419;
 
         // win two number 91, in the front end the string winner should be 91472. without 1.
         let reward = _calculate_rewards_for_ticket_id(contract.data(), current_lottery_id, 0, 1);
@@ -1145,15 +1144,18 @@ mod tests {
             .predecessor_account_id(accounts(2))
             .attached_deposit(12u128 * 10u128.pow(23))
             .build());
-
-        contract.buy_tickets(current_lottery_id, vec![1039219]);
-
+        contract.buy_tickets(current_lottery_id, vec![1039292]);
         testing_env!(context
             .predecessor_account_id(accounts(2))
             .attached_deposit(1)
             .block_timestamp(end_time)
+            .random_seed([
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 4, 5, 6, 7, 8, 9, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9,
+                1, 2, 4, 5
+            ])
             .build());
         contract.close_lottery(current_lottery_id);
+        contract.draw_final_number_and_make_lottery_claimable(current_lottery_id, true);
 
         // start lottery 2
         let start_time2 = 262615600000000;
@@ -1174,7 +1176,7 @@ mod tests {
             .predecessor_account_id(accounts(2))
             .attached_deposit(12u128 * 10u128.pow(23))
             .build());
-        contract.buy_tickets(current_lottery_id, vec![1039219]);
+        contract.buy_tickets(current_lottery_id, vec![1039291]);
 
         // view user info
         let view_user_info =
@@ -1183,8 +1185,20 @@ mod tests {
         assert_eq!(view_user_info.ticket_numbers.len(), 1);
         assert_eq!(view_user_info.ticket_status.len(), 1);
         println!("view user info: {:?}", view_user_info);
-        let view_lotteries = contract.view_all_lotteries_by_user(accounts(2), 0, 25);
-        println!("view_lotteries {:?}", view_lotteries);
+
+        // get view all lotteries
+        let view_ticket_all_lotteries = contract.view_all_lotteries_by_user(accounts(2), 0, 25);
+        println!("view_lotteries {:?}", view_ticket_all_lotteries);
+        // lottery 1
+        let lottery_first = contract.view_lottery(1);
+        println!("view lottery {:?}", contract.view_lottery(1));
+
+        // claim all_tickets
+        testing_env!(context
+            .predecessor_account_id(accounts(2))
+            .attached_deposit(1)
+            .build());
+        contract.claim_all_tickets();
     }
 
     #[test]
