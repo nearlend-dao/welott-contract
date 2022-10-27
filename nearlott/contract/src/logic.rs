@@ -368,7 +368,7 @@ impl NearLott {
         let lottery_key_ids = lotteries_user_list.keys_as_vector();
         let mut near_rewards = 0;
         let mut all_tickets_won = vec![];
-        let mut lotteries_won = vec![];
+        let mut lotteries_winning = vec![];
         for i in 0..lottery_key_ids.len() {
             let lottery_id = lottery_key_ids.get(i).unwrap_or(0);
 
@@ -378,7 +378,7 @@ impl NearLott {
                 let (reward_in_near_to_transfer, tickets_won) =
                     calcualte_near_for_lottery(data, &lottery.unwrap(), &user_tickets_in_a_lottery);
                 if reward_in_near_to_transfer > 0 {
-                    lotteries_won.push(lottery_id);
+                    lotteries_winning.push(lottery_id);
                     near_rewards = near_rewards + reward_in_near_to_transfer;
                     all_tickets_won.extend(tickets_won);
                 }
@@ -415,7 +415,7 @@ impl NearLott {
                 "params": {
                     "claimer": env::predecessor_account_id(),
                     "transfer_amount_in_reward":  U128(near_rewards),
-                    "lotteries_won": lotteries_won,
+                    "lotteries_winning": lotteries_winning,
                     "ticket_ids_length": all_tickets_won.len(),
                     "ticket_ids": all_tickets_won
                 }
