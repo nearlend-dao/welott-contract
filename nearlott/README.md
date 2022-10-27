@@ -1,8 +1,6 @@
 # Nearlott
 
-This contract was initialized with Near-sdk version 4.0.0-pre.7. Made by @mitsori - 2022
-
-Nettlet is inspried by Pancake Swap Lottery.
+This contract was initialized with Near-sdk version 4.0.0-pre.7. Made by @mitsori and @@Sonlam1991 - 2022
 
 # Quick Start
 
@@ -70,37 +68,39 @@ Modify the line in `src/config.js` that sets the account name of the contract. S
 
     const CONTRACT_NAME = process.env.CONTRACT_NAME || 'near-blank-project.YOUR-NAME.testnet'
 
-
-
 Admin:
-1. Deploy contract
- - cấu hình address: 
-    owner_id: AccountId,
-    injector_address: AccountId,
-    operator_address: AccountId,
-    treasury_address: AccountId,
-2. Tạo round
-    - start_lottery: bắt đầu 1 round mới
-    - close_lottery: đóng round
-    - draw_final_number_and_make_lottery_claimable: tính toán giải và tìm ra người thắng cuộc
-    - 
-3. 
 
+1. Deploy contract
+
+- cấu hình address:
+  owner_id: AccountId,
+  injector_address: AccountId,
+  operator_address: AccountId,
+  treasury_address: AccountId,
+
+2. Tạo round
+   - start_lottery: bắt đầu 1 round mới
+   - close_lottery: đóng round
+   - draw_final_number_and_make_lottery_claimable: tính toán giải và tìm ra người thắng cuộc
+   -
+3.
 
 User:
-1. Add stogre 
+
+1. Add stogre
 2. Buy tickets
 3. Check tickets (lấy tickets )
 4. View:
-    - calculate_total_price_for_bulk_tickets: lấy giá tickets
-    - view_latest_lottery_id: lấy cái round gần nhất
-    - view_lottery: view detail 1 round
-    - view_rewards_for_ticket_id: kiểm tra 1 vé vs số round xem có trung hay ko. _bracket (từ giải 0 -  5)
-    - view_user_info_for_lottery_id: kiểm tra 1 user 
-    - view_numbers_and_statuses_for_ticket_ids: 
-    - view_random: 
-    - view_random_result: 
-    - get_current_timestamp: 
-    
-    -> buy_tickets: mua tickets
-    -> claim_tickets: nhận giải
+
+   - calculate_total_price_for_bulk_tickets: lấy giá tickets
+   - view_latest_lottery_id: lấy cái round gần nhất
+   - view_lottery: view detail 1 round
+   - view_rewards_for_ticket_id: kiểm tra 1 vé vs số round xem có trung hay ko. \_bracket (từ giải 0 - 5)
+   - view_user_info_for_lottery_id: kiểm tra 1 user
+   - view_numbers_and_statuses_for_ticket_ids:
+   - view_random:
+   - view_random_result:
+   - get_current_timestamp:
+
+   -> buy_tickets: mua tickets
+   -> claim_tickets: nhận giải

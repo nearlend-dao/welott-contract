@@ -11,6 +11,7 @@ pub struct LotteryUserData {
     pub ticket_numbers: Vec<u32>,
     pub ticket_status: Vec<TicketStatus>,
     pub cursor: u32,
+    pub available_to_claim: u128,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -39,6 +40,7 @@ impl Default for LotteryUserData {
             ticket_numbers: vec![],
             ticket_status: vec![],
             cursor: 0,
+            available_to_claim: 0,
         }
     }
 }
@@ -223,6 +225,7 @@ impl NearLott {
             ticket_numbers: vec![],
             ticket_status: vec![],
             cursor: _cursor,
+            available_to_claim: 0,
         };
         // get lottery status
         let lottery = self.data()._lotteries.get(&_lottery_id);
@@ -253,7 +256,7 @@ impl NearLott {
 
         let _brackets = vec![5, 4, 3, 2, 1, 0];
         let current_lottery = lottery.unwrap();
-
+        let mut available_to_claim = 0;
         for i in 0..length {
             lottery_ticket_ids[i as usize] = tickets_in_a_lottery[(i + _cursor) as usize];
             let ticket_number = self
@@ -287,6 +290,7 @@ impl NearLott {
                 {
                     if rewards_per_bracket > 0 {
                         ticket_statuses[i as usize] = TicketStatus::Claimable;
+                        available_to_claim = available_to_claim + rewards_per_bracket;
                     } else {
                         // if the lottery has been closed. We will determine the status of it
                         ticket_statuses[i as usize] = TicketStatus::Lose;
@@ -298,6 +302,7 @@ impl NearLott {
         }
 
         LotteryUserData {
+            available_to_claim,
             winning_number: current_lottery.final_number,
             lottery_id: current_lottery.lottery_id,
             lottery_ticket_ids,
