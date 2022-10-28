@@ -10,6 +10,7 @@ pub struct LotteryUserData {
     pub lottery_ticket_ids: Vec<TicketId>,
     pub ticket_numbers: Vec<u32>,
     pub ticket_status: Vec<TicketStatus>,
+    pub tickets_rewards: Vec<u128>,
     pub cursor: u32,
     pub available_to_claim: u128,
 }
@@ -39,6 +40,7 @@ impl Default for LotteryUserData {
             lottery_ticket_ids: vec![],
             ticket_numbers: vec![],
             ticket_status: vec![],
+            tickets_rewards: vec![],
             cursor: 0,
             available_to_claim: 0,
         }
@@ -224,6 +226,7 @@ impl NearLott {
             lottery_ticket_ids: vec![],
             ticket_numbers: vec![],
             ticket_status: vec![],
+            tickets_rewards: vec![],
             cursor: _cursor,
             available_to_claim: 0,
         };
@@ -258,6 +261,7 @@ impl NearLott {
         let mut lottery_ticket_ids = vec![0; length as usize];
         let mut ticket_numbers = vec![0; length as usize];
         let mut ticket_statuses = vec![TicketStatus::Undetermined; length as usize];
+        let mut tickets_rewards = vec![0; length as usize];
 
         let _brackets = vec![5, 4, 3, 2, 1, 0];
         let mut available_to_claim = 0;
@@ -302,6 +306,9 @@ impl NearLott {
                 } else {
                     ticket_statuses[i as usize] = TicketStatus::Undetermined;
                 }
+
+                // reward per ticket
+                tickets_rewards[i as usize] = rewards_per_bracket;
             }
         }
 
@@ -312,6 +319,7 @@ impl NearLott {
             lottery_ticket_ids,
             ticket_numbers,
             ticket_status: ticket_statuses,
+            tickets_rewards: tickets_rewards,
             cursor: _cursor,
         }
     }
