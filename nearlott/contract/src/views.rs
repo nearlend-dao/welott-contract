@@ -189,7 +189,7 @@ impl NearLott {
             .map(|idx| {
                 let lottery_id: LotteryId = lottery_key_ids.get(idx).unwrap_or(0);
                 let lottery_data =
-                    self.view_user_info_for_lottery_id(_user.clone(), lottery_id, 0, 10000);
+                    self.view_user_info_for_lottery_id(_user.clone(), lottery_id, 0, 1000);
                 return lottery_data;
             })
             .collect();
@@ -218,7 +218,7 @@ impl NearLott {
         _size: u32,
     ) -> LotteryUserData {
         let mut length: u32 = _size;
-        let empty_user_info = LotteryUserData {
+        let mut empty_user_info = LotteryUserData {
             winning_number: 0,
             lottery_id: 0,
             lottery_ticket_ids: vec![],
@@ -232,6 +232,11 @@ impl NearLott {
         if lottery.is_none() {
             return empty_user_info;
         }
+
+        // assign data
+        let current_lottery = lottery.unwrap();
+        empty_user_info.winning_number = current_lottery.final_number;
+        empty_user_info.lottery_id = current_lottery.lottery_id;
 
         // check any ticket ids by this lotteryid
         // if there is no tickets. Return as a default value
@@ -255,7 +260,6 @@ impl NearLott {
         let mut ticket_statuses = vec![TicketStatus::Undetermined; length as usize];
 
         let _brackets = vec![5, 4, 3, 2, 1, 0];
-        let current_lottery = lottery.unwrap();
         let mut available_to_claim = 0;
         for i in 0..length {
             lottery_ticket_ids[i as usize] = tickets_in_a_lottery[(i + _cursor) as usize];
