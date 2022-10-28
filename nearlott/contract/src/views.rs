@@ -319,7 +319,7 @@ impl NearLott {
             lottery_ticket_ids,
             ticket_numbers,
             ticket_status: ticket_statuses,
-            tickets_rewards: tickets_rewards,
+            tickets_rewards,
             cursor: _cursor,
         }
     }
