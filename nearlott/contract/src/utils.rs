@@ -68,7 +68,7 @@ pub(crate) fn calcualte_near_for_lottery(
             let ticket = data._tickets.get(&this_ticket_id);
             if ticket.is_some() {
                 let m_ticket = ticket.unwrap();
-                if m_ticket.owner == env::predecessor_account_id() && _brackets[i] < 6 {
+                if m_ticket.owner == env::predecessor_account_id() {
                     for j in 0.._brackets.len() {
                         // get reward for speficic ticketid and each bracket
                         let reward_for_ticket_id = _calculate_rewards_for_ticket_id(
