@@ -323,6 +323,18 @@ impl NearLott {
     }
 
     /**
+     * Get all lotteries a user claimed
+     */
+    pub fn view_lotteries_claimed_id(&self, _user: AccountId) -> Vec<LotteryId> {
+        let lotteries_ids = self
+            .data()
+            ._user_lottery_claimed
+            .get(&_user)
+            .unwrap_or(vec![]);
+        return lotteries_ids;
+    }
+
+    /**
      * Using for unit-test
      */
     #[private]

@@ -207,7 +207,7 @@ impl NearLott {
                 "type": "draw_final_number_and_make_lottery_claimable",
                 "params": {
                     "final_number":  _final_number,
-                    "number_address_in_previous_bracket": U128(_number_addresses_in_previous_bracket),
+                    "current_lottery_id":  _lottery_id,
                     "amount_to_withdraw_to_treasury": U128(_amount_to_withdraw_to_treasury),
                     "amount_collected_in_near": U128(lottery.amount_collected_in_near),
                     "amount_to_share_to_winners": U128(_amount_to_share_to_winners),
@@ -287,6 +287,7 @@ impl NearLott {
             .unwrap_or(UnorderedMap::new(StorageKey::UserTicketsPerLottery {
                 account_id: env::predecessor_account_id(),
             }));
+
         for i in 0.._ticket_numbers.len() {
             let ticket_number = _ticket_numbers[i];
             assert!(
@@ -327,22 +328,22 @@ impl NearLott {
 
             // Increase lottery ticket number
             data.current_ticket_id = data.current_ticket_id + 1;
+
+            // fire log
+            env::log_str(
+                &json!({
+                    "type": "buy_tickets",
+                    "params": {
+                        "buyer": &env::predecessor_account_id(),
+                        "current_lottery_id":  data.current_lottery_id,
+                        "ticket_number": ticket_number,
+                        "ticket_id": data.current_ticket_id
+
+                    }
+                })
+                .to_string(),
+            );
         }
-
-        // fire log
-        env::log_str(
-            &json!({
-                "type": "buy_tickets",
-                "params": {
-                    "buyer": &env::predecessor_account_id(),
-                    "current_lottery_id":  data.current_lottery_id,
-                    "numbers_tickets": _ticket_numbers.len(),
-                    "ticket_numbers": _ticket_numbers,
-
-                }
-            })
-            .to_string(),
-        );
     }
 
     /**
@@ -363,6 +364,20 @@ impl NearLott {
         self.assert_contract_running();
         let data = self.data_mut();
 
+        // check lottery has been claimed
+        let current_account_id = env::predecessor_account_id();
+        let mut lotteries_claimed = data
+            ._user_lottery_claimed
+            .get(&current_account_id)
+            .unwrap_or(vec![]);
+        assert_ne!(
+            lotteries_claimed.contains(&_lottery_id),
+            true,
+            "{}",
+            ERR41_ALREADY_CLAIMED
+        );
+
+        // check ticket len and bracket
         assert_eq!(
             _ticket_ids.len(),
             _brackets.len(),
@@ -455,17 +470,39 @@ impl NearLott {
 
             // Increment the reward to transfer
             reward_in_near_to_transfer += reward_for_ticket_id;
+
+            // log claim for each ticket
+            env::log_str(
+                &json!({
+                    "type": "claim_ticket",
+                    "params": {
+                        "claimer": env::predecessor_account_id(),
+                        "reward":  U128(reward_for_ticket_id),
+                        "bracket_reward": _brackets[i],
+                        "current_lottery_id": _lottery_id,
+                        "ticket_id": this_ticket_id
+                    }
+                })
+                .to_string(),
+            );
         }
 
         // Transfer money to msg.sender
         assert!(reward_in_near_to_transfer > 0, "{}", ERR41_ALREADY_CLAIMED);
 
+        // update to saved claimmed history for account
+        lotteries_claimed.push(_lottery_id);
+        data._user_lottery_claimed
+            .insert(&current_account_id, &lotteries_claimed);
+
+        // transfer
         if reward_in_near_to_transfer > 0 {
+            // before transfer
             Promise::new(env::predecessor_account_id()).transfer(reward_in_near_to_transfer);
 
             env::log_str(
                 &json!({
-                    "type": "claim_ticket",
+                    "type": "claim_ticket_transfer",
                     "params": {
                         "claimer": env::predecessor_account_id(),
                         "transfer_amount_in_reward":  U128(reward_in_near_to_transfer),

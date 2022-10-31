@@ -106,6 +106,7 @@ pub(crate) enum StorageKey {
     NumberTickersPerLotteryId { lottery_id: LotteryId },
     UserTicketsPerLottery { account_id: AccountId },
     StorageDeposits,
+    UserLotteriesClaimed,
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Eq, PartialEq, Clone)]
@@ -154,6 +155,10 @@ pub struct ContractData {
     // keep track of user ticket ids for a given lotteryId
     pub _user_ticket_ids_per_lottery_id:
         UnorderedMap<AccountId, UnorderedMap<LotteryId, Vec<TicketId>>>,
+
+    // keep track of the lottery claimed by account Id
+    pub _user_lottery_claimed: UnorderedMap<AccountId, Vec<LotteryId>>,
+
     // keep track of user deposit storage
     pub _storage_deposits: LookupMap<AccountId, Balance>,
 
@@ -241,6 +246,7 @@ impl NearLott {
                     },
                 ),
                 _storage_deposits: LookupMap::new(StorageKey::StorageDeposits),
+                _user_lottery_claimed: UnorderedMap::new(StorageKey::UserLotteriesClaimed),
                 random_result: 0,
                 permission_update: PermissionUpdateState::Allow,
             }),

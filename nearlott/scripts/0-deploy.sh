@@ -2,12 +2,12 @@ set -e
 NETWORK=testnet
 SUFFIX=testnet
 
-MASTER_ACC=lamns1.$NETWORK
+MASTER_ACC=mitsori13.$NETWORK
 CONTRACT_ACC=welott9.$MASTER_ACC
 OWNER=$MASTER_ACC
-TREASURY_ACC=lamns1.$NETWORK
-INJECTOR_ACC=lamns1.$NETWORK
-OPERATOR_ACC=lamns1.$NETWORK
+TREASURY_ACC=mitsori13.$NETWORK
+INJECTOR_ACC=mitsori13.$NETWORK
+OPERATOR_ACC=mitsori13.$NETWORK
 
 export NEAR_ENV=$NETWORK
 
@@ -21,7 +21,7 @@ export NEAR_ENV=$NETWORK
 echo "################ BUILD CONTRACT #########################"
 ../build.sh
 
-echo "################ DEPLOY CONTRACT #########################"
+# echo "################ DEPLOY CONTRACT #########################"
 near deploy $CONTRACT_ACC ../out/nearlott.wasm 
 
 # echo "################# INIT CONTRACT #########################"
