@@ -398,14 +398,18 @@ impl NearLott {
 
             assert!(
                 lottery.first_ticket_id_next_lottery > this_ticket_id,
-                "{}",
-                ERR25_LOTTERY_CLAIM_TICKET_TOO_HIGH
+                "{} - first_ticket_id_next_lottery: {}, this_ticket_id: {}",
+                ERR25_LOTTERY_CLAIM_TICKET_TOO_HIGH,
+                lottery.first_ticket_id_next_lottery,
+                this_ticket_id
             );
 
             assert!(
                 lottery.first_ticket_id <= this_ticket_id,
-                "{}",
-                ERR26_LOTTERY_CLAIM_TICKET_TOO_LOW
+                "{} - first_ticket_id: {}, this_ticket_id: {}",
+                ERR26_LOTTERY_CLAIM_TICKET_TOO_LOW,
+                lottery.first_ticket_id,
+                this_ticket_id
             );
 
             let mut ticket = data
@@ -454,24 +458,26 @@ impl NearLott {
         }
 
         // Transfer money to msg.sender
+        assert!(reward_in_near_to_transfer > 0, "{}", ERR41_ALREADY_CLAIMED);
+
         if reward_in_near_to_transfer > 0 {
             Promise::new(env::predecessor_account_id()).transfer(reward_in_near_to_transfer);
-        }
 
-        env::log_str(
-            &json!({
-                "type": "claim_ticket",
-                "params": {
-                    "claimer": env::predecessor_account_id(),
-                    "transfer_amount_in_reward":  U128(reward_in_near_to_transfer),
-                    "current_lottery_id": _lottery_id,
-                    "ticket_ids_length": _ticket_ids.len(),
-                    "_brackets": _brackets,
-                    "ticket_ids": _ticket_ids
-                }
-            })
-            .to_string(),
-        );
+            env::log_str(
+                &json!({
+                    "type": "claim_ticket",
+                    "params": {
+                        "claimer": env::predecessor_account_id(),
+                        "transfer_amount_in_reward":  U128(reward_in_near_to_transfer),
+                        "current_lottery_id": _lottery_id,
+                        "ticket_ids_length": _ticket_ids.len(),
+                        "_brackets": _brackets,
+                        "ticket_ids": _ticket_ids
+                    }
+                })
+                .to_string(),
+            );
+        }
     }
 
     /**

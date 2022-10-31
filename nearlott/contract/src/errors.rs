@@ -45,3 +45,4 @@ pub const ERR38_DISALLOW_UPDATE: &str =
     "E38: The lottery is running. Could not change any configuration.";
 pub const ERR39_ATTACHED_DEPOSIT_LESS_AMOUNT: &str = "E39: Attached deposit is less than amount";
 pub const ERR40_CURRENTY_TIME_LESS_END_TIME: &str = "E40: Current time less than end time";
+pub const ERR41_ALREADY_CLAIMED: &str = "E41: You're already claimed alll";
