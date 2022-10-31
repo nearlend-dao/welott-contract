@@ -179,7 +179,7 @@ pub struct NearLott {
     pub auditor_account_id: Option<AccountId>,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Deserialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Ticket {
     pub number: u32,

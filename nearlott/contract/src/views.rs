@@ -236,9 +236,15 @@ impl NearLott {
         }
 
         let tickets_in_a_lottery = user_tickets.unwrap();
+        let mut from_index = _cursor;
         let number_tickets_bought_at_lottery_id = tickets_in_a_lottery.len() as u32;
-        if length > (number_tickets_bought_at_lottery_id - _cursor) {
-            length = number_tickets_bought_at_lottery_id - _cursor;
+
+        // if the cursor is greater than the number of list of tickets. Set from_index equals length of the tickets to avoid subflow
+        if from_index > number_tickets_bought_at_lottery_id {
+            from_index = number_tickets_bought_at_lottery_id
+        };
+        if length > (number_tickets_bought_at_lottery_id - from_index) {
+            length = number_tickets_bought_at_lottery_id - from_index;
         }
         let mut lottery_ticket_ids = vec![0; length as usize];
         let mut ticket_numbers = vec![0; length as usize];
