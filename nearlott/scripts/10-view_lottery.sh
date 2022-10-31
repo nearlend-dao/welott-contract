@@ -21,3 +21,9 @@ near view $CONTRACT_ACC view_numbers_and_statuses_for_ticket_ids '{"_ticket_ids"
     13910, 13911, 13912, 13913, 13914,
     13915, 13916, 13917, 13918, 13919,
     13920, 13921, 13922], "_lottery_id": 30}'
+
+
+near call $CONTRACT_ACC --accountId=$OWNER clam_tickets '{
+    "_ticket_ids": [13875, 13876, 13877, 13878, 13879,
+    13880, 13881, 13882, 13883, 13884]
+}' --depositYocto=1
