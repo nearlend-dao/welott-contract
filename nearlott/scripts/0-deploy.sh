@@ -32,22 +32,22 @@ near deploy $CONTRACT_ACC ../out/nearlott.wasm
 #     "treasury_address": "'$TREASURY_ACC'"
 # }'
 
-echo "####################### GET CONFIG CONTRACT #########################"
-near view $CONTRACT_ACC get_config ''
-
 # echo "####################### GET CONFIG CONTRACT #########################"
-# near view $CONTRACT_ACC --accountId=$CONTRACT_ACC view_random '' 
+# near view $CONTRACT_ACC get_config ''
 
-echo "######################## GET LATEST ID ROUND #########################"
-near view $CONTRACT_ACC view_latest_lottery_id ''
+# # echo "####################### GET CONFIG CONTRACT #########################"
+# # near view $CONTRACT_ACC --accountId=$CONTRACT_ACC view_random '' 
 
-# echo "######################## GET DETAIL CURRENT ROUND #########################"
-# near view $CONTRACT_ACC view_current_lottery_running ''
+# echo "######################## GET LATEST ID ROUND #########################"
+# near view $CONTRACT_ACC view_latest_lottery_id ''
 
-echo "################# DEPOSIT STORAGE #########################"
-near call $CONTRACT_ACC --accountId=$OWNER storage_deposit '{
-    "account_id":"'$OWNER'"
-}' --deposit=0.25
+# # echo "######################## GET DETAIL CURRENT ROUND #########################"
+# # near view $CONTRACT_ACC view_current_lottery_running ''
+
+# echo "################# DEPOSIT STORAGE #########################"
+# near call $CONTRACT_ACC --accountId=$OWNER storage_deposit '{
+#     "account_id":"'$OWNER'"
+# }' --deposit=0.25
 
 
 

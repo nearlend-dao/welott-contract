@@ -8,19 +8,6 @@ OWNER=$MASTER_ACC
 
 export NEAR_ENV=$NETWORK
 
-# near view $CONTRACT_ACC view_latest_lottery_id ''
-# near view $CONTRACT_ACC view_lottery '{"_lottery_id": 1}'
-# near view $CONTRACT_ACC view_lottery '{"_lottery_id": 5}'
-
-# echo "######################## GET DETAIL CURRENT ROUND #########################"
-# near view $CONTRACT_ACC view_current_lottery_running ''
-
-# echo "####################### GET CONFIG CONTRACT #########################"
-# near view $CONTRACT_ACC get_config ''
-
-# near view $CONTRACT_ACC view_number_tickets_per_lottery '{"_lottery_id": 1}'
-
-# near view $CONTRACT_ACC view_lotteries '{"_cursor": 0, "_size": 50}'
 near view $CONTRACT_ACC view_user_info_for_lottery_id '{"_user": "lamns1.testnet", "_lottery_id": 30, "_cursor": 0, "_size": 50}'
 near view $CONTRACT_ACC view_numbers_and_statuses_for_ticket_ids '{"_ticket_ids": [13875, 13876, 13877, 13878, 13879,
     13880, 13881, 13882, 13883, 13884,
@@ -32,5 +19,3 @@ near view $CONTRACT_ACC view_numbers_and_statuses_for_ticket_ids '{"_ticket_ids"
     13910, 13911, 13912, 13913, 13914,
     13915, 13916, 13917, 13918, 13919,
     13920, 13921, 13922], "_lottery_id": 30}'
-
-near view $CONTRACT_ACC get_current_timestamp ''

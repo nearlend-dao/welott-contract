@@ -5,44 +5,29 @@ use near_sdk::serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct LotteryUserData {
-    pub winning_number: u32,
+    pub final_number: u32,
     pub lottery_id: LotteryId,
-    pub lottery_ticket_ids: Vec<TicketId>,
     pub ticket_numbers: Vec<u32>,
-    pub ticket_status: Vec<TicketStatus>,
-    pub tickets_rewards: Vec<u128>,
+    pub ticket_ids: Vec<TicketId>,
     pub cursor: u32,
-    pub available_to_claim: u128,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct LotteryNumberAndStatusData {
     pub ticket_numbers: Vec<u32>,
-    pub ticket_status: Vec<TicketStatus>,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-#[serde(crate = "near_sdk::serde")]
-pub enum TicketStatus {
-    Undetermined,
-    Lose,
-    Claimable,
-    Claimed,
+    pub ticket_status: Vec<u8>, //[0: NA, 1: Claimed, 2: Clamble, 3: Lose]
 }
 
 /// User account on this contract
 impl Default for LotteryUserData {
     fn default() -> Self {
         Self {
-            winning_number: 0,
+            final_number: 0,
             lottery_id: 0,
-            lottery_ticket_ids: vec![],
             ticket_numbers: vec![],
-            ticket_status: vec![],
-            tickets_rewards: vec![],
+            ticket_ids: vec![],
             cursor: 0,
-            available_to_claim: 0,
         }
     }
 }
@@ -221,14 +206,11 @@ impl NearLott {
     ) -> LotteryUserData {
         let mut length: u32 = _size;
         let mut empty_user_info = LotteryUserData {
-            winning_number: 0,
+            final_number: 0,
             lottery_id: 0,
-            lottery_ticket_ids: vec![],
             ticket_numbers: vec![],
-            ticket_status: vec![],
-            tickets_rewards: vec![],
+            ticket_ids: vec![],
             cursor: _cursor,
-            available_to_claim: 0,
         };
         // get lottery status
         let lottery = self.data()._lotteries.get(&_lottery_id);
@@ -238,7 +220,7 @@ impl NearLott {
 
         // assign data
         let current_lottery = lottery.unwrap();
-        empty_user_info.winning_number = current_lottery.final_number;
+        empty_user_info.final_number = current_lottery.final_number;
         empty_user_info.lottery_id = current_lottery.lottery_id;
 
         // check any ticket ids by this lotteryid
@@ -260,11 +242,6 @@ impl NearLott {
         }
         let mut lottery_ticket_ids = vec![0; length as usize];
         let mut ticket_numbers = vec![0; length as usize];
-        let mut ticket_statuses = vec![TicketStatus::Undetermined; length as usize];
-        let mut tickets_rewards = vec![0; length as usize];
-
-        let _brackets = vec![5, 4, 3, 2, 1, 0];
-        let mut available_to_claim = 0;
         for i in 0..length {
             lottery_ticket_ids[i as usize] = tickets_in_a_lottery[(i + _cursor) as usize];
             let ticket_number = self
@@ -276,50 +253,13 @@ impl NearLott {
                     owner: AccountId::new_unchecked("no_account".to_string()),
                 });
             ticket_numbers[i as usize] = ticket_number.number;
-
-            if ticket_number.owner == AccountId::new_unchecked(ZERO_ADDRESS_WALLET.to_string()) {
-                ticket_statuses[i as usize] = TicketStatus::Claimed;
-            } else {
-                // check win or lose
-                // get reward for speficic ticketid and each bracket
-                let mut rewards_per_bracket = 0;
-                for bracket_position in 0.._brackets.len() {
-                    let reward_for_ticket_id = _calculate_rewards_for_ticket_id(
-                        self.data(),
-                        _lottery_id,
-                        lottery_ticket_ids[i as usize],
-                        _brackets[bracket_position],
-                    );
-                    rewards_per_bracket += reward_for_ticket_id;
-                }
-
-                if current_lottery.status == Status::Close
-                    || current_lottery.status == Status::Claimable
-                {
-                    if rewards_per_bracket > 0 {
-                        ticket_statuses[i as usize] = TicketStatus::Claimable;
-                        available_to_claim = available_to_claim + rewards_per_bracket;
-                    } else {
-                        // if the lottery has been closed. We will determine the status of it
-                        ticket_statuses[i as usize] = TicketStatus::Lose;
-                    }
-                } else {
-                    ticket_statuses[i as usize] = TicketStatus::Undetermined;
-                }
-
-                // reward per ticket
-                tickets_rewards[i as usize] = rewards_per_bracket;
-            }
         }
 
         LotteryUserData {
-            available_to_claim,
-            winning_number: current_lottery.final_number,
+            final_number: current_lottery.final_number,
             lottery_id: current_lottery.lottery_id,
-            lottery_ticket_ids,
+            ticket_ids: lottery_ticket_ids,
             ticket_numbers,
-            ticket_status: ticket_statuses,
-            tickets_rewards,
             cursor: _cursor,
         }
     }
@@ -335,7 +275,7 @@ impl NearLott {
     ) -> LotteryNumberAndStatusData {
         let length = _ticket_ids.len();
         let mut ticket_numbers = vec![0; length];
-        let mut ticket_statuses = vec![TicketStatus::Undetermined; length];
+        let mut ticket_statuses = vec![0; length]; // 0: NA
 
         let _brackets = vec![5, 4, 3, 2, 1, 0];
         for i in 0..length {
@@ -349,7 +289,7 @@ impl NearLott {
                 });
 
             if ticket_number.owner == AccountId::new_unchecked(ZERO_ADDRESS_WALLET.to_string()) {
-                ticket_statuses[i as usize] = TicketStatus::Claimed;
+                ticket_statuses[i as usize] = 1; // Claimed
             } else {
                 let mut rewards_per_bracket = 0;
                 for bracket_position in 0.._brackets.len() {
@@ -362,9 +302,9 @@ impl NearLott {
                     rewards_per_bracket += reward_for_ticket_id;
                 }
                 if rewards_per_bracket > 0 {
-                    ticket_statuses[i as usize] = TicketStatus::Claimable;
+                    ticket_statuses[i as usize] = 2; // Claimable
                 } else {
-                    ticket_statuses[i as usize] = TicketStatus::Lose;
+                    ticket_statuses[i as usize] = 3; // Lose
                 }
             }
             ticket_numbers[i as usize] = ticket_number.number;

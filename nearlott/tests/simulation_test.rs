@@ -112,25 +112,26 @@ fn lotter_actions() {
             to_yocto("0.25"),
         )
         .assert_success();
-    chandra
-        .call(
-            nearlott_contract.account_id(),
-            "buy_tickets",
-            &json!({
-                "_lottery_id": 1,
-                "_ticket_numbers": [1039219],
-                "_amount": U128(to_yocto("1"))
+    for i in 0..20 {
+        chandra
+            .call(
+                nearlott_contract.account_id(),
+                "buy_tickets",
+                &json!({
+                    "_lottery_id": 1,
+                    "_ticket_numbers": [1039219],
+                    "_amount": U128(to_yocto("1"))
 
-            })
-            .to_string()
-            .into_bytes(),
-            DEFAULT_GAS,
-            to_yocto("1"),
-        )
-        .assert_success();
-
+                })
+                .to_string()
+                .into_bytes(),
+                DEFAULT_GAS,
+                to_yocto("1"),
+            )
+            .assert_success();
+    }
     // get view_user_info_for_lottery_id
-    let view_user_info_for_lottery_id: LotteryUserData = alice
+    let view_user_info_for_lottery_id: LotteryUserData = chandra
         .view(
             nearlott_contract.account_id(),
             "view_user_info_for_lottery_id",
@@ -149,8 +150,7 @@ fn lotter_actions() {
         "view_user_info_for_lottery_id: {:?}",
         view_user_info_for_lottery_id
     );
-    assert_eq!(view_user_info_for_lottery_id.lottery_ticket_ids.len(), 1);
-    assert_eq!(view_user_info_for_lottery_id.ticket_numbers.len(), 1);
-    assert_eq!(view_user_info_for_lottery_id.ticket_status.len(), 1);
+
+    assert_eq!(view_user_info_for_lottery_id.ticket_numbers.len(), 20);
     assert_eq!(view_user_info_for_lottery_id.ticket_numbers[0], 1039219);
 }
