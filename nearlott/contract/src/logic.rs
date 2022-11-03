@@ -202,6 +202,12 @@ impl NearLott {
         // Transfer NEAR to treasury address
         Promise::new(data.treasury_address.clone()).transfer(_amount_to_withdraw_to_treasury);
 
+        // convert near per bracket to string
+        let near_per_bracket: Vec<String> = lottery
+            .near_per_bracket
+            .iter()
+            .map(|&id| id.to_string())
+            .collect();
         env::log_str(
             &json!({
                 "type": "draw_final_number_and_make_lottery_claimable",
@@ -211,6 +217,7 @@ impl NearLott {
                     "amount_to_withdraw_to_treasury": U128(_amount_to_withdraw_to_treasury),
                     "amount_collected_in_near": U128(lottery.amount_collected_in_near),
                     "amount_to_share_to_winners": U128(_amount_to_share_to_winners),
+                    "near_per_bracket": near_per_bracket.join(",")
                 }
             })
             .to_string(),
