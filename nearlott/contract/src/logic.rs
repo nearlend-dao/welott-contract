@@ -371,19 +371,6 @@ impl NearLott {
         self.assert_contract_running();
         let data = self.data_mut();
 
-        // check lottery has been claimed
-        let current_account_id = env::predecessor_account_id();
-        let mut lotteries_claimed = data
-            ._user_lottery_claimed
-            .get(&current_account_id)
-            .unwrap_or(vec![]);
-        assert_ne!(
-            lotteries_claimed.contains(&_lottery_id),
-            true,
-            "{}",
-            ERR41_ALREADY_CLAIMED
-        );
-
         // check ticket len and bracket
         assert_eq!(
             _ticket_ids.len(),
@@ -496,11 +483,6 @@ impl NearLott {
 
         // Transfer money to msg.sender
         assert!(reward_in_near_to_transfer > 0, "{}", ERR41_ALREADY_CLAIMED);
-
-        // update to saved claimmed history for account
-        lotteries_claimed.push(_lottery_id);
-        data._user_lottery_claimed
-            .insert(&current_account_id, &lotteries_claimed);
 
         // transfer
         if reward_in_near_to_transfer > 0 {

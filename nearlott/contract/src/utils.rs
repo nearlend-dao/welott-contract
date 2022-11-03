@@ -229,7 +229,7 @@ pub(crate) fn assert_storage_usage_data(data: &ContractData) {
         .get(&env::predecessor_account_id())
         .unwrap_or(0);
     assert!(
-        account_storage_usage_data(data) <= deposited,
+        account_storage_usage_data(data, env::predecessor_account_id()) <= deposited,
         "{}",
         ERR32_INSUFFICIENT_STORAGE
     );
@@ -241,7 +241,7 @@ pub(crate) fn assert_estimate_storage_usage_data(data: &ContractData, _number_of
         ._storage_deposits
         .get(&env::predecessor_account_id())
         .unwrap_or(0);
-    let usage = account_storage_usage_data(data);
+    let usage = account_storage_usage_data(data, env::predecessor_account_id());
     let estimate_storage = estimate_account_storage_usage_data(_number_of_ticket);
     assert!(
         deposited > (usage + estimate_storage),
@@ -254,8 +254,7 @@ pub(crate) fn assert_estimate_storage_usage_data(data: &ContractData, _number_of
 }
 
 /// Returns amount of $NEAR necessary to cover storage used by this data structure.
-pub(crate) fn account_storage_usage_data(data: &ContractData) -> Balance {
-    let account_id = env::predecessor_account_id();
+pub(crate) fn account_storage_usage_data(data: &ContractData, account_id: AccountId) -> Balance {
     let user_lotteries = data
         ._user_ticket_ids_per_lottery_id
         .get(&account_id)

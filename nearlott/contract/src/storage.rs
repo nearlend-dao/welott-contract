@@ -1,4 +1,5 @@
 use crate::*;
+use near_contract_standards::storage_management::StorageBalance;
 use near_contract_standards::storage_management::StorageBalanceBounds;
 use near_sdk::{env, near_bindgen, AccountId, Balance, StorageUsage};
 
@@ -31,8 +32,8 @@ pub const INIT_ACCOUNT_STORAGE: u128 = (NUMBER_TICKERS_PER_LOTTERY_ID
 #[near_bindgen]
 impl NearLott {
     /// NEP154 required
-    pub fn storage_minimum_balance(&mut self) -> u128 {
-        self.min_storage_usage()
+    pub fn storage_minimum_balance(&self) -> U128 {
+        self.min_storage_usage().into()
     }
 
     #[payable]
@@ -61,7 +62,7 @@ impl NearLott {
 
     pub fn storage_balance_bounds(&self) -> StorageBalanceBounds {
         StorageBalanceBounds {
-            min: U128(INIT_ACCOUNT_STORAGE),
+            min: self.min_storage_usage(),
             max: None,
         }
     }
@@ -70,12 +71,12 @@ impl NearLott {
     pub fn storage_withdraw(&mut self) {
         self.assert_one_yoctor();
         let sender_id: AccountId = env::predecessor_account_id();
-        let available_amount = self.storage_available(sender_id);
-        if available_amount > 0 {
-            Promise::new(env::predecessor_account_id()).transfer(available_amount);
+        let available_amount = self.storage_available(sender_id.clone());
+        if available_amount.0 > 0 {
+            Promise::new(env::predecessor_account_id()).transfer(available_amount.into());
         }
 
-        let usage_data = self.account_storage_usage();
+        let usage_data = self.account_storage_usage(sender_id.clone());
         if usage_data > 0 {
             self.data_mut()
                 ._storage_deposits
@@ -84,30 +85,30 @@ impl NearLott {
     }
 
     /// Returns minimal account deposit storage usage possible.
-    pub fn min_storage_usage(&self) -> Balance {
-        INIT_ACCOUNT_STORAGE as Balance * env::storage_byte_cost()
+    pub fn min_storage_usage(&self) -> U128 {
+        U128(INIT_ACCOUNT_STORAGE as Balance * env::storage_byte_cost())
     }
 
     /// Returns how much NEAR is available for storage.
-    pub fn storage_available(&self, _account_id: AccountId) -> Balance {
+    pub fn storage_available(&self, _account_id: AccountId) -> U128 {
         let deposited = self.data()._storage_deposits.get(&_account_id).unwrap_or(0);
-        let locked = self.account_storage_usage();
+        let locked = self.account_storage_usage(_account_id);
         if deposited > locked {
-            deposited - locked
+            U128(deposited - locked)
         } else {
-            0
+            U128(0)
         }
     }
 
     /// Retuns how much NEAR need to cover for storage
-    pub fn get_user_cover_for_storage(&self, _account_id: AccountId) -> Balance {
+    pub fn get_user_cover_for_storage(&self, _account_id: AccountId) -> U128 {
         let deposited = self.data()._storage_deposits.get(&_account_id).unwrap_or(0);
-        let locked = self.account_storage_usage();
+        let locked = self.account_storage_usage(_account_id);
         if locked > deposited {
             let cover_usage: u128 = locked - deposited;
-            return cover_usage;
+            return U128(cover_usage);
         }
-        0
+        U128(0)
     }
 
     /// Asserts there is sufficient amount of $NEAR to cover storage usage.
@@ -116,8 +117,8 @@ impl NearLott {
     }
 
     /// Returns amount of $NEAR necessary to cover storage used by this data structure.
-    pub fn account_storage_usage(&self) -> Balance {
-        account_storage_usage_data(&self.data())
+    pub fn account_storage_usage(&self, account_id: AccountId) -> Balance {
+        account_storage_usage_data(&self.data(), account_id)
     }
 
     pub fn storage_balance_of(&self, account_id: AccountId) -> U128 {
@@ -126,5 +127,11 @@ impl NearLott {
             .get(&account_id)
             .unwrap_or(0)
             .into()
+    }
+
+    #[allow(unused_variables)]
+    #[payable]
+    fn storage_unregister(&mut self, force: Option<bool>) -> bool {
+        env::panic_str("The account can't be unregistered");
     }
 }

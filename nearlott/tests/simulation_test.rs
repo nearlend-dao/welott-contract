@@ -1,6 +1,7 @@
 use crate::utils::{account_o, init, DEFAULT_GAS};
 use contract::LotteryUserData;
 use contract::INIT_ACCOUNT_STORAGE;
+use near_contract_standards::storage_management::StorageBalanceBounds;
 use near_sdk::{
     json_types::{U128, U64},
     serde::{Deserialize, Serialize},
@@ -153,4 +154,86 @@ fn lotter_actions() {
 
     assert_eq!(view_user_info_for_lottery_id.ticket_numbers.len(), 20);
     assert_eq!(view_user_info_for_lottery_id.ticket_numbers[0], 1039219);
+
+    // view storage
+    let storage_balance_of: U128 = chandra
+        .view(
+            nearlott_contract.account_id(),
+            "storage_balance_of",
+            &json!({
+                "account_id": chandra.account_id(),
+            })
+            .to_string()
+            .into_bytes(),
+        )
+        .unwrap_json();
+    println!("storage_balance_of: {:?}", storage_balance_of);
+
+    let account_storage_usage: U128 = chandra
+        .view(
+            nearlott_contract.account_id(),
+            "get_user_cover_for_storage",
+            &json!({
+                "_account_id": chandra.account_id(),
+            })
+            .to_string()
+            .into_bytes(),
+        )
+        .unwrap_json();
+    println!(
+        "account_storage_usage: {:?}",
+        format!("{:?}", account_storage_usage)
+    );
+
+    let storage_available: U128 = chandra
+        .view(
+            nearlott_contract.account_id(),
+            "storage_available",
+            &json!({
+                "_account_id": chandra.account_id(),
+            })
+            .to_string()
+            .into_bytes(),
+        )
+        .unwrap_json();
+    println!(
+        "storage_available: {:?}",
+        format!("{:?}", storage_available)
+    );
+
+    let min_storage_usage: U128 = chandra
+        .view(
+            nearlott_contract.account_id(),
+            "min_storage_usage",
+            &json!({}).to_string().into_bytes(),
+        )
+        .unwrap_json();
+    println!(
+        "min_storage_usage: {:?}",
+        format!("{:?}", min_storage_usage)
+    );
+
+    let storage_balance_bounds: StorageBalanceBounds = chandra
+        .view(
+            nearlott_contract.account_id(),
+            "storage_balance_bounds",
+            &json!({}).to_string().into_bytes(),
+        )
+        .unwrap_json();
+    println!(
+        "storage_balance_bounds: {:?}",
+        format!(
+            "{:?}, {:?}",
+            storage_balance_bounds.min, storage_balance_bounds.max
+        )
+    );
+
+    let storage_minimum_balance: U128 = chandra
+        .view(
+            nearlott_contract.account_id(),
+            "storage_minimum_balance",
+            &json!({}).to_string().into_bytes(),
+        )
+        .unwrap_json();
+    println!("storage_minimum_balance: {:?}", storage_minimum_balance);
 }
