@@ -146,12 +146,13 @@ impl Account {
     pub fn internal_set_bracket_ticket_number_per_lottery(
         &mut self,
         _lottery_id: &LotteryId,
-        _bracket_ticket_number: &BracketTicketNumber,
+        key_brackets: &Vec<BracketTicketNumber>,
     ) {
         let mut account_bracket_counting =
             self.internal_get_bracket_ticket_number_by_lottery_or_default(_lottery_id);
-        account_bracket_counting
-            .internal_set_bracket_ticket_number_counting(_bracket_ticket_number);
+        for key_bracket in key_brackets.into_iter() {
+            account_bracket_counting.internal_set_bracket_ticket_number_counting(&key_bracket);
+        }
         self.bracket_tickets_number
             .insert(_lottery_id.clone(), account_bracket_counting);
     }
