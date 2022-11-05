@@ -135,11 +135,11 @@ impl NearLott {
         // Initializes the amount to withdraw to treasury
         let mut _amount_to_withdraw_to_treasury: u128 = 0;
 
+        let account_id = env::predecessor_account_id();
+        let mut account = internal_get_account_unwrap_by_contract_data(data, &account_id);
         if lottery.first_ticket_id_next_lottery - lottery.first_ticket_id > 0 {
-            let number_tickets_per_lottery = data
-                ._number_tickers_per_lottery_id
-                .get(&_lottery_id)
-                .expect(ERR19_LOTTERY_NO_TICKERS_NUMBERS);
+            let mut bracket_ticket_numbers =
+                account.internal_get_bracket_ticket_number_by_lottery_or_default(&_lottery_id);
 
             // Calculate prizes in NEAR for each bracket by starting from the highest one
             for i in 0..6 {
@@ -152,9 +152,10 @@ impl NearLott {
                 let _transformed_winning_number =
                     bracket_number + (_final_number % (10u32.pow(j + 1)));
 
-                let number_ticket_in_winning_number = number_tickets_per_lottery
-                    .get(&_transformed_winning_number)
-                    .unwrap_or(0);
+                let number_ticket_in_winning_number = bracket_ticket_numbers
+                    .internal_get_bracket_ticket_number_counting_or_default(
+                        &_transformed_winning_number,
+                    );
 
                 lottery.count_winners_per_bracket[j as usize] =
                     number_ticket_in_winning_number - _number_addresses_in_previous_bracket;
@@ -259,9 +260,6 @@ impl NearLott {
             ERR31_LOTTERY_IS_OVER
         );
 
-        // asert storage cover
-        assert_estimate_storage_usage_data(&data, _ticket_numbers.len() as u64);
-
         // Calculate number of NEAR to this contract
         let amount_near_to_transfer = _calculate_total_price_for_bulk_tickets(
             lottery.discount_divisor,
@@ -269,7 +267,7 @@ impl NearLott {
             _ticket_numbers.len() as u128,
         );
         assert!(
-            env::attached_deposit() == amount_near_to_transfer,
+            env::attached_deposit() >= amount_near_to_transfer,
             "{}: {}",
             ERR16_ATTACHED_DEPOSIT_NOT_EQUAL_AMOUNT,
             amount_near_to_transfer
@@ -282,18 +280,7 @@ impl NearLott {
         data.permission_update = PermissionUpdateState::Allow;
 
         // update lottery data
-        let mut number_tickets_in_a_lottery = data
-            ._number_tickers_per_lottery_id
-            .get(&_lottery_id)
-            .unwrap_or(UnorderedMap::new(StorageKey::NumberTickersPerLotteryId {
-                lottery_id: _lottery_id,
-            }));
-        let mut user_lotteries = data
-            ._user_ticket_ids_per_lottery_id
-            .get(&env::predecessor_account_id())
-            .unwrap_or(UnorderedMap::new(StorageKey::UserTicketsPerLottery {
-                account_id: env::predecessor_account_id(),
-            }));
+        let account_id = env::predecessor_account_id();
 
         for i in 0.._ticket_numbers.len() {
             let ticket_number = _ticket_numbers[i];
@@ -309,20 +296,19 @@ impl NearLott {
                 .map(|x| create_number_one(x) + (ticket_number % 10u32.pow(x)))
                 .collect();
             for key_bracket in key_brackets.into_iter() {
-                // increase counting for each key number
-                let value_bracket = number_tickets_in_a_lottery.get(&key_bracket).unwrap_or(0) + 1;
-                // insert each bracket
-                number_tickets_in_a_lottery.insert(&key_bracket, &value_bracket);
+                // insert each bracket number with counter by +1 automatically
+                let mut acc_saver = internal_get_account_unwrap_by_contract_data(data, &account_id);
+                acc_saver
+                    .internal_set_bracket_ticket_number_per_lottery(&_lottery_id, &key_bracket);
+                internal_set_account_data(data, &account_id, acc_saver);
             }
-            data._number_tickers_per_lottery_id
-                .insert(&_lottery_id, &number_tickets_in_a_lottery);
 
             // push new ticket id to user_tickets
-            let mut user_tickets_in_a_lottery = user_lotteries.get(&_lottery_id).unwrap_or(vec![]);
-            user_tickets_in_a_lottery.push(data.current_ticket_id);
-            user_lotteries.insert(&_lottery_id, &user_tickets_in_a_lottery);
-            data._user_ticket_ids_per_lottery_id
-                .insert(&env::predecessor_account_id(), &user_lotteries);
+            let mut account = internal_get_account_unwrap_by_contract_data(data, &account_id);
+            account.internal_set_ticket_ids_per_lottery(&_lottery_id, data.current_ticket_id);
+
+            // calcualte deposit storage
+            internal_set_account_data(data, &account_id, account);
 
             // save tickets with current ticket id
             data._tickets.insert(

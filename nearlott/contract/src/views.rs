@@ -164,19 +164,17 @@ impl NearLott {
         _cursor: usize,
         _size: usize,
     ) -> Vec<LotteryUserData> {
-        let lotteries_user_tickets = self.data()._user_ticket_ids_per_lottery_id.get(&_user);
-        if lotteries_user_tickets.is_none() {
-            return vec![];
-        }
-
-        let lotteries_user_tickets = lotteries_user_tickets.unwrap();
-        let lottery_key_ids = lotteries_user_tickets.keys_as_vector();
+        let account = self.internal_unwrap_account(&_user);
+        let lottery_key_ids = account.bracket_tickets_number.keys();
 
         let mut lotteries: Vec<LotteryUserData> = (0..lottery_key_ids.len())
-            .map(|idx| {
-                let lottery_id: LotteryId = lottery_key_ids.get(idx).unwrap_or(0);
-                let lottery_data =
-                    self.view_user_info_for_lottery_id(_user.clone(), lottery_id, 0, 1000);
+            .map(|lottery_id| {
+                let lottery_data = self.view_user_info_for_lottery_id(
+                    _user.clone(),
+                    lottery_id as LotteryId,
+                    0,
+                    1000,
+                );
                 return lottery_data;
             })
             .collect();
@@ -225,19 +223,14 @@ impl NearLott {
 
         // check any ticket ids by this lotteryid
         // if there is no tickets. Return as a default value
-        let lotteries_user_tickets = self.data()._user_ticket_ids_per_lottery_id.get(&_user);
-        if lotteries_user_tickets.is_none() {
+        let mut account = self.internal_unwrap_account(&_user);
+        let user_tickets = account.internal_get_ticket_id_per_lottery_or_default(&_lottery_id);
+        if user_tickets.len() == 0 {
             return empty_user_info;
         }
 
-        let user_tickets = lotteries_user_tickets.unwrap().get(&_lottery_id);
-        if user_tickets.is_none() {
-            return empty_user_info;
-        }
-
-        let tickets_in_a_lottery = user_tickets.unwrap();
         let mut from_index = _cursor;
-        let number_tickets_bought_at_lottery_id = tickets_in_a_lottery.len() as u32;
+        let number_tickets_bought_at_lottery_id = user_tickets.len() as u32;
 
         // if the cursor is greater than the number of list of tickets. Set from_index equals length of the tickets to avoid subflow
         if from_index > number_tickets_bought_at_lottery_id {
@@ -249,7 +242,7 @@ impl NearLott {
         let mut lottery_ticket_ids = vec![0; length as usize];
         let mut ticket_numbers = vec![0; length as usize];
         for i in 0..length {
-            lottery_ticket_ids[i as usize] = tickets_in_a_lottery[(i + _cursor) as usize];
+            lottery_ticket_ids[i as usize] = user_tickets[(i + _cursor) as usize];
             let ticket_number = self
                 .data()
                 ._tickets

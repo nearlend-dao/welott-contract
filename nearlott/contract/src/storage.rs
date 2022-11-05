@@ -1,137 +1,202 @@
 use crate::*;
-use near_contract_standards::storage_management::StorageBalance;
-use near_contract_standards::storage_management::StorageBalanceBounds;
-use near_sdk::{env, near_bindgen, AccountId, Balance, StorageUsage};
+use near_contract_standards::storage_management::{StorageBalance, StorageBalanceBounds};
+use near_sdk::assert_one_yocto;
+use near_sdk::json_types::U128;
+use near_sdk::StorageUsage;
 
-pub const U128_STORAGE: StorageUsage = 16;
-// const U64_STORAGE: StorageUsage = 8;
-pub const U32_STORAGE: StorageUsage = 4;
+/// 10000 bytes
+const MIN_STORAGE_BALANCE: Balance = 10000u128 * env::STORAGE_PRICE_PER_BYTE;
 
-/// max length of account id is 64 bytes. We charge per byte.
-pub const ACC_ID_STORAGE: StorageUsage = 64;
+#[derive(BorshSerialize, BorshDeserialize)]
+pub struct Storage {
+    pub storage_balance: Balance,
+    pub used_bytes: StorageUsage,
+    #[borsh_skip]
+    pub storage_tracker: StorageTracker,
+}
 
-// key prefix of a collection takes 4 bytes;
-const COLLECTION_KEY_PREFIX: StorageUsage = 4;
+#[derive(BorshSerialize, BorshDeserialize)]
+pub enum VStorage {
+    Current(Storage),
+}
 
-// _number_tickers_per_lottery_id
-const NUMBER_TICKERS_PER_LOTTERY_ID: StorageUsage =
-    COLLECTION_KEY_PREFIX + U32_STORAGE + COLLECTION_KEY_PREFIX + U32_STORAGE + U128_STORAGE;
+impl From<VStorage> for Storage {
+    fn from(v: VStorage) -> Self {
+        match v {
+            VStorage::Current(c) => c,
+        }
+    }
+}
 
-//_user_ticket_ids_per_lottery_id
-const NUMBER_TICKETS_PER_LOTTERY_ID_USAGE: StorageUsage =
-    COLLECTION_KEY_PREFIX + ACC_ID_STORAGE + COLLECTION_KEY_PREFIX + U32_STORAGE + U32_STORAGE;
+impl From<Storage> for VStorage {
+    fn from(c: Storage) -> Self {
+        VStorage::Current(c)
+    }
+}
 
-// _storage_deposits
-const STORAGE_DEPOSITS_USAGE: StorageUsage = COLLECTION_KEY_PREFIX + ACC_ID_STORAGE + U128_STORAGE;
+impl Storage {
+    pub fn new() -> Self {
+        Self {
+            storage_balance: 0,
+            used_bytes: 0,
+            storage_tracker: Default::default(),
+        }
+    }
 
-// Contract Storage
-pub const INIT_ACCOUNT_STORAGE: u128 = (NUMBER_TICKERS_PER_LOTTERY_ID
-    + NUMBER_TICKETS_PER_LOTTERY_ID_USAGE
-    + STORAGE_DEPOSITS_USAGE) as u128;
+    fn assert_storage_covered(&self) {
+        let storage_balance_needed = Balance::from(self.used_bytes) * env::storage_byte_cost();
+        assert!(
+            storage_balance_needed <= self.storage_balance,
+            "Not enough storage balance"
+        );
+    }
+}
+
+impl NearLott {
+    pub fn internal_get_storage(&self, account_id: &AccountId) -> Option<Storage> {
+        self.data().storage.get(account_id).map(|o| o.into())
+    }
+
+    pub fn internal_unwrap_storage(&self, account_id: &AccountId) -> Storage {
+        self.internal_get_storage(account_id)
+            .expect("Storage for account is missing")
+    }
+
+    pub fn internal_set_storage(&mut self, account_id: &AccountId, mut storage: Storage) {
+        if storage.storage_tracker.bytes_added >= storage.storage_tracker.bytes_released {
+            let extra_bytes_used =
+                storage.storage_tracker.bytes_added - storage.storage_tracker.bytes_released;
+            storage.used_bytes += extra_bytes_used;
+            storage.assert_storage_covered();
+        } else {
+            let bytes_released =
+                storage.storage_tracker.bytes_released - storage.storage_tracker.bytes_added;
+            assert!(
+                storage.used_bytes >= bytes_released,
+                "Internal storage accounting bug"
+            );
+            storage.used_bytes -= bytes_released;
+        }
+        storage.storage_tracker.bytes_released = 0;
+        storage.storage_tracker.bytes_added = 0;
+        self.data_mut().storage.insert(account_id, &storage.into());
+    }
+
+    pub fn internal_storage_balance_of(&self, account_id: &AccountId) -> Option<StorageBalance> {
+        self.internal_get_storage(account_id)
+            .map(|storage| StorageBalance {
+                total: storage.storage_balance.into(),
+                available: U128(
+                    storage.storage_balance
+                        - std::cmp::max(
+                            Balance::from(storage.used_bytes) * env::storage_byte_cost(),
+                            self.storage_balance_bounds().min.0,
+                        ),
+                ),
+            })
+    }
+}
 
 #[near_bindgen]
 impl NearLott {
-    /// NEP154 required
-    pub fn storage_minimum_balance(&self) -> U128 {
-        self.min_storage_usage().into()
-    }
-
     #[payable]
-    pub fn storage_deposit(&mut self, account_id: Option<AccountId>) {
-        let storage_account_id = account_id
+    pub fn storage_deposit(
+        &mut self,
+        account_id: Option<AccountId>,
+        registration_only: Option<bool>,
+    ) -> StorageBalance {
+        let amount: Balance = env::attached_deposit();
+        let account_id = account_id
             .map(|a| a.into())
-            .unwrap_or_else(env::predecessor_account_id);
-        let deposit = env::attached_deposit();
-        assert!(
-            deposit >= INIT_ACCOUNT_STORAGE,
-            "{}: {}",
-            ERR33_INSUFFICIENT_MINIMUM_REQUIRES,
-            INIT_ACCOUNT_STORAGE
-        );
+            .unwrap_or_else(|| env::predecessor_account_id());
+        let storage = self.internal_get_storage(&account_id);
+        let registration_only = registration_only.unwrap_or(false);
+        if let Some(mut storage) = storage {
+            if registration_only && amount > 0 {
+                Promise::new(env::predecessor_account_id()).transfer(amount);
+            } else {
+                storage.storage_balance += amount;
+                self.internal_set_storage(&account_id, storage);
+            }
+        } else {
+            let min_balance = self.storage_balance_bounds().min.0;
+            if amount < min_balance {
+                env::panic_str("The attached deposit is less than the mimimum storage balance");
+            }
 
-        let mut balance: u128 = self
-            .data_mut()
-            ._storage_deposits
-            .get(&storage_account_id)
-            .unwrap_or(0);
-        balance += deposit;
-        self.data_mut()
-            ._storage_deposits
-            .insert(&storage_account_id, &balance);
-    }
+            let mut storage = Storage::new();
+            if registration_only {
+                let refund = amount - min_balance;
+                if refund > 0 {
+                    Promise::new(env::predecessor_account_id()).transfer(refund);
+                }
+                storage.storage_balance = min_balance;
+            } else {
+                storage.storage_balance = amount;
+            }
 
-    pub fn storage_balance_bounds(&self) -> StorageBalanceBounds {
-        StorageBalanceBounds {
-            min: self.min_storage_usage(),
-            max: None,
+            let mut account = Account::new(&account_id);
+            // HACK: Tracking the extra bytes required to store the storage object itself and
+            // recording this under account storage tracker. It'll be accounted when saving the
+            // account below.
+            account.storage_tracker.start();
+            self.internal_set_storage(&account_id, storage);
+            account.storage_tracker.stop();
+            self.internal_set_account(&account_id, account);
         }
+        self.internal_storage_balance_of(&account_id).unwrap()
     }
 
     #[payable]
-    pub fn storage_withdraw(&mut self) {
-        self.assert_one_yoctor();
-        let sender_id: AccountId = env::predecessor_account_id();
-        let available_amount = self.storage_available(sender_id.clone());
-        if available_amount.0 > 0 {
-            Promise::new(env::predecessor_account_id()).transfer(available_amount.into());
-        }
-
-        let usage_data = self.account_storage_usage(sender_id.clone());
-        if usage_data > 0 {
-            self.data_mut()
-                ._storage_deposits
-                .insert(&env::predecessor_account_id(), &usage_data);
-        }
-    }
-
-    /// Returns minimal account deposit storage usage possible.
-    pub fn min_storage_usage(&self) -> U128 {
-        U128(INIT_ACCOUNT_STORAGE as Balance * env::storage_byte_cost())
-    }
-
-    /// Returns how much NEAR is available for storage.
-    pub fn storage_available(&self, _account_id: AccountId) -> U128 {
-        let deposited = self.data()._storage_deposits.get(&_account_id).unwrap_or(0);
-        let locked = self.account_storage_usage(_account_id);
-        if deposited > locked {
-            U128(deposited - locked)
+    pub fn storage_withdraw(&mut self, amount: Option<U128>) -> StorageBalance {
+        assert_one_yocto();
+        let account_id = env::predecessor_account_id();
+        if let Some(storage_balance) = self.internal_storage_balance_of(&account_id) {
+            let amount = amount.unwrap_or(storage_balance.available).0;
+            if amount > storage_balance.available.0 {
+                env::panic_str("The amount is greater than the available storage balance");
+            }
+            if amount > 0 {
+                let mut storage = self.internal_unwrap_storage(&account_id);
+                storage.storage_balance -= amount;
+                self.internal_set_storage(&account_id, storage);
+                Promise::new(account_id.clone()).transfer(amount);
+            }
+            self.internal_storage_balance_of(&account_id).unwrap()
         } else {
-            U128(0)
+            env::panic_str(&format!("The account {} is not registered", &account_id));
         }
-    }
-
-    /// Retuns how much NEAR need to cover for storage
-    pub fn get_user_cover_for_storage(&self, _account_id: AccountId) -> U128 {
-        let deposited = self.data()._storage_deposits.get(&_account_id).unwrap_or(0);
-        let locked = self.account_storage_usage(_account_id);
-        if locked > deposited {
-            let cover_usage: u128 = locked - deposited;
-            return U128(cover_usage);
-        }
-        U128(0)
-    }
-
-    /// Asserts there is sufficient amount of $NEAR to cover storage usage.
-    pub fn assert_storage_usage(&self) {
-        assert_storage_usage_data(&self.data())
-    }
-
-    /// Returns amount of $NEAR necessary to cover storage used by this data structure.
-    pub fn account_storage_usage(&self, account_id: AccountId) -> Balance {
-        account_storage_usage_data(&self.data(), account_id)
-    }
-
-    pub fn storage_balance_of(&self, account_id: AccountId) -> U128 {
-        self.data()
-            ._storage_deposits
-            .get(&account_id)
-            .unwrap_or(0)
-            .into()
     }
 
     #[allow(unused_variables)]
     #[payable]
-    fn storage_unregister(&mut self, force: Option<bool>) -> bool {
+    pub fn storage_unregister(&mut self, force: Option<bool>) -> bool {
         env::panic_str("The account can't be unregistered");
+    }
+
+    pub fn storage_balance_bounds(&self) -> StorageBalanceBounds {
+        StorageBalanceBounds {
+            min: U128(MIN_STORAGE_BALANCE),
+            max: None,
+        }
+    }
+
+    pub fn storage_balance_of(&self, account_id: AccountId) -> Option<StorageBalance> {
+        self.internal_storage_balance_of(&account_id)
+    }
+}
+
+#[near_bindgen]
+impl NearLott {
+    /// Helper method for debugging storage usage that ignores minimum storage limits.
+    pub fn debug_storage_balance_of(&self, account_id: AccountId) -> Option<StorageBalance> {
+        self.internal_get_storage(&account_id)
+            .map(|storage| StorageBalance {
+                total: storage.storage_balance.into(),
+                available: U128(
+                    storage.storage_balance
+                        - Balance::from(storage.used_bytes) * env::storage_byte_cost(),
+                ),
+            })
     }
 }

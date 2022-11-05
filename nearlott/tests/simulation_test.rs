@@ -1,12 +1,13 @@
 use crate::utils::{account_o, init, DEFAULT_GAS};
 use contract::LotteryUserData;
-use contract::INIT_ACCOUNT_STORAGE;
+use near_contract_standards::storage_management::StorageBalance;
 use near_contract_standards::storage_management::StorageBalanceBounds;
 use near_sdk::{
+    env,
     json_types::{U128, U64},
     serde::{Deserialize, Serialize},
     serde_json::json,
-    AccountId, Gas,
+    AccountId, Balance, Gas,
 };
 use near_sdk_sim::{to_yocto, view};
 mod utils;
@@ -40,7 +41,7 @@ fn test_storage_deposit() {
             "storage_deposit",
             &json!({}).to_string().into_bytes(),
             DEFAULT_GAS,
-            (INIT_ACCOUNT_STORAGE as u64).into(),
+            500000000000000000000000,
         )
         .assert_success();
 }
@@ -60,6 +61,15 @@ fn lotter_actions() {
         root,
     ) = init();
 
+    let minium_deposit_amount: StorageBalanceBounds = chandra
+        .view(
+            nearlott_contract.account_id(),
+            "storage_balance_bounds",
+            &json!({}).to_string().into_bytes(),
+        )
+        .unwrap_json();
+    println!("minium_deposit_amount: {:?}", minium_deposit_amount.min);
+
     const SEP_8_2022: u64 = 1633046400000000000;
     const ONE_DAY: u64 = 86400000000000;
 
@@ -73,6 +83,15 @@ fn lotter_actions() {
     .to_string();
 
     // deposit near to cover contract
+    _operator
+        .call(
+            nearlott_contract.account_id(),
+            "storage_deposit",
+            &json!({}).to_string().into_bytes(),
+            DEFAULT_GAS,
+            minium_deposit_amount.min.0,
+        )
+        .assert_success();
     _operator.borrow_runtime_mut().cur_block.block_timestamp = SEP_8_2022 - ONE_DAY;
     _operator
         .call(
@@ -110,10 +129,29 @@ fn lotter_actions() {
             "storage_deposit",
             &json!({}).to_string().into_bytes(),
             DEFAULT_GAS,
-            to_yocto("0.25"),
+            minium_deposit_amount.min.0 * 5,
         )
         .assert_success();
-    for i in 0..20 {
+
+    // Do a loop buying 2000 tickets
+    for i in 0..2000 {
+        // check storage available
+        let chandra_storage: StorageBalance = chandra
+            .view(
+                nearlott_contract.account_id(),
+                "debug_storage_balance_of",
+                &json!({
+                    "account_id": chandra.account_id(),
+                })
+                .to_string()
+                .into_bytes(),
+            )
+            .unwrap_json();
+        println!(
+            "storage_available: {:?}: {:?}, {:?}",
+            i, chandra_storage.available.0, chandra_storage.total.0
+        );
+
         chandra
             .call(
                 nearlott_contract.account_id(),
@@ -154,86 +192,4 @@ fn lotter_actions() {
 
     assert_eq!(view_user_info_for_lottery_id.ticket_numbers.len(), 20);
     assert_eq!(view_user_info_for_lottery_id.ticket_numbers[0], 1039219);
-
-    // view storage
-    let storage_balance_of: U128 = chandra
-        .view(
-            nearlott_contract.account_id(),
-            "storage_balance_of",
-            &json!({
-                "account_id": chandra.account_id(),
-            })
-            .to_string()
-            .into_bytes(),
-        )
-        .unwrap_json();
-    println!("storage_balance_of: {:?}", storage_balance_of);
-
-    let account_storage_usage: U128 = chandra
-        .view(
-            nearlott_contract.account_id(),
-            "get_user_cover_for_storage",
-            &json!({
-                "_account_id": chandra.account_id(),
-            })
-            .to_string()
-            .into_bytes(),
-        )
-        .unwrap_json();
-    println!(
-        "account_storage_usage: {:?}",
-        format!("{:?}", account_storage_usage)
-    );
-
-    let storage_available: U128 = chandra
-        .view(
-            nearlott_contract.account_id(),
-            "storage_available",
-            &json!({
-                "_account_id": chandra.account_id(),
-            })
-            .to_string()
-            .into_bytes(),
-        )
-        .unwrap_json();
-    println!(
-        "storage_available: {:?}",
-        format!("{:?}", storage_available)
-    );
-
-    let min_storage_usage: U128 = chandra
-        .view(
-            nearlott_contract.account_id(),
-            "min_storage_usage",
-            &json!({}).to_string().into_bytes(),
-        )
-        .unwrap_json();
-    println!(
-        "min_storage_usage: {:?}",
-        format!("{:?}", min_storage_usage)
-    );
-
-    let storage_balance_bounds: StorageBalanceBounds = chandra
-        .view(
-            nearlott_contract.account_id(),
-            "storage_balance_bounds",
-            &json!({}).to_string().into_bytes(),
-        )
-        .unwrap_json();
-    println!(
-        "storage_balance_bounds: {:?}",
-        format!(
-            "{:?}, {:?}",
-            storage_balance_bounds.min, storage_balance_bounds.max
-        )
-    );
-
-    let storage_minimum_balance: U128 = chandra
-        .view(
-            nearlott_contract.account_id(),
-            "storage_minimum_balance",
-            &json!({}).to_string().into_bytes(),
-        )
-        .unwrap_json();
-    println!("storage_minimum_balance: {:?}", storage_minimum_balance);
 }

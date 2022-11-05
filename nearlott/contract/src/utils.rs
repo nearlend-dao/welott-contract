@@ -1,6 +1,5 @@
 use crate::callback::ext_ft_contract;
 use crate::gas::GAS_FOR_FT_TRANSFER;
-use near_sdk::StorageUsage;
 
 use crate::*;
 // use rand::Rng; // 0.8.0
@@ -47,49 +46,6 @@ pub(crate) fn create_number_one(sequence: u32) -> u32 {
         .collect::<String>()
         .parse::<u32>()
         .expect(ERR36_STRING_NUMBER_INVALID)
-}
-
-pub(crate) fn calcualte_near_for_lottery(
-    data: &ContractData,
-    _lottery: &Lottery,
-    _ticket_ids: &Vec<TicketId>,
-) -> (u128, Vec<TicketId>) {
-    // Initializes the reward_in_near_to_transfer
-    let mut reward_in_near_to_transfer = 0;
-    let _brackets = vec![5, 4, 3, 2, 1, 0];
-    let mut tickets_won = vec![];
-
-    for i in 0.._ticket_ids.len() {
-        let this_ticket_id = _ticket_ids[i];
-
-        if _lottery.first_ticket_id_next_lottery > this_ticket_id
-            && _lottery.first_ticket_id <= this_ticket_id
-        {
-            let ticket = data._tickets.get(&this_ticket_id);
-            if ticket.is_some() {
-                let m_ticket = ticket.unwrap();
-                if m_ticket.owner == env::predecessor_account_id() {
-                    for j in 0.._brackets.len() {
-                        // get reward for speficic ticketid and each bracket
-                        let reward_for_ticket_id = _calculate_rewards_for_ticket_id(
-                            data,
-                            _lottery.lottery_id,
-                            this_ticket_id,
-                            _brackets[j],
-                        );
-                        // Increment the reward to transfer
-                        if reward_for_ticket_id > 0 {
-                            // add ticket to return
-                            tickets_won.push(this_ticket_id);
-                            reward_in_near_to_transfer += reward_for_ticket_id;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    (reward_in_near_to_transfer, tickets_won)
 }
 
 /**
@@ -222,74 +178,6 @@ pub(crate) fn random_position() -> Vec<u8> {
     positions
 }
 
-/// Asserts there is sufficient amount of $NEAR to cover storage usage.
-pub(crate) fn assert_storage_usage_data(data: &ContractData) {
-    let deposited = data
-        ._storage_deposits
-        .get(&env::predecessor_account_id())
-        .unwrap_or(0);
-    assert!(
-        account_storage_usage_data(data, env::predecessor_account_id()) <= deposited,
-        "{}",
-        ERR32_INSUFFICIENT_STORAGE
-    );
-}
-
-/// Asserts there is sufficient amount of $NEAR to cover storage usage.
-pub(crate) fn assert_estimate_storage_usage_data(data: &ContractData, _number_of_ticket: u64) {
-    let deposited = data
-        ._storage_deposits
-        .get(&env::predecessor_account_id())
-        .unwrap_or(0);
-    let usage = account_storage_usage_data(data, env::predecessor_account_id());
-    let estimate_storage = estimate_account_storage_usage_data(_number_of_ticket);
-    assert!(
-        deposited > (usage + estimate_storage),
-        "{}. Deposited: {}, used: {}, estimate nescessray NEAR should be deposited to cover fee: {}",
-        ERR32_INSUFFICIENT_STORAGE,
-        deposited,
-        usage,
-        estimate_storage
-    );
-}
-
-/// Returns amount of $NEAR necessary to cover storage used by this data structure.
-pub(crate) fn account_storage_usage_data(data: &ContractData, account_id: AccountId) -> Balance {
-    let user_lotteries = data
-        ._user_ticket_ids_per_lottery_id
-        .get(&account_id)
-        .unwrap_or(UnorderedMap::new(b"A".to_vec()));
-
-    let values = user_lotteries
-        .values()
-        .map(|user_tickets| user_tickets.len() as u64)
-        .collect::<Vec<_>>();
-    let number_of_tickets: u64 = values.iter().sum();
-    // number of lotteries x (each lottery including: list of ticket numbers and 4 bytes)
-    let storage_use_store_lotteries: StorageUsage =
-        user_lotteries.len() * (U32_STORAGE * number_of_tickets);
-
-    // storage using for list of _number_tickers_per_lottery_id
-    let storage_number_of_tickets_elements_numbers =
-        user_lotteries.len() * (U32_STORAGE + U128_STORAGE * 6);
-
-    INIT_ACCOUNT_STORAGE
-        + storage_use_store_lotteries as u128
-        + storage_number_of_tickets_elements_numbers as u128
-}
-
-/// Estimate the storage need for number of tickets
-pub(crate) fn estimate_account_storage_usage_data(number_of_tickets: u64) -> Balance {
-    // number of lotteries x (each lottery including: list of ticket numbers and 4 bytes)
-    let storage_use_store_lotteries: StorageUsage = 1 * (U32_STORAGE * number_of_tickets);
-
-    // storage using for list of _number_tickers_per_lottery_id
-    let storage_number_of_tickets_elements_numbers =
-        number_of_tickets * (U32_STORAGE + U128_STORAGE * 6);
-
-    storage_use_store_lotteries as u128 + storage_number_of_tickets_elements_numbers as u128
-}
-
 pub(crate) fn extract_data(value: Option<U128>) -> u128 {
     let value_in_128 = if let Some(amount) = value.map(|a| a.0) {
         amount
@@ -297,4 +185,81 @@ pub(crate) fn extract_data(value: Option<U128>) -> u128 {
         0
     };
     value_in_128
+}
+
+#[allow(unused)]
+pub(crate) fn unordered_map_pagination<K, VV, V>(
+    m: &UnorderedMap<K, VV>,
+    from_index: Option<u64>,
+    limit: Option<u64>,
+) -> Vec<(K, V)>
+where
+    K: BorshSerialize + BorshDeserialize,
+    VV: BorshSerialize + BorshDeserialize,
+    V: From<VV>,
+{
+    let keys = m.keys_as_vector();
+    let values = m.values_as_vector();
+    let from_index = from_index.unwrap_or(0);
+    let limit = limit.unwrap_or(keys.len());
+    (from_index..std::cmp::min(keys.len(), from_index + limit))
+        .map(|index| (keys.get(index).unwrap(), values.get(index).unwrap().into()))
+        .collect()
+}
+
+pub(crate) fn internal_get_account_unwrap_by_contract_data(
+    contract_data: &mut ContractData,
+    account_id: &AccountId,
+) -> Account {
+    let account = contract_data.accounts.get(account_id).map(|o| o.into());
+    account.expect(ERR42_ACCOUNT_NO_EXISTING)
+}
+
+pub(crate) fn internal_set_storage_data(
+    data: &mut ContractData,
+    account_id: &AccountId,
+    mut storage: Storage,
+) {
+    if storage.storage_tracker.bytes_added >= storage.storage_tracker.bytes_released {
+        let extra_bytes_used =
+            storage.storage_tracker.bytes_added - storage.storage_tracker.bytes_released;
+        storage.used_bytes += extra_bytes_used;
+
+        // check assert
+        let storage_balance_needed = Balance::from(storage.used_bytes) * env::storage_byte_cost();
+        assert!(
+            storage_balance_needed <= storage.storage_balance,
+            "Not enough storage balance"
+        );
+    } else {
+        let bytes_released =
+            storage.storage_tracker.bytes_released - storage.storage_tracker.bytes_added;
+        assert!(
+            storage.used_bytes >= bytes_released,
+            "Internal storage accounting bug"
+        );
+        storage.used_bytes -= bytes_released;
+    }
+    storage.storage_tracker.bytes_released = 0;
+    storage.storage_tracker.bytes_added = 0;
+    data.storage.insert(account_id, &storage.into());
+}
+
+pub(crate) fn internal_set_account_data(
+    data: &mut ContractData,
+    account_id: &AccountId,
+    mut account: Account,
+) {
+    let mut storage: Storage = data
+        .storage
+        .get(account_id)
+        .map(|o| o.into())
+        .expect("Storage for account is missing");
+    storage
+        .storage_tracker
+        .consume(&mut account.storage_tracker);
+    storage.storage_tracker.start();
+    data.accounts.insert(account_id, &account.into());
+    storage.storage_tracker.stop();
+    internal_set_storage_data(data, account_id, storage);
 }

@@ -46,3 +46,4 @@ pub const ERR38_DISALLOW_UPDATE: &str =
 pub const ERR39_ATTACHED_DEPOSIT_LESS_AMOUNT: &str = "E39: Attached deposit is less than amount";
 pub const ERR40_CURRENTY_TIME_LESS_END_TIME: &str = "E40: Current time less than end time";
 pub const ERR41_ALREADY_CLAIMED: &str = "E41: You're already claimed alll";
+pub const ERR42_ACCOUNT_NO_EXISTING: &str = "E42: Account is not existing in Welott";
