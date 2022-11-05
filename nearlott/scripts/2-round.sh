@@ -3,12 +3,13 @@ NETWORK=testnet
 SUFFIX=testnet
 
 MASTER_ACC=lamns1.$NETWORK
-CONTRACT_ACC=welott9.$MASTER_ACC
+CONTRACT_ACC=welott21.$MASTER_ACC
 OWNER=$MASTER_ACC
 TREASURY_ACC=lamns1.$NETWORK
 INJECTOR_ACC=lamns1.$NETWORK
 OPERATOR_ACC=lamns1.$NETWORK
 DECIMAL_20=00000000000000000000
+DECIMAL_23=00000000000000000000000
 DECIMAL_24=000000000000000000000000
 ONE_YOCTO=0.000000000000000000000001
 
@@ -24,26 +25,26 @@ export NEAR_ENV=$NETWORK
 #     "_lottery_id": 3
 # }' --depositYocto=1
 
-near call $CONTRACT_ACC --accountId=$OWNER draw_final_number_and_make_lottery_claimable '{
-    "_lottery_id": 2,
-    "_auto_injection": true
-}' --depositYocto=1
+# near call $CONTRACT_ACC --accountId=$OWNER draw_final_number_and_make_lottery_claimable '{
+#     "_lottery_id": 2,
+#     "_auto_injection": true
+# }' --depositYocto=1
 
 # near call $CONTRACT_ACC --accountId=$OWNER claim_tickets '{
 #     "_lottery_id": 1,
 #     "_ticket_ids": true
 # }' --depositYocto=1
 
-# echo "########################### START ROUND #########################"
+echo "########################### START ROUND #########################"
 # end_time=$(($(date +%s) + 24*60*60))
-# # # end_time=$(($(date +%s) + 5*60))
-# near call $CONTRACT_ACC --accountId=$OWNER start_lottery '{
-#     "_end_time": '$end_time'000000000,
-#     "_price_ticket_in_near": "1'$DECIMAL_20'",
-#     "_discount_divisor": "2000",
-#     "_rewards_breakdown": [125, 375, 750, 1250, 2500, 5000],
-#     "_treasury_fee": "2000"
-# }' --depositYocto=1
+end_time=$(($(date +%s) + 30*60))
+near call $CONTRACT_ACC --accountId=$OWNER start_lottery '{
+    "_end_time": '$end_time'000000000,
+    "_price_ticket_in_near": "1'$DECIMAL_23'",
+    "_discount_divisor": "1000",
+    "_rewards_breakdown": [125, 375, 750, 1250, 2500, 5000],
+    "_treasury_fee": "1000"
+}' --depositYocto=1
 
 # echo "######################## BUY TICKETS #################################"
 # near call $CONTRACT_ACC --accountId=$OWNER buy_tickets '{
