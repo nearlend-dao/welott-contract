@@ -20,10 +20,6 @@ pub struct Account {
     #[serde(skip_serializing)]
     pub storage_tracker: StorageTracker,
 
-    // keeps track of number of ticket per unique combination for each lotteryId
-    #[serde(skip_serializing)]
-    pub bracket_tickets_number: HashMap<LotteryId, AccountBracketCounting>,
-
     // keep track of user ticket ids for a given lotteryId
     pub tickets: HashMap<LotteryId, Vec<TicketId>>,
 }
@@ -52,7 +48,6 @@ impl Account {
         Self {
             account_id: account_id.clone(),
             storage_tracker: Default::default(),
-            bracket_tickets_number: HashMap::new(),
             tickets: HashMap::new(),
         }
     }
@@ -114,47 +109,6 @@ impl NearLott {
     /// Returns the number of accounts
     pub fn get_num_accounts(&self) -> u32 {
         self.data().accounts.len() as _
-    }
-}
-
-impl Account {
-    pub fn internal_unwrap_number_ticket_per_lottery(
-        &self,
-        _lottery_id: &LotteryId,
-    ) -> AccountBracketCounting {
-        self.internal_get_bracket_ticket_number_by_lottery(_lottery_id)
-            .expect(ERR19_LOTTERY_NO_TICKERS_NUMBERS)
-    }
-
-    pub fn internal_get_bracket_ticket_number_by_lottery(
-        &self,
-        _lottery_id: &LotteryId,
-    ) -> Option<AccountBracketCounting> {
-        self.bracket_tickets_number
-            .get(_lottery_id)
-            .map(|bracket_ticket_number| bracket_ticket_number.clone())
-    }
-
-    pub fn internal_get_bracket_ticket_number_by_lottery_or_default(
-        &mut self,
-        _lottery_id: &LotteryId,
-    ) -> AccountBracketCounting {
-        self.internal_get_bracket_ticket_number_by_lottery(_lottery_id)
-            .unwrap_or_else(AccountBracketCounting::new)
-    }
-
-    pub fn internal_set_bracket_ticket_number_per_lottery(
-        &mut self,
-        _lottery_id: &LotteryId,
-        key_brackets: &Vec<BracketTicketNumber>,
-    ) {
-        let mut account_bracket_counting =
-            self.internal_get_bracket_ticket_number_by_lottery_or_default(_lottery_id);
-        for key_bracket in key_brackets.into_iter() {
-            account_bracket_counting.internal_set_bracket_ticket_number_counting(&key_bracket);
-        }
-        self.bracket_tickets_number
-            .insert(_lottery_id.clone(), account_bracket_counting);
     }
 }
 

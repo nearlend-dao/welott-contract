@@ -3,7 +3,7 @@ NETWORK=testnet
 SUFFIX=testnet
 
 MASTER_ACC=lamns1.$NETWORK
-CONTRACT_ACC=welott9.$MASTER_ACC
+CONTRACT_ACC=welott20.$MASTER_ACC
 OWNER=$MASTER_ACC
 
 export NEAR_ENV=$NETWORK
@@ -42,6 +42,14 @@ export NEAR_ENV=$NETWORK
 
 # near view $CONTRACT_ACC view_all_lotteries_by_user '{"_user": "lamns1.testnet", "_lottery_id": 28, "_cursor": 0, "_size": 1}'
 
-near view $CONTRACT_ACC storage_balance_of '{"account_id": "lamns1.testnet"}'
-near view $CONTRACT_ACC account_storage_usage '{"account_id": "tn888.testnet"}' --accountId=$OWNER 
-near view $CONTRACT_ACC storage_available '{"_account_id": "tn888.testnet"}' --accountId=$OWNER 
+near view $CONTRACT_ACC  view_user_info_for_lottery_id '{
+    "_user": "mitsori13.testnet",
+    "_lottery_id": 4,
+    "_cursor": 0,
+    "_size": 100
+}' 
+near view $CONTRACT_ACC view_numbers_and_statuses_for_ticket_ids '{"_ticket_ids": [129], "_lottery_id": 4}'
+
+# near view $CONTRACT_ACC storage_balance_of '{"account_id": "lamns1.testnet"}'
+# near view $CONTRACT_ACC account_storage_usage '{"account_id": "tn888.testnet"}' --accountId=$OWNER 
+# near view $CONTRACT_ACC storage_available '{"_account_id": "tn888.testnet"}' --accountId=$OWNER 

@@ -111,6 +111,7 @@ pub(crate) enum StorageKey {
     Tickets,
     BracketCalculator,
     Storage,
+    BracketTicketNumbers { lottery_id: LotteryId },
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Eq, PartialEq, Clone)]
@@ -148,6 +149,8 @@ pub struct ContractData {
     // mapping are cheaper than arrays
     pub _lotteries: UnorderedMap<LotteryId, Lottery>,
     pub _tickets: UnorderedMap<TicketId, Ticket>,
+    pub _bracket_tickets_number:
+        UnorderedMap<LotteryId, UnorderedMap<BracketTicketNumber, CountTicketValue>>,
 
     // bracket calculator is used for verifying claims for ticket prizes
     pub _bracket_calculator: LookupMap<BracketPosition, u32>,
@@ -234,6 +237,9 @@ impl NearLott {
                 permission_update: PermissionUpdateState::Allow,
                 storage: LookupMap::new(StorageKey::Storage),
                 accounts: UnorderedMap::new(StorageKey::Accounts),
+                _bracket_tickets_number: UnorderedMap::new(StorageKey::BracketTicketNumbers {
+                    lottery_id: 0,
+                }),
             }),
             web_app_url: Some(String::from(DEFAULT_WEB_APP_URL)),
             auditor_account_id: Some(AccountId::new_unchecked(String::from(
@@ -311,6 +317,7 @@ mod tests {
         assert_eq!(data._lotteries.len(), 0);
         assert_eq!(data._tickets.len(), 0);
         assert_eq!(data.random_result, 0);
+        assert_eq!(data._bracket_tickets_number.len(), 0);
 
         assert_eq!(data._bracket_calculator.get(&0), Some(1));
         assert_eq!(data._bracket_calculator.get(&1), Some(11));
@@ -581,13 +588,12 @@ mod tests {
             available_storage.total.0, available_storage.available.0
         );
         let buyer = internal_get_account_unwrap_by_contract_data(contract.data_mut(), &accounts(2));
-        let bracket_tickets_number =
-            buyer.internal_get_bracket_ticket_number_by_lottery(&current_lottery_id);
-        assert_eq!(bracket_tickets_number.is_some(), true);
-        let bracket1_ticket_number = bracket_tickets_number
-            .unwrap()
-            .internal_get_bracket_ticket_number_counting(&key_bracket1);
-        assert_eq!(bracket1_ticket_number, Some(1));
+        let data2 = contract.data();
+        let ticket_per_lottery_id = data2
+            ._bracket_tickets_number
+            .get(&current_lottery_id)
+            .unwrap();
+        assert_eq!(ticket_per_lottery_id.len(), 6);
 
         // number of lottery user has joined.
         let tickets = buyer
@@ -632,7 +638,7 @@ mod tests {
             &mut contract,
             accounts(3),
             current_lottery_id,
-            vec![1292876, 1292871],
+            vec![1292876, 1380611],
         );
 
         let data_mut = contract.data_mut();
@@ -654,7 +660,7 @@ mod tests {
         let third_ticket: Ticket = data_mut._tickets.get(&2).unwrap();
         assert_eq!(firt_ticket.number, 1292877);
         assert_eq!(second_ticket.number, 1292876);
-        assert_eq!(third_ticket.number, 1292871);
+        assert_eq!(third_ticket.number, 1380611);
 
         // close lottery
         close_lottery(&mut context, &mut contract, current_lottery_id);
@@ -697,8 +703,12 @@ mod tests {
 
         // check balance available
         let available_storage = contract.debug_storage_balance_of(accounts(2)).unwrap();
+        println!(
+            "test_get_user_cover_for_storage: {:?}, {:?}",
+            available_storage.available.0, available_storage.total.0
+        );
         assert_eq!(available_storage.total.0, 100000000000000000000000);
-        assert_eq!(available_storage.available.0, 97310000000000000000000);
+        assert_eq!(available_storage.available.0, 97350000000000000000000);
     }
 
     #[test]
@@ -736,24 +746,23 @@ mod tests {
             vec![1292877, 1292837],
         );
 
-        let data_mut = contract.data_mut();
-        let lottery3 = data_mut._lotteries.get(&current_lottery_id).unwrap();
+        let data3 = contract.data();
+        let lottery3 = data3._lotteries.get(&current_lottery_id).unwrap();
         assert_eq!(lottery3.amount_collected_in_near, 2999000000000000000000000);
 
-        let buyer = internal_get_account_unwrap_by_contract_data(data_mut, &accounts(2));
-        let bracket_tickets_number =
-            buyer.internal_get_bracket_ticket_number_by_lottery(&current_lottery_id);
-        assert_eq!(bracket_tickets_number.is_some(), true);
         assert_eq!(
-            bracket_tickets_number
+            data3
+                ._bracket_tickets_number
+                .get(&current_lottery_id)
                 .unwrap()
-                .bracket_ticket_number_counting
-                .keys()
+                .keys_as_vector()
                 .len(),
             13
         );
 
         // number of ticket should be 3
+        let data_mut = contract.data_mut();
+        let buyer = internal_get_account_unwrap_by_contract_data(data_mut, &accounts(2));
         let tickets = buyer
             .internal_get_ticket_ids_per_lottery(&current_lottery_id)
             .unwrap_or(vec![]);

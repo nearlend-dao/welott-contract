@@ -165,7 +165,7 @@ impl NearLott {
         _size: usize,
     ) -> Vec<LotteryUserData> {
         let account = self.internal_unwrap_account(&_user);
-        let lottery_key_ids = account.bracket_tickets_number.keys();
+        let lottery_key_ids = account.tickets.keys();
 
         let mut lotteries: Vec<LotteryUserData> = (0..lottery_key_ids.len())
             .map(|lottery_id| {

@@ -263,16 +263,3 @@ pub(crate) fn internal_set_account_data(
     storage.storage_tracker.stop();
     internal_set_storage_data(data, account_id, storage);
 }
-
-pub(crate) fn internal_set_bracket_ticket_number_per_lottery(
-    mut account: Account,
-    _lottery_id: &LotteryId,
-    _bracket_ticket_number: &BracketTicketNumber,
-) {
-    let mut account_bracket_counting =
-        account.internal_get_bracket_ticket_number_by_lottery_or_default(_lottery_id);
-    account_bracket_counting.internal_set_bracket_ticket_number_counting(_bracket_ticket_number);
-    account
-        .bracket_tickets_number
-        .insert(_lottery_id.clone(), account_bracket_counting);
-}

@@ -138,8 +138,10 @@ impl NearLott {
         let account_id = env::predecessor_account_id();
         let mut account = internal_get_account_unwrap_by_contract_data(data, &account_id);
         if lottery.first_ticket_id_next_lottery - lottery.first_ticket_id > 0 {
-            let mut bracket_ticket_numbers =
-                account.internal_get_bracket_ticket_number_by_lottery_or_default(&_lottery_id);
+            let number_tickets_per_lottery = data
+                ._bracket_tickets_number
+                .get(&_lottery_id)
+                .expect(ERR19_LOTTERY_NO_TICKERS_NUMBERS);
 
             // Calculate prizes in NEAR for each bracket by starting from the highest one
             for i in 0..6 {
@@ -152,11 +154,20 @@ impl NearLott {
                 let _transformed_winning_number =
                     bracket_number + (_final_number % (10u32.pow(j + 1)));
 
-                let number_ticket_in_winning_number = bracket_ticket_numbers
-                    .internal_get_bracket_ticket_number_counting_or_default(
-                        &_transformed_winning_number,
-                    );
-
+                let number_ticket_in_winning_number = number_tickets_per_lottery
+                    .get(&_transformed_winning_number)
+                    .unwrap_or(0);
+                println!("data.random_result: {:?}", data.random_result);
+                println!(
+                    "number_ticket_in_winning_number: {:?}, {:?}, {:?}",
+                    _transformed_winning_number,
+                    number_ticket_in_winning_number,
+                    _number_addresses_in_previous_bracket
+                );
+                println!(
+                    "_amount_to_share_to_winners: {:?}",
+                    _amount_to_share_to_winners,
+                );
                 lottery.count_winners_per_bracket[j as usize] =
                     number_ticket_in_winning_number - _number_addresses_in_previous_bracket;
 
@@ -280,8 +291,15 @@ impl NearLott {
         data.permission_update = PermissionUpdateState::Allow;
 
         // update lottery data
+        let mut _bracket_tickets_number =
+            data._bracket_tickets_number
+                .get(&_lottery_id)
+                .unwrap_or(UnorderedMap::new(StorageKey::BracketTicketNumbers {
+                    lottery_id: _lottery_id,
+                }));
         let account_id = env::predecessor_account_id();
 
+        // prepare key bracket for kind of decimals values
         let bracket_placeholder: Vec<u32> = (1..=6 as u32)
             .into_iter()
             .map(|x| create_number_one(x))
@@ -296,18 +314,22 @@ impl NearLott {
             );
 
             // generate bracket key and number values. Increase by 1
-            let key_brackets: Vec<u32> = bracket_placeholder
-                .clone()
-                .into_iter()
-                .map(|x| x + (ticket_number % 10u32.pow(x.to_string().len() as u32)))
-                .collect();
-            // push new ticket id to user_tickets
+            for x in &bracket_placeholder {
+                let key_bracket = x + (ticket_number % 10u32.pow(x.to_string().len() as u32));
+                let value_bracket = _bracket_tickets_number.get(&key_bracket).unwrap_or(0) + 1;
+                _bracket_tickets_number.insert(&key_bracket, &value_bracket);
+            }
+
+            // save data to user info
             let mut account = internal_get_account_unwrap_by_contract_data(data, &account_id);
-            account.internal_set_bracket_ticket_number_per_lottery(&_lottery_id, &key_brackets);
             account.internal_set_ticket_ids_per_lottery(&_lottery_id, data.current_ticket_id);
 
             // calcualte deposit storage
             internal_set_account_data(data, &account_id, account);
+
+            // save bracket counting number
+            data._bracket_tickets_number
+                .insert(&_lottery_id, &_bracket_tickets_number);
 
             // save tickets with current ticket id
             data._tickets.insert(
