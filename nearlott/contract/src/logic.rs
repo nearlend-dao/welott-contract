@@ -85,6 +85,7 @@ impl NearLott {
                     "first_ticket_id_next_lottery": data.current_ticket_id,
                     "pending_injection_next_lottery": U128(data.pending_injection_next_lottery),
                     "_discount_divisor": _discount_divisor,
+                    "treasury_fee": treasury_fee
                 }
             })
             .to_string(),
@@ -220,6 +221,13 @@ impl NearLott {
             .iter()
             .map(|&id| id.to_string())
             .collect();
+
+        // get rewards breakdown
+        let rewards_breakdown: Vec<String> = lottery
+            .rewards_breakdown
+            .iter()
+            .map(|&id| id.to_string())
+            .collect();
         env::log_str(
             &json!({
                 "type": "draw_final_number_and_make_lottery_claimable",
@@ -229,7 +237,8 @@ impl NearLott {
                     "amount_to_withdraw_to_treasury": U128(_amount_to_withdraw_to_treasury),
                     "amount_collected_in_near": U128(lottery.amount_collected_in_near),
                     "amount_to_share_to_winners": U128(_amount_to_share_to_winners),
-                    "near_per_bracket": near_per_bracket.join(",")
+                    "near_per_bracket": near_per_bracket.join(","),
+                    "rewards_breakdown": rewards_breakdown.join(","),
                 }
             })
             .to_string(),
