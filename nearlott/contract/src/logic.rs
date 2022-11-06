@@ -85,7 +85,7 @@ impl NearLott {
                     "first_ticket_id_next_lottery": data.current_ticket_id,
                     "pending_injection_next_lottery": U128(data.pending_injection_next_lottery),
                     "_discount_divisor": _discount_divisor,
-                    "treasury_fee": treasury_fee
+                    "treasury_fee": U128(treasury_fee),
                 }
             })
             .to_string(),
