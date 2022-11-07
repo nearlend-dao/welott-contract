@@ -350,6 +350,7 @@ impl NearLott {
             );
 
             // Increase lottery ticket number
+            let ticket_id = data.current_ticket_id;
             data.current_ticket_id = data.current_ticket_id + 1;
 
             // fire log
@@ -360,7 +361,7 @@ impl NearLott {
                         "buyer": &env::predecessor_account_id(),
                         "current_lottery_id":  data.current_lottery_id,
                         "ticket_number": ticket_number,
-                        "ticket_id": data.current_ticket_id
+                        "ticket_id": ticket_id
 
                     }
                 })
