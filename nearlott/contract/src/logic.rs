@@ -121,8 +121,7 @@ impl NearLott {
             ERR30_LOTTERY_IS_NOT_CLOSE
         );
         //  genrate winning number from env:seed
-        // let final_number = get_random_number();
-        let final_number = 1327419u32;
+        let final_number = get_random_number();
         data.random_result = final_number;
 
         // Calculate the finalNumber based on the randomResult generated
@@ -136,8 +135,6 @@ impl NearLott {
         // Initializes the amount to withdraw to treasury
         let mut _amount_to_withdraw_to_treasury: u128 = 0;
 
-        let account_id = env::predecessor_account_id();
-        let mut account = internal_get_account_unwrap_by_contract_data(data, &account_id);
         if lottery.first_ticket_id_next_lottery - lottery.first_ticket_id > 0 {
             let number_tickets_per_lottery = data
                 ._bracket_tickets_number
@@ -193,6 +190,8 @@ impl NearLott {
                             / 10000;
                 }
             }
+        } else {
+            _amount_to_withdraw_to_treasury = _amount_to_share_to_winners
         }
 
         // Update internal statuses for lottery
