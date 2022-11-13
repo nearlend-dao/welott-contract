@@ -3,7 +3,7 @@ NETWORK=testnet
 SUFFIX=testnet
 
 MASTER_ACC=lamns1.$NETWORK
-CONTRACT_ACC=welott21.$MASTER_ACC
+CONTRACT_ACC=welott22.$MASTER_ACC
 OWNER=$MASTER_ACC
 TREASURY_ACC=lamns1.$NETWORK
 INJECTOR_ACC=lamns1.$NETWORK
@@ -37,10 +37,10 @@ export NEAR_ENV=$NETWORK
 
 echo "########################### START ROUND #########################"
 # end_time=$(($(date +%s) + 24*60*60))
-end_time=$(($(date +%s) + 30*60))
+end_time=$(($(date +%s) + 12*60*60))
 near call $CONTRACT_ACC --accountId=$OWNER start_lottery '{
     "_end_time": '$end_time'000000000,
-    "_price_ticket_in_near": "1'$DECIMAL_23'",
+    "_price_ticket_in_near": "1'$DECIMAL_24'",
     "_discount_divisor": "1000",
     "_rewards_breakdown": [125, 375, 750, 1250, 2500, 5000],
     "_treasury_fee": "1000"

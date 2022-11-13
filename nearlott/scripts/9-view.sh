@@ -3,7 +3,7 @@ NETWORK=testnet
 SUFFIX=testnet
 
 MASTER_ACC=lamns1.$NETWORK
-CONTRACT_ACC=welott21.$MASTER_ACC
+CONTRACT_ACC=welott22.$MASTER_ACC
 OWNER=$MASTER_ACC
 
 export NEAR_ENV=$NETWORK
@@ -57,4 +57,8 @@ export NEAR_ENV=$NETWORK
 # near view $CONTRACT_ACC view_user_info_for_lottery_id '{"_user": "lamns1.testnet", "_lottery_id": 4, "_cursor": 0, "_size": 50}'
 # near view $CONTRACT_ACC view_user_info_for_lottery_id '{"_user": "lamns1.testnet", "_lottery_id": 5, "_cursor": 0, "_size": 50}'
 # near view $CONTRACT_ACC view_user_info_for_lottery_id '{"_user": "lamns1.testnet", "_lottery_id": 6, "_cursor": 0, "_size": 50}'
-near view $CONTRACT_ACC view_user_info_for_lottery_id '{"_user": "lamns1.testnet", "_lottery_id": 8, "_cursor": 0, "_size": 50}'
+# near view $CONTRACT_ACC view_user_info_for_lottery_id '{"_user": "lamns1.testnet", "_lottery_id": 8, "_cursor": 0, "_size": 50}'
+
+near view $CONTRACT_ACC view_lottery '{"_lottery_id": 4}'
+near view $CONTRACT_ACC view_lottery '{"_lottery_id": 5}'
+near view $CONTRACT_ACC view_lottery '{"_lottery_id": 6}'
