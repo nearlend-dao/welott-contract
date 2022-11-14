@@ -155,17 +155,6 @@ impl NearLott {
                 let number_ticket_in_winning_number = number_tickets_per_lottery
                     .get(&_transformed_winning_number)
                     .unwrap_or(0);
-                println!("data.random_result: {:?}", data.random_result);
-                println!(
-                    "number_ticket_in_winning_number: {:?}, {:?}, {:?}",
-                    _transformed_winning_number,
-                    number_ticket_in_winning_number,
-                    _number_addresses_in_previous_bracket
-                );
-                println!(
-                    "_amount_to_share_to_winners: {:?}",
-                    _amount_to_share_to_winners,
-                );
                 lottery.count_winners_per_bracket[j as usize] =
                     number_ticket_in_winning_number - _number_addresses_in_previous_bracket;
 
@@ -227,6 +216,14 @@ impl NearLott {
             .iter()
             .map(|&id| id.to_string())
             .collect();
+
+        // get count tickets for each bracket
+        let counter_winers: Vec<String> = lottery
+            .count_winners_per_bracket
+            .iter()
+            .map(|&id| id.to_string())
+            .collect();
+
         env::log_str(
             &json!({
                 "type": "draw_final_number_and_make_lottery_claimable",
@@ -238,6 +235,7 @@ impl NearLott {
                     "amount_to_share_to_winners": U128(_amount_to_share_to_winners),
                     "near_per_bracket": near_per_bracket.join(","),
                     "rewards_breakdown": rewards_breakdown.join(","),
+                    "counter_winers": counter_winers.join(","),
                 }
             })
             .to_string(),
@@ -414,6 +412,7 @@ impl NearLott {
 
         // Initializes the reward_in_near_to_transfer
         let mut reward_in_near_to_transfer = 0;
+        let mut rewards = vec![];
         for i in 0.._ticket_ids.len() {
             // If position of the bracket >= 6
             assert!(_brackets[i] < 6, "{}", ERR24_BRACKETS_OUT_RANGE); // Must be between 0 and 5
@@ -481,20 +480,8 @@ impl NearLott {
             // Increment the reward to transfer
             reward_in_near_to_transfer += reward_for_ticket_id;
 
-            // log claim for each ticket
-            env::log_str(
-                &json!({
-                    "type": "claim_ticket",
-                    "params": {
-                        "claimer": env::predecessor_account_id(),
-                        "reward":  U128(reward_for_ticket_id),
-                        "bracket_reward": _brackets[i],
-                        "current_lottery_id": _lottery_id,
-                        "ticket_id": this_ticket_id
-                    }
-                })
-                .to_string(),
-            );
+            // add reward into vector rewards
+            rewards.push(reward_for_ticket_id.to_string());
         }
 
         // Transfer money to msg.sender
@@ -505,16 +492,19 @@ impl NearLott {
             // before transfer
             Promise::new(env::predecessor_account_id()).transfer(reward_in_near_to_transfer);
 
+            let _ticket_ids_str: Vec<String> =
+                _ticket_ids.iter().map(|&id| id.to_string()).collect();
             env::log_str(
                 &json!({
-                    "type": "claim_ticket_transfer",
+                    "type": "claim_ticket",
                     "params": {
                         "claimer": env::predecessor_account_id(),
                         "transfer_amount_in_reward":  U128(reward_in_near_to_transfer),
                         "current_lottery_id": _lottery_id,
                         "ticket_ids_length": _ticket_ids.len(),
-                        "_brackets": _brackets,
-                        "ticket_ids": _ticket_ids
+                        "bracket_rewards": _brackets,
+                        "ticket_ids": _ticket_ids_str.join(","),
+                        "rewards": rewards.join(","),
                     }
                 })
                 .to_string(),

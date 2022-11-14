@@ -679,9 +679,11 @@ mod tests {
             .build());
         contract.draw_final_number_and_make_lottery_claimable(current_lottery_id, true);
         contract.data_mut().random_result = 1327419;
+
         let data3 = contract.data();
         let pending_injection_amount = data3.pending_injection_next_lottery;
         let lottery_claim_lottery = data3._lotteries.get(&current_lottery_id).unwrap();
+
         assert_eq!(lottery_claim_lottery.status, Status::Claimable);
         assert_eq!(lottery_claim_lottery.final_number, 1327419);
         assert_eq!(data3.random_result, 1327419);
@@ -798,6 +800,7 @@ mod tests {
         contract.data_mut().random_result = 1327419;
         contract.draw_final_number_and_make_lottery_claimable(current_lottery_id, true);
 
+        // fixed update lottery final number
         // view numbers and status for ticket ids
         let tk_numbers =
             contract.view_numbers_and_statuses_for_ticket_ids(vec![0, 1, 2, 3], current_lottery_id);
