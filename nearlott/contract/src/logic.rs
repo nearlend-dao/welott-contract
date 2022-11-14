@@ -311,6 +311,8 @@ impl NearLott {
             .map(|x| create_number_one(x))
             .collect();
 
+        let mut ticket_ids: Vec<String> = vec![];
+
         for i in 0.._ticket_numbers.len() {
             let ticket_number = _ticket_numbers[i];
             assert!(
@@ -348,23 +350,26 @@ impl NearLott {
 
             // Increase lottery ticket number
             let ticket_id = data.current_ticket_id;
+            ticket_ids.push(ticket_id.to_string());
+
             data.current_ticket_id = data.current_ticket_id + 1;
-
-            // fire log
-            env::log_str(
-                &json!({
-                    "type": "buy_tickets",
-                    "params": {
-                        "buyer": &env::predecessor_account_id(),
-                        "current_lottery_id":  data.current_lottery_id,
-                        "ticket_number": ticket_number,
-                        "ticket_id": ticket_id
-
-                    }
-                })
-                .to_string(),
-            );
         }
+
+        // fire log
+        let _ticket_numbers_str: Vec<String> =
+            _ticket_numbers.iter().map(|&id| id.to_string()).collect();
+        env::log_str(
+            &json!({
+                "type": "buy_tickets",
+                "params": {
+                    "buyer": &env::predecessor_account_id(),
+                    "current_lottery_id":  data.current_lottery_id,
+                    "ticket_numbers": _ticket_numbers_str.join(","),
+                    "ticket_ids": ticket_ids.join(",")
+                }
+            })
+            .to_string(),
+        );
     }
 
     /**
