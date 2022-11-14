@@ -5,9 +5,9 @@ use crate::*;
 /********************************/
 // [NEP-129](https://github.com/nearprotocol/NEPs/pull/129)
 // see also pub fn get_contract_info
-pub const CONTRACT_NAME: &str = "NearLott";
+pub const CONTRACT_NAME: &str = "WeLott";
 pub const CONTRACT_VERSION: &str = "0.0.1";
-pub const DEFAULT_WEB_APP_URL: &str = "https://nearlott.com";
+pub const DEFAULT_WEB_APP_URL: &str = "https://www.welott.nearlenddao.com";
 pub const DEFAULT_AUDITOR_ACCOUNT_ID: &str = "mitsori.near";
 pub const DEVELOPERS_ACCOUNT_ID: &str = "mitsori.near";
 

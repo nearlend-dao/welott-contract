@@ -11,6 +11,7 @@ use near_sdk::{
 use std::collections::HashMap;
 use std::fmt;
 
+pub use crate::utils::*;
 pub use crate::account::*;
 pub use crate::assert::*;
 pub use crate::callback::*;
@@ -19,8 +20,8 @@ pub use crate::gas::*;
 pub use crate::logic::*;
 pub use crate::owner::*;
 pub use crate::storage::*;
-use crate::storage_tracker::*;
-pub use crate::utils::*;
+pub use crate::storage_tracker::*;
+pub use crate::account_btn_counting::*;
 pub use crate::views::*;
 
 mod account;
@@ -228,7 +229,7 @@ impl NearLott {
                 current_ticket_id: 0,
                 max_number_tickets_per_buy_or_claim: 12,
                 pending_injection_next_lottery: 0,
-                min_discount_divisor: 300,
+                min_discount_divisor: 0,
                 max_treasury_fee: 3000, // 30%
                 _lotteries: UnorderedMap::new(StorageKey::Lotteries),
                 _tickets: UnorderedMap::new(StorageKey::Tickets),
