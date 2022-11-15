@@ -252,7 +252,6 @@ impl NearLott {
     pub fn buy_tickets(&mut self, _lottery_id: LotteryId, _ticket_numbers: Vec<TicketNumber>) {
         self.assert_contract_running();
         assert!(_ticket_numbers.len() > 0, "{}", ERR21_TICKETS__LENGTH);
-        
         // Check total tickets of user per a lottery
         let account_id = env::predecessor_account_id();
         let mut account = self.internal_unwrap_account(&account_id);
@@ -262,7 +261,6 @@ impl NearLott {
             "{}",
             ERR43_ACCOUNT_MAX_TICKETS_PER_A_LOTTERY
         );
-
 
         let data = self.data_mut();
         let mut lottery = data
@@ -315,7 +313,6 @@ impl NearLott {
                 .unwrap_or(UnorderedMap::new(StorageKey::BracketTicketNumbers {
                     lottery_id: _lottery_id,
                 }));
-        
 
         // prepare key bracket for kind of decimals values
         let bracket_placeholder: Vec<u32> = (1..=6 as u32)
@@ -511,15 +508,16 @@ impl NearLott {
 
             let _ticket_ids_str: Vec<String> =
                 _ticket_ids.iter().map(|&id| id.to_string()).collect();
+            let _brackets_str: Vec<String> = _brackets.iter().map(|&id| id.to_string()).collect();
             env::log_str(
                 &json!({
-                    "type": "claim_ticket",
+                    "type": "claim_tickets",
                     "params": {
                         "claimer": env::predecessor_account_id(),
                         "transfer_amount_in_reward":  U128(reward_in_near_to_transfer),
                         "current_lottery_id": _lottery_id,
                         "ticket_ids_length": _ticket_ids.len(),
-                        "bracket_rewards": _brackets,
+                        "bracket_rewards": _brackets_str.join(","),
                         "ticket_ids": _ticket_ids_str.join(","),
                         "rewards": rewards.join(","),
                     }
