@@ -30,9 +30,6 @@ impl NearLott {
     }
 }
 
-pub(crate) fn to_sec(timestamp: Timestamp) -> TimestampSec {
-    (timestamp / 10u64.pow(9)) as u32
-}
 
 /**
 * @notice Create a number generrated from number of '1'

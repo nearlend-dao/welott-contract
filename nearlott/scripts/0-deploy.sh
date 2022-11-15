@@ -3,7 +3,7 @@ NETWORK=testnet
 SUFFIX=testnet
 
 MASTER_ACC=lamns1.$NETWORK
-CONTRACT_ACC=welott22.$MASTER_ACC
+CONTRACT_ACC=welott37.$MASTER_ACC
 OWNER=$MASTER_ACC
 TREASURY_ACC=lamns1.$NETWORK
 INJECTOR_ACC=lamns1.$NETWORK
@@ -21,7 +21,7 @@ export NEAR_ENV=$NETWORK
 echo "################ BUILD CONTRACT #########################"
 ../build.sh
 
-# echo "################ DEPLOY CONTRACT #########################"
+echo "################ DEPLOY CONTRACT #########################"
 near deploy $CONTRACT_ACC ../out/nearlott.wasm 
 
 # echo "################# INIT CONTRACT #########################"
