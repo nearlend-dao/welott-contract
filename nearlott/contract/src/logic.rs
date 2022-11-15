@@ -252,6 +252,18 @@ impl NearLott {
     pub fn buy_tickets(&mut self, _lottery_id: LotteryId, _ticket_numbers: Vec<TicketNumber>) {
         self.assert_contract_running();
         assert!(_ticket_numbers.len() > 0, "{}", ERR21_TICKETS__LENGTH);
+        
+        // Check total tickets of user per a lottery
+        let account_id = env::predecessor_account_id();
+        let mut account = self.internal_unwrap_account(&account_id);
+        let user_tickets = account.internal_get_ticket_id_per_lottery_or_default(&_lottery_id);
+        assert!(
+            (user_tickets.len() + _ticket_numbers.len()) <= 120,
+            "{}",
+            ERR43_ACCOUNT_MAX_TICKETS_PER_A_LOTTERY
+        );
+
+
         let data = self.data_mut();
         let mut lottery = data
             ._lotteries
@@ -303,7 +315,7 @@ impl NearLott {
                 .unwrap_or(UnorderedMap::new(StorageKey::BracketTicketNumbers {
                     lottery_id: _lottery_id,
                 }));
-        let account_id = env::predecessor_account_id();
+        
 
         // prepare key bracket for kind of decimals values
         let bracket_placeholder: Vec<u32> = (1..=6 as u32)

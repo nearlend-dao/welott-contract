@@ -3,7 +3,7 @@ NETWORK=testnet
 SUFFIX=testnet
 
 MASTER_ACC=lamns1.$NETWORK
-CONTRACT_ACC=welott32.$MASTER_ACC
+CONTRACT_ACC=welott37.$MASTER_ACC
 OWNER=$MASTER_ACC
 TREASURY_ACC=lamns1.$NETWORK
 INJECTOR_ACC=lamns1.$NETWORK
@@ -15,22 +15,22 @@ export NEAR_ENV=$NETWORK
 # echo "################ DELETE THE ACCOUNT #########################"
 # near delete $CONTRACT_ACC $MASTER_ACC
 
-echo "################ CREATE NEW ACCOUNT #########################"
-near create-account $CONTRACT_ACC --masterAccount $MASTER_ACC --initialBalance 10
+# echo "################ CREATE NEW ACCOUNT #########################"
+# near create-account $CONTRACT_ACC --masterAccount $MASTER_ACC --initialBalance 10
 
 echo "################ BUILD CONTRACT #########################"
 ../build.sh
 
-# echo "################ DEPLOY CONTRACT #########################"
+echo "################ DEPLOY CONTRACT #########################"
 near deploy $CONTRACT_ACC ../out/nearlott.wasm 
 
-echo "################# INIT CONTRACT #########################"
-near call $CONTRACT_ACC --accountId=$OWNER new '{
-    "owner_id":"'$OWNER'",
-    "injector_address":"'$INJECTOR_ACC'",
-    "operator_address": "'$OPERATOR_ACC'",
-    "treasury_address": "'$TREASURY_ACC'"
-}'
+# echo "################# INIT CONTRACT #########################"
+# near call $CONTRACT_ACC --accountId=$OWNER new '{
+#     "owner_id":"'$OWNER'",
+#     "injector_address":"'$INJECTOR_ACC'",
+#     "operator_address": "'$OPERATOR_ACC'",
+#     "treasury_address": "'$TREASURY_ACC'"
+# }'
 
 echo "####################### GET CONFIG CONTRACT #########################"
 near view $CONTRACT_ACC get_config ''
