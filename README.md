@@ -1,92 +1,126 @@
-# Nearlott
+![Welott](https://pbs.twimg.com/media/FhrHbJpUUAA1m8R?format=jpg&name=4096x4096)
+
+# Welott - Blockchain-based Lottery
+Welott is a secure online lottery system, which employs smart contracts, Chainlink VRF Solution and $NEAR to distribute tickets & prizes.
+
+App is live: [https://welott.nearlenddao.com](https://welott.nearlenddao.com/)  
+
+## OnlyFunds App Overview
+
+### Inspiration
+The lottery business has been established for a long time and accepted in many countries with different models and scopes. Even so, the organization of lottery games all has the same purpose: Meeting the entertainment needs of a part of the population, Creating jobs; Attracting investment capital; Promoting economic growth, and Contributing to social activities.
+
+Lottery industry revenue in the Asia Pacific region has reached 21 billion USD. In Vietnam, for example, the revenue from the lottery business has steadily increased over the years. Budget reports for the past five years show that the total revenue from the lottery business is over $ 1.0 BILLION per year. _As of 2021, this number is around $3.5 billion; in the first half of 2022, this number reached $2.4 BILLION. Compared with other sources of revenue, such as crude oil in the first six months of 2022 is just more than 1.2 billion USD, the market size of the lottery business is remarkable.
+
+However, business activities also exist many problems and barriers that cannot be solved, such as:
+
+TRANSPARENCY: The issue of transparency from lottery companies and independent auditing firms in financial, business and investment activities has always been a controversial topic in society;
+
+HIGH COST: The lottery industry is mainly operated by the traditional method, selling goods through many intermediaries, leading to high operating costs and child labor abuse;
+
+LOTTERY FRAUD: Fraudulent activities to limit or prevent a player's ability to win; or Criminals using fake or altered lottery tickets to claim prizes;
+
+PRIVACY: When players face problems receiving bonuses because they must go through complicated verification procedures or their identities cannot be kept secure, it leads to negative consequences later.
+
+With the limitations mentioned above, the lottery industry is currently facing two options: one is to change to transform, and the other is to retreat. The only way to solve this problem is to apply "TECHNOLOGY." Experts also confirmed that traditional sales channels would gradually decrease soon. Instead, digital transformation and online ticketing will be an inevitable trend.
+
+## Benefits for NEAR
+ 
+UTILITY: Welott uses $NEAR to distribute prizes and tickets, increasing the utility of the $NEAR token and generating a significant amount of TVL for the Ecosystem in the long term.
+
+OPEN-SOURCE: Welott is an open-source project built by developers from the Nearlend DAO project with proven qualifications and capabilities. The project will bring much value to the next developers who want to learn and build new applications on top of the NEAR Blockchain and the RUST language.
+
+MISSING PUZZLE: Although a few lottery projects have been developed on the NEAR Protocol, they still need to be completed and offer a whole user experience. So, for now, the lottery is still a missing puzzle in the NEAR Ecosystem.
 
 
+# How we built it
 
-## Getting started
+General Rules
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+Welott applies a basic lottery model with six digits. Players can choose the number they want instead of choosing predefined numbers from the publisher. To increase convenience, Welott also allows players to choose numbers at random.
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+The total value of the Prize Pool corresponds to the number of tickets purchased by the player and is distributed into corresponding frames. There are all 06 prize frames from 1 to 6 (or corresponding to 2% ;3%; 5%; 10%; 20%; 40%). In addition, 20% of the Pool's value will be provisioned in each round. Alternatively, at least 20% will be left for the next round in addition to the amount paid to the player.
+
+Method of choosing winning numbers
+
+Welott will integrate NEAR VRF (Verifiable Random Function) to choose the winning number.
+
+https://docs.rs/near-sdk/latest/near_sdk/env/fn.random_seed.html#
+
+Initially, NEAR VRF (Verifiable Random Function) is a provably fair and verifiable random number generator (RNG) that enables smart contracts to access random values without compromising security or usability.
+
+Pick 10 digits random from the VRF number and modulo operator (https://en.wikipedia.org/wiki/Modulo_operation) by 9 to get the position random. Then using those positions to select digit by digit from the original VRF
+The 10 numbers selected will combine into a string and convert to a number. We can call the name is fn1
+The last step we will select the final number by using the math: 1,000,000 - (1,000,000 + (fn1 modulo 1,000,000))
+For example:
+
+The env:random_seed() number is: a = 9854264523
+
+1) Ten positions random is [0,8,5,4,2,6,4,5,2,3]
+
+2) A number generated will be: 9262542654. It's corresponding with:
+
+a[0] = 9 ; a[8] = 2 ; a[5] = 6 ; a[4] = 2 ; a[2] = 5;
+
+a[6] = 4 ; a[4] = 2 ; a[5] = 6 ; a[2] = 5 ; a[3] = 4
+
+3) The final number is 5 4 2 6 5 4
+
+It is calculated by the math: 1,000,000 - (1,000,000 + (9262542654 % 1,000,000))
 
 ## Add your files
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+- How to check out Welott:
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/nearlend/nearlott.git
-git branch -M main
-git push -uf origin main
+cd your_path_folder
+git clone https://gitlab.com/nearlend/nearlott.git
+cd nearlott
 ```
 
-## Integrate with your tools
+## Unit test and simulation test
 
-- [ ] [Set up project integrations](https://gitlab.com/nearlend/nearlott/-/settings/integrations)
+- Unit test:
+```
+cd nearlott/contract
+cargo test -- --nocapture
+```
 
-## Collaborate with your team
+- Simulation test:
+```
+cd nearlott/tests
+cargo test -- --nocapture
+```
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Automatically merge when pipeline succeeds](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+## Run bash scripts
 
-## Test and Deploy
+```
+cd scripts
+```
 
-Use the built-in continuous integration in GitLab.
+Deploy contract: 
+```
+sh ./0-deploy.sh
+```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing(SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+Update Welott contract:
+```
+sh ./1-config.sh
+```
 
-***
+Start lottery, close lottery, draw final number:
+```
+sh ./2-round.sh
+```
 
-# Editing this README
+Views info lotteries
+```
+sh ./9-view.sh
+```
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thank you to [makeareadme.com](https://www.makeareadme.com/) for this template.
+## Others products of Nearlend DAO:
 
-## Suggestions for a good README
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+Testnet of Lending Protocol: https://www.testnet.nearlenddao.com/
 
-## Name
-Choose a self-explaining name for your project.
+Lang Biang NFT: https://nearlenddao.com/lang-biang-club
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
