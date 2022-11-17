@@ -74,21 +74,21 @@ It is calculated by the math: 1,000,000 - (1,000,000 + (9262542654 % 1,000,000))
 
 ```
 cd your_path_folder
-git clone https://gitlab.com/nearlend/nearlott.git
-cd nearlott
+git clone https://gitlab.com/nearlend-protocol/welott.git
+cd welott
 ```
 
 ## Unit test and simulation test
 
 - Unit test:
 ```
-cd nearlott/contract
+cd welott/contract
 cargo test -- --nocapture
 ```
 
 - Simulation test:
 ```
-cd nearlott/tests
+cd welott/tests
 cargo test -- --nocapture
 ```
 
