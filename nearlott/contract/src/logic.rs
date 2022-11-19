@@ -1,6 +1,6 @@
 use crate::*;
 
-pub const ZERO_ADDRESS_WALLET: &str = "0.near";
+pub const ZERO_ADDRESS_WALLET: &str = "no_account.testnet";
 
 #[near_bindgen]
 impl NearLott {
