@@ -16,7 +16,7 @@ pub struct ConfigContractData {
     pub pending_injection_next_lottery: u128,
 
     pub min_discount_divisor: u128,
-    pub max_treasury_fee: u128,
+    pub max_reserve_fee: u128,
 }
 
 #[near_bindgen]
@@ -89,7 +89,7 @@ impl NearLott {
             max_number_tickets_per_buy_or_claim: data.max_number_tickets_per_buy_or_claim,
             pending_injection_next_lottery: data.pending_injection_next_lottery,
             min_discount_divisor: data.min_discount_divisor,
-            max_treasury_fee: data.max_treasury_fee,
+            max_reserve_fee: data.max_reserve_fee,
         }
     }
 }
