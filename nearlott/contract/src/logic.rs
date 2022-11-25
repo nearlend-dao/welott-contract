@@ -136,7 +136,9 @@ impl NearLott {
 
         // Calculate the amount to share post-treasury fee
         // The totally amount_collected_in_near minus 20% of the reserve pool, minutes 5% of the operator fee
-        let _operate_fee = ((lottery.amount_collected_in_near - lottery.last_pot_size) * lottery.operate_fee) / 10000;
+        let _operate_fee = ((lottery.amount_collected_in_near - lottery.last_pot_size)
+            * lottery.operate_fee)
+            / 10000;
         let _reserver_fee =
             ((lottery.amount_collected_in_near - _operate_fee) * lottery.reserve_fee) / 10000;
         let mut _amount_to_share_to_winners = 0;

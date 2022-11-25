@@ -11,7 +11,6 @@ use near_sdk::{
 use std::collections::HashMap;
 use std::fmt;
 
-pub use crate::utils::*;
 pub use crate::account::*;
 pub use crate::account_btn_counting::*;
 pub use crate::assert::*;
@@ -22,6 +21,7 @@ pub use crate::logic::*;
 pub use crate::owner::*;
 pub use crate::storage::*;
 pub use crate::storage_tracker::*;
+pub use crate::utils::*;
 pub use crate::views::*;
 
 mod account;
@@ -693,12 +693,20 @@ mod tests {
         // assert_eq!(lottery_claim_lottery.final_number, 1327419);
         // assert_eq!(data3.random_result, 1327419);
         // there is no one be a winner
-        let operate_fee = (lottery_claim_lottery.amount_collected_in_near - lottery_claim_lottery.last_pot_size)*lottery_claim_lottery.operate_fee / 1000;
+        let operate_fee = (lottery_claim_lottery.amount_collected_in_near
+            - lottery_claim_lottery.last_pot_size)
+            * lottery_claim_lottery.operate_fee
+            / 10000;
+        println!(
+            "amount_collected_in_near: {:?}",
+            lottery_claim_lottery.amount_collected_in_near
+        );
+        println!("operate_fee: {:?}", operate_fee);
         let amount_to_shared = ((lottery_claim_lottery.amount_collected_in_near - operate_fee)
             * (10000 - lottery_claim_lottery.reserve_fee))
             / 10000;
-
-        assert_eq!(amount_to_shared, 2279200000000000000000000);
+        println!("amount_to_shared: {:?}", amount_to_shared);
+        assert_eq!(amount_to_shared, 2279240000000000000000000);
         // reserver pool
         let reserver_pool = ((lottery_claim_lottery.amount_collected_in_near - operate_fee)
             * lottery_claim_lottery.reserve_fee)
@@ -844,12 +852,12 @@ mod tests {
             rewards_brackets[5]
         );
         assert_eq!(rewards_brackets.len(), 6);
-        // assert_eq!(rewards_brackets[0], 13313333333333333333333);
-        // assert_eq!(rewards_brackets[1], 119820000000000000000000);
-        // assert_eq!(rewards_brackets[2], 0);
-        // assert_eq!(rewards_brackets[3], 0);
-        // assert_eq!(rewards_brackets[4], 0);
-        // assert_eq!(rewards_brackets[5], 0);
+        assert_eq!(rewards_brackets[0], 12647666666666666666666);
+        assert_eq!(rewards_brackets[1], 113829000000000000000000);
+        assert_eq!(rewards_brackets[2], 0);
+        assert_eq!(rewards_brackets[3], 0);
+        assert_eq!(rewards_brackets[4], 0);
+        assert_eq!(rewards_brackets[5], 0);
         println!("Bracket 1 reward: {}", rewards_brackets[0]);
         println!("Bracket 2 reward: {}", rewards_brackets[1]);
         // number of winners per brackets
@@ -877,15 +885,18 @@ mod tests {
         // check rewards summary share share
         let data3 = contract.data();
         let lottery_claim_lottery = data3._lotteries.get(&current_lottery_id).unwrap();
-        let operate_fee = (lottery_claim_lottery.amount_collected_in_near - lottery_claim_lottery.last_pot_size)*lottery_claim_lottery.operate_fee / 1000;
+        let operate_fee = (lottery_claim_lottery.amount_collected_in_near
+            - lottery_claim_lottery.last_pot_size)
+            * lottery_claim_lottery.operate_fee
+            / 10000;
+        println!("claim_tickets_operate_fee: {}", operate_fee);
 
         // reserver pool
         let reserver_pool = ((lottery_claim_lottery.amount_collected_in_near - operate_fee)
             * lottery_claim_lottery.reserve_fee)
             / 10000;
 
-        let amount_to_shared = ((lottery_claim_lottery.amount_collected_in_near
-            - operate_fee)
+        let amount_to_shared = ((lottery_claim_lottery.amount_collected_in_near - operate_fee)
             * (10000 - lottery_claim_lottery.reserve_fee))
             / 10000;
 
@@ -894,7 +905,7 @@ mod tests {
         // check pending_injection_next_lottery
         assert_eq!(
             data3.pending_injection_next_lottery,
-            3642240000000000000000000, //number of near in vauls add for the next turns
+            3642528000000000000000000, //number of near in vauls add for the next turns
         );
         assert_eq!(
             data3.pending_injection_next_lottery + 2, // increase by 1 to match the value.
