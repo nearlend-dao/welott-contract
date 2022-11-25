@@ -3,7 +3,7 @@ NETWORK=testnet
 SUFFIX=testnet
 
 MASTER_ACC=lamns1.$NETWORK
-CONTRACT_ACC=welott38.$MASTER_ACC
+CONTRACT_ACC=welott40.$MASTER_ACC
 OWNER=$MASTER_ACC
 TREASURY_ACC=lamns1.$NETWORK
 INJECTOR_ACC=lamns1.$NETWORK
@@ -43,7 +43,9 @@ near call $CONTRACT_ACC --accountId=$OWNER start_lottery '{
     "_price_ticket_in_near": "1'$DECIMAL_24'",
     "_discount_divisor": "0",
     "_rewards_breakdown": [125, 375, 750, 1250, 2500, 5000],
-    "_treasury_fee": "1000"
+    "_reserve_fee": "2000",
+    "_operate_fee": "500"
+
 }' --depositYocto=1
 
 # echo "######################## BUY TICKETS #################################"
