@@ -71,6 +71,7 @@ impl NearLott {
                 first_ticket_id: data.current_ticket_id,
                 first_ticket_id_next_lottery: data.current_ticket_id,
                 amount_collected_in_near: data.pending_injection_next_lottery,
+                last_pot_size: data.pending_injection_next_lottery,
                 final_number: 0,
                 operate_fee,
             },
@@ -125,8 +126,7 @@ impl NearLott {
             ERR30_LOTTERY_IS_NOT_CLOSE
         );
         //  genrate winning number from env:seed
-        // let final_number = get_random_number();
-        let final_number = 1327419;
+        let final_number = get_random_number();
         data.random_result = final_number;
 
         // Calculate the finalNumber based on the randomResult generated
@@ -136,7 +136,7 @@ impl NearLott {
 
         // Calculate the amount to share post-treasury fee
         // The totally amount_collected_in_near minus 20% of the reserve pool, minutes 5% of the operator fee
-        let _operate_fee = internal_get_operation_fee(data, _lottery_id);
+        let _operate_fee = ((lottery.amount_collected_in_near - lottery.last_pot_size) * lottery.operate_fee) / 10000;
         let _reserver_fee =
             ((lottery.amount_collected_in_near - _operate_fee) * lottery.reserve_fee) / 10000;
         let mut _amount_to_share_to_winners = 0;
@@ -202,7 +202,6 @@ impl NearLott {
 
         // save to chain
         data._lotteries.insert(&_lottery_id, &lottery);
-        data.amount_discount = 0;
 
         if _auto_injection {
             // incase there is no one won, we automatically get the number of shares winner per breakdown to pending injector next lottery
@@ -386,13 +385,6 @@ impl NearLott {
             lottery.amount_collected_in_near + amount_near_to_transfer;
         data._lotteries.insert(&_lottery_id, &lottery);
         data.permission_update = PermissionUpdateState::Allow;
-
-        // saving the amount discount
-        let amount_discount =
-            _ticket_numbers.len() as u128 * lottery.price_ticket_in_near - env::attached_deposit();
-        if amount_discount > 0 {
-            data.amount_discount += amount_discount;
-        }
 
         // fire log
         let _ticket_numbers_str: Vec<String> =

@@ -259,19 +259,3 @@ pub(crate) fn internal_set_account_data(
     storage.storage_tracker.stop();
     internal_set_storage_data(data, account_id, storage);
 }
-
-pub(crate) fn internal_get_operation_fee(data: &ContractData, _lottery_id: LotteryId) -> u128 {
-    let lottery = data._lotteries.get(&_lottery_id);
-    if lottery.is_none() {
-        return 0;
-    }
-    let lottery_data = lottery.unwrap();
-    let number_of_ticket_per_lottery = data.current_ticket_id - lottery_data.first_ticket_id;
-
-    let operation_fee = (((number_of_ticket_per_lottery as u128
-        * lottery_data.price_ticket_in_near)
-        - data.amount_discount)
-        * lottery_data.operate_fee)
-        / 10000;
-    operation_fee
-}

@@ -2,7 +2,7 @@ use crate::info::DEFAULT_AUDITOR_ACCOUNT_ID;
 use crate::info::DEFAULT_WEB_APP_URL;
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
 use near_sdk::collections::{LookupMap, UnorderedMap};
-use near_sdk::json_types::{U128, U64};
+use near_sdk::json_types::U128;
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
     env, near_bindgen, serde_json::json, AccountId, Balance, BorshStorageKey, PanicOnDefault,
@@ -11,6 +11,7 @@ use near_sdk::{
 use std::collections::HashMap;
 use std::fmt;
 
+pub use crate::utils::*;
 pub use crate::account::*;
 pub use crate::account_btn_counting::*;
 pub use crate::assert::*;
@@ -21,7 +22,6 @@ pub use crate::logic::*;
 pub use crate::owner::*;
 pub use crate::storage::*;
 pub use crate::storage_tracker::*;
-pub use crate::utils::*;
 pub use crate::views::*;
 
 mod account;
@@ -81,6 +81,7 @@ pub struct Lottery {
     pub first_ticket_id: u32,
     pub first_ticket_id_next_lottery: u32,
     pub amount_collected_in_near: u128,
+    pub last_pot_size: u128,
     pub final_number: u32,
     pub operate_fee: u128,
 }
@@ -101,6 +102,7 @@ impl Default for Lottery {
             first_ticket_id: 0,
             first_ticket_id_next_lottery: 0,
             amount_collected_in_near: 0,
+            last_pot_size: 0,
             final_number: 0,
             operate_fee: 0,
         }
@@ -148,7 +150,6 @@ pub struct ContractData {
 
     pub min_discount_divisor: u128,
     pub max_reserve_fee: u128,
-    pub amount_discount: u128,
 
     // mapping are cheaper than arrays
     pub _lotteries: UnorderedMap<LotteryId, Lottery>,
@@ -244,7 +245,6 @@ impl NearLott {
                 _bracket_tickets_number: UnorderedMap::new(StorageKey::BracketTicketNumbers {
                     lottery_id: 0,
                 }),
-                amount_discount: 0,
             }),
             web_app_url: Some(String::from(DEFAULT_WEB_APP_URL)),
             auditor_account_id: Some(AccountId::new_unchecked(String::from(
@@ -687,24 +687,14 @@ mod tests {
         contract.data_mut().random_result = 1327419;
 
         let data3 = contract.data();
-        let pending_injection_amount = data3.pending_injection_next_lottery;
         let lottery_claim_lottery = data3._lotteries.get(&current_lottery_id).unwrap();
 
         assert_eq!(lottery_claim_lottery.status, Status::Claimable);
         // assert_eq!(lottery_claim_lottery.final_number, 1327419);
         // assert_eq!(data3.random_result, 1327419);
         // there is no one be a winner
-        let operate_fee = contract.get_operation_fee(current_lottery_id);
-        assert_eq!(
-            ((data3.current_ticket_id - lottery_claim_lottery.first_ticket_id) as u128
-                * lottery_claim_lottery.price_ticket_in_near
-                * lottery_claim_lottery.operate_fee)
-                / 10000,
-            operate_fee
-        );
-        let amount_to_shared = ((lottery_claim_lottery.amount_collected_in_near
-            - data3.amount_discount
-            - operate_fee)
+        let operate_fee = (lottery_claim_lottery.amount_collected_in_near - lottery_claim_lottery.last_pot_size)*lottery_claim_lottery.operate_fee / 1000;
+        let amount_to_shared = ((lottery_claim_lottery.amount_collected_in_near - operate_fee)
             * (10000 - lottery_claim_lottery.reserve_fee))
             / 10000;
 
@@ -887,7 +877,7 @@ mod tests {
         // check rewards summary share share
         let data3 = contract.data();
         let lottery_claim_lottery = data3._lotteries.get(&current_lottery_id).unwrap();
-        let operate_fee = contract.get_operation_fee(current_lottery_id);
+        let operate_fee = (lottery_claim_lottery.amount_collected_in_near - lottery_claim_lottery.last_pot_size)*lottery_claim_lottery.operate_fee / 1000;
 
         // reserver pool
         let reserver_pool = ((lottery_claim_lottery.amount_collected_in_near - operate_fee)
@@ -895,7 +885,6 @@ mod tests {
             / 10000;
 
         let amount_to_shared = ((lottery_claim_lottery.amount_collected_in_near
-            - data3.amount_discount
             - operate_fee)
             * (10000 - lottery_claim_lottery.reserve_fee))
             / 10000;
@@ -1230,32 +1219,5 @@ mod tests {
         assert_eq!(0, lottery.first_ticket_id_next_lottery);
         assert_eq!(1000000000000000000000000, lottery.amount_collected_in_near);
         assert_eq!(0, lottery.final_number);
-    }
-
-    #[test]
-    fn test_calculate_operate_fee() {
-        let (mut context, mut contract) = setup_contract();
-
-        // deposit storage
-        deposit_for_account(&mut context, &mut contract, accounts(2));
-        // start lottery 2
-        start_a_lottery(&mut context, &mut contract, accounts(2));
-
-        // view current
-        let current_lottery_id = contract.data().current_lottery_id;
-        buy_a_ticket(
-            &mut context,
-            &mut contract,
-            accounts(2),
-            current_lottery_id,
-            vec![1039219],
-        );
-
-        // view current
-        let current_lottery_id = contract.data().current_lottery_id;
-
-        assert_eq!(contract.data().amount_discount, 0);
-        let operate_fee = contract.get_operation_fee(current_lottery_id);
-        assert_eq!(operate_fee, 5 * 10u128.pow(22));
     }
 }

@@ -345,11 +345,4 @@ impl NearLott {
         let config = self._get_config();
         return config;
     }
-
-    /***
-     * Get the operation fee of a lottery_id
-     */
-    pub fn get_operation_fee(&self, _lottery_id: LotteryId) -> u128 {
-        internal_get_operation_fee(self.data(), _lottery_id)
-    }
 }
