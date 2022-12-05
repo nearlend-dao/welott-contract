@@ -86,12 +86,12 @@ near call $CONTRACT_ACC --accountId=$OWNER start_lottery '{
 # }'
 
 # echo "####################### VIEW TICKETS #################################"
-# near view $CONTRACT_ACC  view_user_info_for_lottery_id '{
-#     "_user": "'$OWNER'",
-#     "_lottery_id": 1,
-#     "_cursor": 0,
-#     "_size": 100
-# }' 
+near view $CONTRACT_ACC  view_user_info_for_lottery_id '{
+    "_user": "'$OWNER'",
+    "_lottery_id": 1,
+    "_cursor": 0,
+    "_size": 100
+}' 
 
 
 # echo "######################## CLOSE ROUND #############################"
