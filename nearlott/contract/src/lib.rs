@@ -519,7 +519,6 @@ mod tests {
     fn close_lottery(
         context: &mut VMContextBuilder,
         contract: &mut NearLott,
-        current_lottery_id: LotteryId,
     ) {
         // // close ticket
         let start_time = 162615600000000;
@@ -533,7 +532,7 @@ mod tests {
             ])
             .block_timestamp(end_time + 5000)
             .build());
-        contract.close_lottery(current_lottery_id);
+        contract.close_lottery();
     }
 
     fn buy_a_ticket(
@@ -669,7 +668,7 @@ mod tests {
         assert_eq!(third_ticket.number, 1380611);
 
         // close lottery
-        close_lottery(&mut context, &mut contract, current_lottery_id);
+        close_lottery(&mut context, &mut contract);
 
         // check random number generated.
         let data2 = contract.data();
@@ -816,7 +815,7 @@ mod tests {
         );
 
         // close lottery
-        close_lottery(&mut context, &mut contract, current_lottery_id);
+        close_lottery(&mut context, &mut contract);
 
         // draw final number
         contract.data_mut().random_result = 1327419;
@@ -999,7 +998,7 @@ mod tests {
         );
 
         // close lottery
-        close_lottery(&mut context, &mut contract, current_lottery_id);
+        close_lottery(&mut context, &mut contract);
 
         // draw final number
         testing_env!(context
@@ -1028,7 +1027,7 @@ mod tests {
         let current_lottery_id = contract.data().current_lottery_id;
 
         // close lottery
-        close_lottery(&mut context, &mut contract, current_lottery_id);
+        close_lottery(&mut context, &mut contract);
 
         let data2 = contract.data();
         let lottery = data2._lotteries.get(&current_lottery_id).unwrap();

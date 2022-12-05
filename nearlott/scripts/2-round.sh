@@ -37,7 +37,7 @@ export NEAR_ENV=$NETWORK
 
 echo "########################### START ROUND #########################"
 # end_time=$(($(date +%s) + 24*60*60))
-end_time=$(($(date +%s) + 5*60))
+end_time=$(($(date +%s) + 60))
 near call $CONTRACT_ACC --accountId=$OWNER start_lottery '{
     "_end_time": '$end_time'000000000,
     "_price_ticket_in_near": "1'$DECIMAL_24'",
