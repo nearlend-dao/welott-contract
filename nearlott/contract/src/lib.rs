@@ -942,8 +942,12 @@ mod tests {
         // view status ticket after claimed
         let status_tickets =
             contract.view_numbers_and_statuses_for_ticket_ids(vec![0, 1, 2, 3], current_lottery_id);
-        let view_user_info_for_lottery_id =
-            contract.view_user_info_for_lottery_id(accounts(2), current_lottery_id, 0, 100);
+        let view_user_info_for_lottery_id = contract.view_user_info_for_lottery_id(
+            accounts(2),
+            current_lottery_id,
+            Some(0),
+            Some(100),
+        );
         println!("status_tickets: {:?}", status_tickets);
         println!(
             "view_user_info_for_lottery_id: {:?}",
@@ -1107,12 +1111,27 @@ mod tests {
         );
 
         // view user info
-        let view_user_info =
-            contract.view_user_info_for_lottery_id(accounts(2), current_lottery_id, 0, 25);
-        println!("view user info: {:?}", view_user_info);
+        let view_user_info = contract.view_user_info_for_lottery_id(
+            accounts(2),
+            current_lottery_id,
+            Some(0),
+            Some(25),
+        );
+
+        println!(
+            "view user info [test_view_user_info_for_lottery_id]: {:?}",
+            view_user_info
+        );
+        assert_eq!(view_user_info.lottery_id, 1);
+        assert_eq!(view_user_info.ticket_numbers.len(), 1);
+        assert_eq!(view_user_info.ticket_numbers[0], 1039291);
+
+        assert_eq!(view_user_info.ticket_ids.len(), 1);
+        assert_eq!(view_user_info.ticket_ids[0], 0);
 
         // get view all lotteries
-        let view_ticket_all_lotteries = contract.view_all_lotteries_by_user(accounts(2), 0, 25);
+        let view_ticket_all_lotteries =
+            contract.view_all_lotteries_by_user(accounts(2), Some(0), Some(25));
         println!("view_lotteries {:?}", view_ticket_all_lotteries);
         // lottery 1
         let _lottery_first = contract.view_lottery(1);

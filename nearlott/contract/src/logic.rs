@@ -127,6 +127,7 @@ impl NearLott {
         );
         //  genrate winning number from env:seed
         let final_number = get_random_number();
+        // let final_number = 1327419; // TODO: Only remove on the mainnet. It's necessary for testing purpose
         data.random_result = final_number;
 
         // Calculate the finalNumber based on the randomResult generated
