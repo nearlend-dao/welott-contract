@@ -553,18 +553,18 @@ impl NearLott {
 
     /**
      * @notice Close lottery
-     * @param _lotteryId: lottery id
      * @dev Callable by operator
      */
     #[payable]
-    pub fn close_lottery(&mut self, _lottery_id: LotteryId) {
+    pub fn close_lottery(&mut self) {
         self.assert_one_yoctor();
         self.assert_operator_calling();
         self.assert_contract_running();
         let data = self.data_mut();
+        let _lottery_id = data.current_lottery_id;
         let mut lottery = data
             ._lotteries
-            .get(&data.current_lottery_id)
+            .get(&_lottery_id)
             .expect(ERR1_NOT_EXISTING_LOTTERY);
 
         assert_eq!(
@@ -592,7 +592,7 @@ impl NearLott {
             &json!({
                 "type": "close_lottery",
                 "params": {
-                    "current_lottery_id": data.current_lottery_id,
+                    "current_lottery_id": _lottery_id,
                     "current_ticket_id":  data.current_ticket_id,
                 }
             })
