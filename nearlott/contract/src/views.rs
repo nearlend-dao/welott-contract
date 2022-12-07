@@ -104,7 +104,7 @@ impl NearLott {
             ._lotteries
             .get(&_lottery_id)
             .expect(ERR1_NOT_EXISTING_LOTTERY);
-        data.current_ticket_id - lottery.first_ticket_id_next_lottery
+        lottery.first_ticket_id_next_lottery - lottery.first_ticket_id
     }
 
     /**
