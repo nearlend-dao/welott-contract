@@ -13,11 +13,20 @@ pub struct LotteryUserData {
     pub cursor: u32,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(crate = "near_sdk::serde")]
+pub enum TicketStatus {
+    NoStatus = 0,
+    Claimed = 1,
+    Claimable = 2,
+    Lose = 3,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct LotteryNumberAndStatusData {
     pub ticket_numbers: Vec<u32>,
-    pub ticket_status: Vec<u8>, //[0: NA, 1: Claimed, 2: Claimable, 3: Lose] // Nên chuyển thành enum
+    pub ticket_status: Vec<TicketStatus>, // [0: NA, 1: Claimed, 2: Claimable, 3: Lose]
 }
 
 /// User account on this contract
@@ -251,7 +260,7 @@ impl NearLott {
     ) -> LotteryNumberAndStatusData {
         let length = _ticket_ids.len();
         let mut ticket_numbers = vec![0; length];
-        let mut ticket_statuses = vec![0; length]; // 0: NA
+        let mut ticket_statuses = vec![TicketStatus::NoStatus; length]; // 0: NA
 
         let _brackets = vec![5, 4, 3, 2, 1, 0];
         for i in 0..length {
@@ -265,7 +274,7 @@ impl NearLott {
                 });
 
             if ticket_number.owner == AccountId::new_unchecked(ZERO_ADDRESS_WALLET.to_string()) {
-                ticket_statuses[i as usize] = 1; // Claimed
+                ticket_statuses[i as usize] = TicketStatus::Claimed; // Claimed
             } else {
                 let mut rewards_per_bracket = 0;
                 for bracket_position in 0.._brackets.len() {
@@ -278,9 +287,9 @@ impl NearLott {
                     rewards_per_bracket += reward_for_ticket_id;
                 }
                 if rewards_per_bracket > 0 {
-                    ticket_statuses[i as usize] = 2; // Claimable
+                    ticket_statuses[i as usize] = TicketStatus::Claimable; // Claimable
                 } else {
-                    ticket_statuses[i as usize] = 3; // Lose
+                    ticket_statuses[i as usize] = TicketStatus::Lose; // Lose
                 }
             }
             ticket_numbers[i as usize] = ticket_number.number;
