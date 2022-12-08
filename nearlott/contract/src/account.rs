@@ -8,7 +8,7 @@ pub struct AccountSimpleView {
     pub account_id: AccountId,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize, Debug, Clone)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Account {
     /// A copy of an account ID. Saves one storage_read when iterating on accounts.
@@ -20,7 +20,8 @@ pub struct Account {
     pub storage_tracker: StorageTracker,
 
     // keep track of user ticket ids for a given lotteryId
-    pub tickets: HashMap<LotteryId, Vec<TicketId>>,
+    #[serde(skip_serializing)]
+    pub tickets: UnorderedMap<LotteryId, Vec<TicketId>>,
 }
 
 #[derive(BorshSerialize, BorshDeserialize)]
@@ -47,7 +48,7 @@ impl Account {
         Self {
             account_id: account_id.clone(),
             storage_tracker: Default::default(),
-            tickets: HashMap::new(),
+            tickets: UnorderedMap::new(StorageKey::AccountTickets),
         }
     }
 }
@@ -121,7 +122,7 @@ impl Account {
         &self,
         _lottery_id: &LotteryId,
     ) -> Option<Vec<TicketId>> {
-        self.tickets.get(_lottery_id).map(|x| x.clone())
+        self.tickets.get(_lottery_id)
     }
 
     pub fn internal_get_ticket_id_per_lottery_or_default(
@@ -139,6 +140,6 @@ impl Account {
     ) {
         let mut ticket_ids = self.internal_get_ticket_id_per_lottery_or_default(_lottery_id);
         ticket_ids.push(ticket_id);
-        self.tickets.insert(_lottery_id.clone(), ticket_ids.into());
+        self.tickets.insert(_lottery_id, &ticket_ids);
     }
 }

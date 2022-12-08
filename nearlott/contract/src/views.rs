@@ -179,7 +179,7 @@ impl NearLott {
         let lottery_key_ids = account.tickets.keys();
 
         lottery_key_ids
-            .map(|&lottery_id| {
+            .map(|lottery_id| {
                 self.view_user_info_for_lottery_id(_user.clone(), lottery_id, _cursor, _size)
             })
             .collect()
@@ -228,9 +228,9 @@ impl NearLott {
 
         let lottery_ticket_ids: Vec<TicketId> = user_tickets
             .iter()
-            .map(|&x| x)
             .skip(_cursor.unwrap_or(0) as usize)
             .take(_size.unwrap_or(PAGINATION_SIZE) as usize)
+            .map(|&x| x)
             .collect();
 
         let ticket_numbers: Vec<u32> = self
