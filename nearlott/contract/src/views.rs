@@ -96,11 +96,12 @@ impl NearLott {
     }
 
     pub fn view_lotteries(&self, _cursor: Option<u64>, _size: Option<u64>) -> Vec<Lottery> {
-        let values = self.data()._lotteries.values_as_vector();
-        let from_index = _cursor.unwrap_or(0);
-        let limit = _size.unwrap_or(values.len());
-        (from_index..std::cmp::min(values.len(), from_index + limit))
-            .map(|index| values.get(values.len() - index - 1).unwrap().into())
+        self.data()
+            ._lotteries
+            .iter()
+            .skip(_cursor.unwrap_or(0) as usize)
+            .take(_size.unwrap_or(self.data()._lotteries.len()) as usize)
+            .map(|x| x.1)
             .collect()
     }
 
@@ -114,7 +115,7 @@ impl NearLott {
             ._lotteries
             .get(&_lottery_id)
             .expect(ERR1_NOT_EXISTING_LOTTERY);
-        data.current_ticket_id - lottery.first_ticket_id_next_lottery
+        lottery.first_ticket_id_next_lottery - lottery.first_ticket_id
     }
 
     /**

@@ -386,6 +386,7 @@ impl NearLott {
         // Increment the total amount collected for the lottery round
         lottery.amount_collected_in_near =
             lottery.amount_collected_in_near + amount_near_to_transfer;
+        lottery.first_ticket_id_next_lottery = data.current_ticket_id;
         data._lotteries.insert(&_lottery_id, &lottery);
         data.permission_update = PermissionUpdateState::Allow;
 
