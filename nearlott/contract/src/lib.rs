@@ -517,10 +517,7 @@ mod tests {
         );
     }
 
-    fn close_lottery(
-        context: &mut VMContextBuilder,
-        contract: &mut NearLott,
-    ) {
+    fn close_lottery(context: &mut VMContextBuilder, contract: &mut NearLott) {
         // // close ticket
         let start_time = 162615600000000;
         let end_time = start_time + 12345678 as u64 + 1;

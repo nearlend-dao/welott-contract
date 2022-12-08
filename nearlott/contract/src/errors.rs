@@ -47,4 +47,5 @@ pub const ERR39_ATTACHED_DEPOSIT_LESS_AMOUNT: &str = "E39: Attached deposit is l
 pub const ERR40_CURRENTY_TIME_LESS_END_TIME: &str = "E40: Current time less than end time";
 pub const ERR41_ALREADY_CLAIMED: &str = "E41: You're already claimed alll";
 pub const ERR42_ACCOUNT_NO_EXISTING: &str = "E42: Account is not existing in Welott";
-pub const ERR43_ACCOUNT_MAX_TICKETS_PER_A_LOTTERY: &str = "E43: Maximum tickets of user per a lottery is 120";
+pub const ERR43_ACCOUNT_MAX_TICKETS_PER_A_LOTTERY: &str =
+    "E43: Maximum tickets of user per a lottery is 120";
