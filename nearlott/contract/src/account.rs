@@ -8,7 +8,7 @@ pub struct AccountSimpleView {
     pub account_id: AccountId,
 }
 
-#[derive(BorshSerialize, BorshDeserialize, Serialize)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
 pub struct Account {
     /// A copy of an account ID. Saves one storage_read when iterating on accounts.

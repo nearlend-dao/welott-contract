@@ -21,9 +21,7 @@ export NEAR_ENV=$NETWORK
 # near view $CONTRACT_ACC get_current_timestamp ''
 
 # echo "######################## CLOSE ROUND #############################"
-# near call $CONTRACT_ACC --accountId=$OWNER close_lottery '{
-#     "_lottery_id": 3
-# }' --depositYocto=1
+ near call $CONTRACT_ACC --accountId=$OWNER close_lottery '{}' --depositYocto=1
 
 # near call $CONTRACT_ACC --accountId=$OWNER draw_final_number_and_make_lottery_claimable '{
 #     "_lottery_id": 2,
@@ -37,10 +35,10 @@ export NEAR_ENV=$NETWORK
 
 echo "########################### START ROUND #########################"
 # end_time=$(($(date +%s) + 24*60*60))
-end_time=$(($(date +%s) + 60))
+end_time=$(($(date +%s) + 1000*60))
 near call $CONTRACT_ACC --accountId=$OWNER start_lottery '{
     "_end_time": '$end_time'000000000,
-    "_price_ticket_in_near": "1'$DECIMAL_24'",
+    "_price_ticket_in_near": "1'$DECIMAL_23'",
     "_discount_divisor": "0",
     "_rewards_breakdown": [125, 375, 750, 1250, 2500, 5000],
     "_reserve_fee": "2000",
@@ -95,6 +93,4 @@ near view $CONTRACT_ACC  view_user_info_for_lottery_id '{
 
 
 # echo "######################## CLOSE ROUND #############################"
-# near call $CONTRACT_ACC --accountId=$OWNER close_lottery '{
-#     "_lottery_id": 1
-# }' --depositYocto=1
+near call $CONTRACT_ACC --accountId=$OWNER close_lottery '{}' --depositYocto=1

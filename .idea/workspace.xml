@@ -8,7 +8,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="90294278-d446-4c93-aedf-427257a75ceb" name="Changes" comment="change unit test">
+      <change afterPath="$PROJECT_DIR$/nearlott/scripts/test_buy_tickets_1.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nearlott/scripts/test_buy_tickets_2.sh" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/nearlott/scripts/test_buy_tickets_3.sh" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nearlott/contract/src/account.rs" beforeDir="false" afterPath="$PROJECT_DIR$/nearlott/contract/src/account.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nearlott/contract/src/logic.rs" beforeDir="false" afterPath="$PROJECT_DIR$/nearlott/contract/src/logic.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nearlott/contract/src/views.rs" beforeDir="false" afterPath="$PROJECT_DIR$/nearlott/contract/src/views.rs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nearlott/out/nearlott.wasm" beforeDir="false" afterPath="$PROJECT_DIR$/nearlott/out/nearlott.wasm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nearlott/scripts/0-deploy.sh" beforeDir="false" afterPath="$PROJECT_DIR$/nearlott/scripts/0-deploy.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nearlott/scripts/2-round.sh" beforeDir="false" afterPath="$PROJECT_DIR$/nearlott/scripts/2-round.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nearlott/scripts/9-view.sh" beforeDir="false" afterPath="$PROJECT_DIR$/nearlott/scripts/9-view.sh" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/nearlott/scripts/test_duplicate.sh" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,6 +30,33 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="GitToolBoxStore">
+    <option name="branchesCleanupHistory">
+      <BranchesCleanupHistory>
+        <option name="history">
+          <list>
+            <BranchCleanupEntry>
+              <option name="deletions">
+                <list>
+                  <BranchDeletion>
+                    <option name="hash" value="e42d6a474991dcb6d9a91978bc73cb6876e27dc7" />
+                    <option name="name" value="change-ticket-status-to-enum" />
+                  </BranchDeletion>
+                  <BranchDeletion>
+                    <option name="hash" value="7ce4ac0983b7feb9ebf4e1d973c938755e9e8745" />
+                    <option name="name" value="change_view_lotteries" />
+                  </BranchDeletion>
+                  <BranchDeletion>
+                    <option name="hash" value="8c753adb33524e350fd5cd1c3b5a46d1f32c2fb2" />
+                    <option name="name" value="dev" />
+                  </BranchDeletion>
+                </list>
+              </option>
+              <option name="timestamp" value="1670601532103" />
+            </BranchCleanupEntry>
+          </list>
+        </option>
+      </BranchesCleanupHistory>
+    </option>
     <option name="projectConfigVersion" value="5" />
   </component>
   <component name="MacroExpansionManager">
@@ -39,7 +77,7 @@
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Volumes/Data/Crypto/nearlend/nearlott&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/duonghb53/near-lend/nearlott/nearlott/scripts&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -51,6 +89,11 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/nearlott/scripts" />
+    </key>
+  </component>
   <component name="RunManager" selected="Cargo.Test tests::test_close_lottery">
     <configuration name="Build" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
       <option name="command" value="build " />
@@ -147,6 +190,8 @@
       <workItem from="1662108638340" duration="601000" />
       <workItem from="1670000399686" duration="1127000" />
       <workItem from="1670001558514" duration="56000" />
+      <workItem from="1670598904805" duration="5971000" />
+      <workItem from="1670687697654" duration="2624000" />
     </task>
     <task id="LOCAL-00001" summary="remove lottery id param">
       <created>1669911000630</created>
