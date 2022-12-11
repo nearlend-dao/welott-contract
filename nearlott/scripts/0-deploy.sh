@@ -2,12 +2,13 @@ set -e
 NETWORK=testnet
 SUFFIX=testnet
 
-MASTER_ACC=dev-1670690337621-13695714686091
-CONTRACT_ACC=dev-1670690337621-13695714686091
+MASTER_ACC=lamns1.$NETWORK
+CONTRACT_ACC=welott42.$MASTER_ACC
 OWNER=$MASTER_ACC
-TREASURY_ACC=dev-1670690337621-13695714686091
-INJECTOR_ACC=dev-1670690337621-13695714686091
-OPERATOR_ACC=dev-1670690337621-13695714686091
+TREASURY_ACC=lamns1.$NETWORK
+INJECTOR_ACC=lamns1.$NETWORK
+OPERATOR_ACC=lamns1.$NETWORK
+
 
 export NEAR_ENV=$NETWORK
 
@@ -19,10 +20,10 @@ export NEAR_ENV=$NETWORK
 # near create-account $CONTRACT_ACC --masterAccount $MASTER_ACC --initialBalance 10
 
 echo "################ BUILD CONTRACT #########################"
-#./build.sh
+../build.sh
 
 echo "################ DEPLOY CONTRACT #########################"
-#near dev-deploy --wasmFile ./out/nearlott.wasm
+near deploy $CONTRACT_ACC ../out/nearlott.wasm
 
 # echo "################# INIT CONTRACT #########################"
  near call $CONTRACT_ACC --accountId=$OWNER new '{
