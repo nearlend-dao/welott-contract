@@ -272,11 +272,11 @@ impl NearLott {
         let account_id = env::predecessor_account_id();
         let mut account = self.internal_unwrap_account(&account_id);
         let user_tickets = account.internal_get_ticket_id_per_lottery_or_default(&_lottery_id);
-        // assert!(
-        //     (user_tickets.len() + _ticket_numbers.len()) <= 120,
-        //     "{}",
-        //     ERR43_ACCOUNT_MAX_TICKETS_PER_A_LOTTERY
-        // );
+        assert!(
+            (user_tickets.len() + _ticket_numbers.len()) <= 120,
+            "{}",
+            ERR43_ACCOUNT_MAX_TICKETS_PER_A_LOTTERY
+        );
 
         let data = self.data_mut();
         let mut lottery = data
