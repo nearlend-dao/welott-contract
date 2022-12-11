@@ -9,6 +9,7 @@ TREASURY_ACC=lamns1.$NETWORK
 INJECTOR_ACC=lamns1.$NETWORK
 OPERATOR_ACC=lamns1.$NETWORK
 
+
 export NEAR_ENV=$NETWORK
 
 
@@ -22,15 +23,15 @@ echo "################ BUILD CONTRACT #########################"
 ../build.sh
 
 echo "################ DEPLOY CONTRACT #########################"
-near deploy $CONTRACT_ACC ../out/nearlott.wasm 
+near deploy $CONTRACT_ACC ../out/nearlott.wasm
 
 # echo "################# INIT CONTRACT #########################"
-# near call $CONTRACT_ACC --accountId=$OWNER new '{
-#     "owner_id":"'$OWNER'",
-#     "injector_address":"'$INJECTOR_ACC'",
-#     "operator_address": "'$OPERATOR_ACC'",
-#     "treasury_address": "'$TREASURY_ACC'"
-# }'
+ near call $CONTRACT_ACC --accountId=$OWNER new '{
+     "owner_id":"'$OWNER'",
+     "injector_address":"'$INJECTOR_ACC'",
+     "operator_address": "'$OPERATOR_ACC'",
+     "treasury_address": "'$TREASURY_ACC'"
+ }'
 
 echo "####################### GET CONFIG CONTRACT #########################"
 near view $CONTRACT_ACC get_config ''

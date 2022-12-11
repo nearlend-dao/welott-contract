@@ -53,7 +53,7 @@ export NEAR_ENV=$NETWORK
 
 # near view $CONTRACT_ACC view_user_info_for_lottery_id '{"_user": "lamns1.testnet", "_lottery_id": 1, "_cursor": 0, "_size": 50}'
 # near view $CONTRACT_ACC view_user_info_for_lottery_id '{"_user": "lamns1.testnet", "_lottery_id": 2, "_cursor": 0, "_size": 50}'
-# near view $CONTRACT_ACC view_user_info_for_lottery_id '{"_user": "lamns1.testnet", "_lottery_id": 3, "_cursor": 0, "_size": 50}'
+# near view $CONTRACT_ACC view_user_info_for_lottery_id '{"_user": "lamns1.testnet", "_lottery_id": 1, "_cursor": 0, "_size": 50}'
 # near view $CONTRACT_ACC view_user_info_for_lottery_id '{"_user": "lamns1.testnet", "_lottery_id": 4, "_cursor": 0, "_size": 50}'
 # near view $CONTRACT_ACC view_user_info_for_lottery_id '{"_user": "lamns1.testnet", "_lottery_id": 5, "_cursor": 0, "_size": 50}'
 # near view $CONTRACT_ACC view_user_info_for_lottery_id '{"_user": "lamns1.testnet", "_lottery_id": 6, "_cursor": 0, "_size": 50}'

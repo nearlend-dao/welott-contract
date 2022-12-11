@@ -1,7 +1,10 @@
 use crate::config::ConfigContractData;
 use crate::*;
-use near_sdk::serde::{Deserialize, Serialize};
-const PAGINATION_SIZE: u32 = 10;
+use near_sdk::{
+    log,
+    serde::{Deserialize, Serialize},
+};
+const PAGINATION_SIZE: usize = 50;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(crate = "near_sdk::serde")]
@@ -169,17 +172,17 @@ impl NearLott {
      * @param _cursor: cursor to start where to retrieve the tickets
      * @param _size: the number of tickets to retrieve
      */
-    pub fn view_all_lotteries_by_user(
+    pub fn view_all_tickets_by_user_in_lottery_id(
         &self,
         _user: AccountId,
-        _cursor: Option<u32>,
-        _size: Option<u32>,
+        _cursor: Option<usize>,
+        _size: Option<usize>,
     ) -> Vec<LotteryUserData> {
         let account = self.internal_unwrap_account(&_user);
         let lottery_key_ids = account.tickets.keys();
 
         lottery_key_ids
-            .map(|&lottery_id| {
+            .map(|lottery_id| {
                 self.view_user_info_for_lottery_id(_user.clone(), lottery_id, _cursor, _size)
             })
             .collect()
@@ -196,15 +199,17 @@ impl NearLott {
         &self,
         _user: AccountId,
         _lottery_id: LotteryId,
-        _cursor: Option<u32>,
-        _size: Option<u32>,
+        _cursor: Option<usize>,
+        _size: Option<usize>,
     ) -> LotteryUserData {
+        let cursor = _cursor.unwrap_or(0);
+
         let mut empty_user_info = LotteryUserData {
             final_number: 0,
             lottery_id: 0,
             ticket_numbers: vec![],
             ticket_ids: vec![],
-            cursor: _cursor.unwrap_or(0),
+            cursor: cursor as u32,
         };
 
         // get lottery status
@@ -222,31 +227,42 @@ impl NearLott {
         // if there is no tickets. Return as a default value
         let mut account = self.internal_unwrap_account(&_user);
         let user_tickets = account.internal_get_ticket_id_per_lottery_or_default(&_lottery_id);
-        if user_tickets.len() == 0 {
+
+        if user_tickets.is_empty() || user_tickets.len() <= cursor {
             return empty_user_info;
         }
 
-        let lottery_ticket_ids: Vec<TicketId> = user_tickets
-            .iter()
-            .map(|&x| x)
-            .skip(_cursor.unwrap_or(0) as usize)
-            .take(_size.unwrap_or(PAGINATION_SIZE) as usize)
-            .collect();
+        let mut size = match _size {
+            None => PAGINATION_SIZE,
+            Some(size) => size,
+        };
 
-        let ticket_numbers: Vec<u32> = self
-            .data()
-            ._tickets
-            .iter()
-            .filter(|x| lottery_ticket_ids.contains(&x.0))
-            .map(|x| x.1.number)
-            .collect();
+        if size > PAGINATION_SIZE {
+            size = PAGINATION_SIZE;
+        }
+
+        let mut lottery_ticket_ids = vec![0; size as usize];
+        let mut ticket_numbers = vec![0; size as usize];
+
+        for i in 0..size {
+            lottery_ticket_ids[i] = user_tickets[i + cursor];
+            let ticket_number =
+                self.data()
+                    ._tickets
+                    .get(&lottery_ticket_ids[i])
+                    .unwrap_or(Ticket {
+                        number: 0,
+                        owner: AccountId::new_unchecked("no_account".to_string()),
+                    });
+            ticket_numbers[i] = ticket_number.number;
+        }
 
         LotteryUserData {
             final_number: current_lottery.final_number,
             lottery_id: current_lottery.lottery_id,
             ticket_ids: lottery_ticket_ids,
             ticket_numbers,
-            cursor: _cursor.unwrap_or(0),
+            cursor: cursor as u32,
         }
     }
 
