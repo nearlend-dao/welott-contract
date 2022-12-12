@@ -49,3 +49,5 @@ pub const ERR41_ALREADY_CLAIMED: &str = "E41: You're already claimed alll";
 pub const ERR42_ACCOUNT_NO_EXISTING: &str = "E42: Account is not existing in Welott";
 pub const ERR43_ACCOUNT_MAX_TICKETS_PER_A_LOTTERY: &str =
     "E43: Maximum tickets of user per a lottery is 120";
+pub const ERR44_LIMIT_ELEMENT_PER_A_VIEW: &str =
+    "E44: Maximum limit element for per a view is 50";

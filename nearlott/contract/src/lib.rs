@@ -1129,7 +1129,7 @@ mod tests {
 
         // get view all lotteries
         let view_ticket_all_lotteries =
-            contract.view_all_lotteries_by_user(accounts(2), Some(0), Some(25));
+            contract.view_all_tickets_by_user_in_lottery_id(accounts(2), Some(0), Some(25));
         println!("view_lotteries {:?}", view_ticket_all_lotteries);
         // lottery 1
         let _lottery_first = contract.view_lottery(1);
