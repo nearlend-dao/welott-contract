@@ -1,8 +1,6 @@
 use crate::config::ConfigContractData;
 use crate::*;
-use near_sdk::{
-    serde::{Deserialize, Serialize},
-};
+use near_sdk::serde::{Deserialize, Serialize};
 const PAGINATION_SIZE: usize = 50;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -201,8 +199,12 @@ impl NearLott {
         _cursor: Option<usize>,
         _size: Option<usize>,
     ) -> LotteryUserData {
-        let size = _size.unwrap_or(PAGINATION_SIZE);
-        assert!(size <= PAGINATION_SIZE, "{}", ERR44_LIMIT_ELEMENT_PER_A_VIEW);
+        let mut size = _size.unwrap_or(PAGINATION_SIZE);
+        assert!(
+            size <= PAGINATION_SIZE,
+            "{}",
+            ERR44_LIMIT_ELEMENT_PER_A_VIEW
+        );
 
         let cursor = _cursor.unwrap_or(0);
         let mut empty_user_info = LotteryUserData {
@@ -228,21 +230,26 @@ impl NearLott {
         // if there is no tickets. Return as a default value
         let mut account = self.internal_unwrap_account(&_user);
         let user_tickets = account.internal_get_ticket_id_per_lottery_or_default(&_lottery_id);
+        let number_tickets_bought_at_lottery_id = user_tickets.len();
 
-        if user_tickets.is_empty() || user_tickets.len() <= cursor {
+        if user_tickets.is_empty() || number_tickets_bought_at_lottery_id <= cursor {
             return empty_user_info;
         }
 
         let mut lottery_ticket_ids = vec![0; size as usize];
         let mut ticket_numbers = vec![0; size as usize];
 
+        if size > (number_tickets_bought_at_lottery_id - cursor) {
+            size = number_tickets_bought_at_lottery_id - cursor;
+        }
+
         for i in 0..size {
             lottery_ticket_ids[i] = user_tickets[i + cursor];
-            let ticket_number =
-                self.data()
-                    ._tickets
-                    .get(&lottery_ticket_ids[i])
-                    .expect(ERR2_NOT_EXISTING_TICKET);
+            let ticket_number = self
+                .data()
+                ._tickets
+                .get(&lottery_ticket_ids[i])
+                .expect(ERR2_NOT_EXISTING_TICKET);
             ticket_numbers[i] = ticket_number.number;
         }
 
