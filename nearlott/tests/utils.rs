@@ -1,6 +1,6 @@
-use near_sdk::{serde_json::json, AccountId};
+use near_sdk::{AccountId};
 use near_sdk_sim::{
-    deploy, init_simulator, to_yocto, ContractAccount, UserAccount, STORAGE_AMOUNT,
+    deploy, init_simulator, to_yocto, ContractAccount, UserAccount,
 };
 
 near_sdk_sim::lazy_static_include::lazy_static_include_bytes! {
@@ -43,27 +43,27 @@ pub fn init() -> (
         to_yocto("100"),
     );
 
-    root.create_user(account_from(&"g"), to_yocto("100"));
+    root.create_user(account_from("g"), to_yocto("100"));
 
-    root.create_user(account_from(&"h"), to_yocto("100"));
+    root.create_user(account_from("h"), to_yocto("100"));
 
-    root.create_user(account_from(&"i"), to_yocto("100"));
+    root.create_user(account_from("i"), to_yocto("100"));
 
-    root.create_user(account_from(&"j"), to_yocto("100"));
+    root.create_user(account_from("j"), to_yocto("100"));
 
-    root.create_user(account_from(&"k"), to_yocto("100"));
+    root.create_user(account_from("k"), to_yocto("100"));
 
-    root.create_user(account_from(&"l"), to_yocto("100"));
+    root.create_user(account_from("l"), to_yocto("100"));
 
-    root.create_user(account_from(&"m"), to_yocto("100"));
+    root.create_user(account_from("m"), to_yocto("100"));
 
-    let alice = root.create_user(account_from(&"x"), to_yocto("100"));
+    let alice = root.create_user(account_from("x"), to_yocto("100"));
 
-    let bob = root.create_user(account_from(&"y"), to_yocto("100"));
+    let bob = root.create_user(account_from("y"), to_yocto("100"));
 
-    let chandra = root.create_user(account_from(&"z"), to_yocto("100"));
+    let chandra = root.create_user(account_from("z"), to_yocto("100"));
 
-    let darmaji = root.create_user(account_from(&"n"), to_yocto("100"));
+    let darmaji = root.create_user(account_from("n"), to_yocto("100"));
 
     let nearlott_contract = deploy!(
         contract: NearlottContract,
@@ -92,10 +92,6 @@ pub fn init() -> (
     )
 }
 
-pub fn account_o() -> AccountId {
-    account_from("o")
-}
-
 pub fn account_from(s: &str) -> AccountId {
-    AccountId::new_unchecked(s.repeat(64).to_string())
+    AccountId::new_unchecked(s.repeat(64))
 }
