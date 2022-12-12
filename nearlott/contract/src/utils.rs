@@ -31,7 +31,7 @@ impl NearLott {
 }
 
 /**
-* @notice Create a number generrated from number of '1'
+* @notice Create a number generated from number of '1'
 * @param sequence: the time repeats number generator
 * For example: 1, 11, 111, 1111, 1111...etc
 */
@@ -124,17 +124,17 @@ pub(crate) fn get_random_number() -> u32 {
     let random: Vec<u8> = random_position();
     assert!(random.len() >= 10, "{}", ERR37_NOT_ENOUGH_RANDOM_NUMBERS);
     let rand_array_str = format!("{:?}", &random);
-    // Specific position to get values. Random_seeds defauls return to 32 number in a vector<u8>.
+    // Specific position to get values. Random_seeds default return to 32 number in a vector<u8>.
     let rand_array: Vec<u8> = random
         .into_iter()
         .map(|x| *env::random_seed().get(x as usize).unwrap())
         .collect();
-    // convert so tring
+    // convert so string
     let randomness_instr = rand_array
         .into_iter()
         .map(|x| x.to_string())
         .collect::<String>();
-    // comvert to u64 to prepare for final number
+    // convert to u64 to prepare for final number
     let randomness = randomness_instr
         .parse::<u128>()
         .expect(ERR34_RANDOM_NUMBER_INVALID);

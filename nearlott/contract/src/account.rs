@@ -48,7 +48,9 @@ impl Account {
         Self {
             account_id: account_id.clone(),
             storage_tracker: Default::default(),
-            tickets: UnorderedMap::new(StorageKey::AccountTickets),
+            tickets: UnorderedMap::new(StorageKey::AccountTickets {
+                account_id: account_id.clone(),
+            }),
         }
     }
 }
@@ -73,7 +75,7 @@ impl NearLott {
         self.internal_set_storage(account_id, storage);
     }
 
-    pub fn internal_set_accoun_contract_data(
+    pub fn internal_set_account_contract_data(
         data: &mut ContractData,
         account_id: &AccountId,
         mut account: Account,
