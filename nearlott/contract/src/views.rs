@@ -236,12 +236,11 @@ impl NearLott {
             return empty_user_info;
         }
 
-        let mut lottery_ticket_ids = vec![0; size as usize];
-        let mut ticket_numbers = vec![0; size as usize];
-
         if size > (number_tickets_bought_at_lottery_id - cursor) {
             size = number_tickets_bought_at_lottery_id - cursor;
         }
+        let mut lottery_ticket_ids = vec![0; size as usize];
+        let mut ticket_numbers = vec![0; size as usize];
 
         for i in 0..size {
             lottery_ticket_ids[i] = user_tickets[i + cursor];
