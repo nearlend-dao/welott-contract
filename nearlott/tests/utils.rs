@@ -61,7 +61,7 @@ pub fn init() -> (
 
     let bob = root.create_user(account_from("y"), to_yocto("100"));
 
-    let chandra = root.create_user(account_from("z"), to_yocto("100"));
+    let chandra = root.create_user(account_from("z"), to_yocto("10000"));
 
     let darmaji = root.create_user(account_from("n"), to_yocto("100"));
 

@@ -188,6 +188,6 @@ fn lotter_actions() {
         view_user_info_for_lottery_id
     );
 
-    assert_eq!(view_user_info_for_lottery_id.ticket_numbers.len(), 20);
+    assert_eq!(view_user_info_for_lottery_id.ticket_numbers.len(), 25);
     assert_eq!(view_user_info_for_lottery_id.ticket_numbers[0], 1039219);
 }
