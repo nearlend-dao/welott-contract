@@ -2,11 +2,7 @@ use crate::utils::{init, DEFAULT_GAS};
 use contract::LotteryUserData;
 use near_contract_standards::storage_management::StorageBalance;
 use near_contract_standards::storage_management::StorageBalanceBounds;
-use near_sdk::{
-    json_types::{U128},
-    serde_json::json,
-    AccountId,
-};
+use near_sdk::{json_types::U128, serde_json::json, AccountId};
 use near_sdk_sim::{to_yocto, view};
 mod utils;
 

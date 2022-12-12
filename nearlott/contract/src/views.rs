@@ -1,8 +1,6 @@
 use crate::config::ConfigContractData;
 use crate::*;
-use near_sdk::{
-    serde::{Deserialize, Serialize},
-};
+use near_sdk::serde::{Deserialize, Serialize};
 const PAGINATION_SIZE: usize = 50;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -202,7 +200,11 @@ impl NearLott {
         _size: Option<usize>,
     ) -> LotteryUserData {
         let size = _size.unwrap_or(PAGINATION_SIZE);
-        assert!(size <= PAGINATION_SIZE, "{}", ERR44_LIMIT_ELEMENT_PER_A_VIEW);
+        assert!(
+            size <= PAGINATION_SIZE,
+            "{}",
+            ERR44_LIMIT_ELEMENT_PER_A_VIEW
+        );
 
         let cursor = _cursor.unwrap_or(0);
         let mut empty_user_info = LotteryUserData {
@@ -238,11 +240,11 @@ impl NearLott {
 
         for i in 0..size {
             lottery_ticket_ids[i] = user_tickets[i + cursor];
-            let ticket_number =
-                self.data()
-                    ._tickets
-                    .get(&lottery_ticket_ids[i])
-                    .expect(ERR2_NOT_EXISTING_TICKET);
+            let ticket_number = self
+                .data()
+                ._tickets
+                .get(&lottery_ticket_ids[i])
+                .expect(ERR2_NOT_EXISTING_TICKET);
             ticket_numbers[i] = ticket_number.number;
         }
 

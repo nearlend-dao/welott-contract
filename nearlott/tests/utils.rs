@@ -1,7 +1,5 @@
-use near_sdk::{AccountId};
-use near_sdk_sim::{
-    deploy, init_simulator, to_yocto, ContractAccount, UserAccount,
-};
+use near_sdk::AccountId;
+use near_sdk_sim::{deploy, init_simulator, to_yocto, ContractAccount, UserAccount};
 
 near_sdk_sim::lazy_static_include::lazy_static_include_bytes! {
     NEARLOTT_WASM_BYTES => "out/nearlott.wasm",
