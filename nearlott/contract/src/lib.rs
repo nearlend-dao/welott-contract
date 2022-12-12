@@ -117,7 +117,7 @@ pub(crate) enum StorageKey {
     BracketCalculator,
     Storage,
     BracketTicketNumbers { lottery_id: LotteryId },
-    AccountTickets,
+    AccountTickets { account_id: AccountId },
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Eq, PartialEq, Clone)]

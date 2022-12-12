@@ -125,7 +125,7 @@ impl NearLott {
             "{}",
             ERR30_LOTTERY_IS_NOT_CLOSE
         );
-        //  genrate winning number from env:seed
+        //  generate winning number from env:seed
         let final_number = get_random_number();
         // let final_number = 1327419; // TODO: Only remove on the mainnet. It's necessary for testing purpose
         data.random_result = final_number;
@@ -442,12 +442,12 @@ impl NearLott {
             .get(&_lottery_id)
             .expect(ERR1_NOT_EXISTING_LOTTERY);
 
-        // Only allow claimming after drawing a winning number
+        // Only allow claiming after drawing a winning number
         assert_eq!(
             lottery.status,
             Status::Claimable,
             "{}",
-            ERR23_LOTTERY_NOT_CLAMABLE
+            ERR23_LOTTERY_NOT_CLAIMABLE
         );
 
         // Initializes the reward_in_near_to_transfer

@@ -324,7 +324,7 @@ impl NearLott {
     }
 
     /**
-     * Get current blockt imestamp running in Near blockchain
+     * Get current block timestamp running in Near blockchain
      */
     pub fn get_current_timestamp(&self) -> u64 {
         env::block_timestamp()
