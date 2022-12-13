@@ -58,7 +58,7 @@ impl NearLott {
     pub fn set_owner(&mut self, owner_id: AccountId) {
         self.assert_one_yoctor();
         self.assert_owner_calling();
-        self.data_mut().owner_id = owner_id.into();
+        self.data_mut().owner_id = owner_id;
     }
 
     #[payable]
@@ -71,7 +71,7 @@ impl NearLott {
             env::log_str(&msg);
             self.data_mut().state = RunningState::Paused;
         } else {
-            env::log_str(&"Contract state is already in Paused");
+            env::log_str("Contract state is already in Paused");
         }
     }
     #[payable]
@@ -101,7 +101,7 @@ impl NearLott {
         );
         let mut contract: NearLott = env::state_read().expect("ERR_NOT_INITIALIZED");
         contract.data = match contract.data {
-            VersionedContractData::V0001(data) => VersionedContractData::V0001(data.into()),
+            VersionedContractData::V0001(data) => VersionedContractData::V0001(data),
         };
         contract
     }

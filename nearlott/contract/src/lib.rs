@@ -223,7 +223,7 @@ impl NearLott {
         brackets.insert(&4, &11111);
         brackets.insert(&5, &111111);
 
-        let this = Self {
+        Self {
             data: VersionedContractData::V0001(ContractData {
                 owner_id,
                 injector_address,
@@ -251,9 +251,7 @@ impl NearLott {
             auditor_account_id: Some(AccountId::new_unchecked(String::from(
                 DEFAULT_AUDITOR_ACCOUNT_ID,
             ))),
-        };
-
-        this
+        }
     }
 }
 

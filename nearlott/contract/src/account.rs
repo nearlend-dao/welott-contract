@@ -132,7 +132,7 @@ impl Account {
         _lottery_id: &LotteryId,
     ) -> Vec<TicketId> {
         self.internal_get_ticket_ids_per_lottery(_lottery_id)
-            .unwrap_or(vec![])
+            .unwrap_or_default()
     }
 
     pub fn internal_set_ticket_ids_per_lottery(

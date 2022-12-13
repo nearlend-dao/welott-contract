@@ -190,9 +190,9 @@ impl NearLott {
                     // A. No NEAR to distribute, they are added to the amount to withdraw to treasury address
                 } else {
                     lottery.near_per_bracket[j as usize] = 0;
-                    _amount_to_withdraw_to_next_lottery = _amount_to_withdraw_to_next_lottery
-                        + (lottery.rewards_breakdown[j as usize] * _amount_to_share_to_winners)
-                            / 10000;
+                    _amount_to_withdraw_to_next_lottery += (lottery.rewards_breakdown[j as usize]
+                        * _amount_to_share_to_winners)
+                        / 10000;
                 }
             }
         } else {
@@ -267,7 +267,7 @@ impl NearLott {
     #[payable]
     pub fn buy_tickets(&mut self, _lottery_id: LotteryId, _ticket_numbers: Vec<TicketNumber>) {
         self.assert_contract_running();
-        assert!(_ticket_numbers.len() > 0, "{}", ERR21_TICKETS__LENGTH);
+        assert!(!_ticket_numbers.is_empty(), "{}", ERR21_TICKETS__LENGTH);
         // Check total tickets of user per a lottery
         let account_id = env::predecessor_account_id();
         let mut account = self.internal_unwrap_account(&account_id);
@@ -321,7 +321,7 @@ impl NearLott {
             .iter()
             .map(|&x| {
                 assert!(
-                    x >= 1000000 && x <= 1999999,
+                    (1000000..=1999999).contains(&x),
                     "{}",
                     ERR31_TICKET_NUMBER_RANGE
                 );
@@ -330,18 +330,18 @@ impl NearLott {
             .collect();
 
         // update lottery data
-        let mut _bracket_tickets_number =
-            data._bracket_tickets_number
-                .get(&_lottery_id)
-                .unwrap_or(UnorderedMap::new(StorageKey::BracketTicketNumbers {
+        let mut _bracket_tickets_number = data
+            ._bracket_tickets_number
+            .get(&_lottery_id)
+            .unwrap_or_else(|| {
+                UnorderedMap::new(StorageKey::BracketTicketNumbers {
                     lottery_id: _lottery_id,
-                }));
+                })
+            });
 
         // prepare key bracket for kind of decimals values
-        let bracket_placeholder: Vec<u32> = (1..=6 as u32)
-            .into_iter()
-            .map(|x| create_number_one(x))
-            .collect();
+        let bracket_placeholder: Vec<u32> =
+            (1..=6_u32).into_iter().map(create_number_one).collect();
 
         let mut ticket_ids: Vec<String> = vec![];
 
@@ -379,13 +379,12 @@ impl NearLott {
             let ticket_id = data.current_ticket_id;
             ticket_ids.push(ticket_id.to_string());
 
-            data.current_ticket_id = data.current_ticket_id + 1;
+            data.current_ticket_id += 1;
         }
 
         // saving data
         // Increment the total amount collected for the lottery round
-        lottery.amount_collected_in_near =
-            lottery.amount_collected_in_near + amount_near_to_transfer;
+        lottery.amount_collected_in_near += amount_near_to_transfer;
         lottery.first_ticket_id_next_lottery = data.current_ticket_id;
         data._lotteries.insert(&_lottery_id, &lottery);
         data.permission_update = PermissionUpdateState::Allow;

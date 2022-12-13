@@ -112,7 +112,7 @@ pub(crate) fn _calculate_rewards_for_ticket_id(
         let lottery_brackets = lottery.near_per_bracket;
         return lottery_brackets[_bracket as usize];
     }
-    return 0;
+    0
 }
 
 /**
@@ -175,12 +175,11 @@ pub(crate) fn random_position() -> Vec<u8> {
 }
 
 pub(crate) fn extract_data(value: Option<U128>) -> u128 {
-    let value_in_128 = if let Some(amount) = value.map(|a| a.0) {
+    if let Some(amount) = value.map(|a| a.0) {
         amount
     } else {
         0
-    };
-    value_in_128
+    }
 }
 
 #[allow(unused)]

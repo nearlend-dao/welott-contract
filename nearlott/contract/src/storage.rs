@@ -34,6 +34,12 @@ impl From<Storage> for VStorage {
     }
 }
 
+impl Default for Storage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Storage {
     pub fn new() -> Self {
         Self {
@@ -106,9 +112,7 @@ impl NearLott {
         registration_only: Option<bool>,
     ) -> StorageBalance {
         let amount: Balance = env::attached_deposit();
-        let account_id = account_id
-            .map(|a| a.into())
-            .unwrap_or_else(|| env::predecessor_account_id());
+        let account_id = account_id.unwrap_or_else(env::predecessor_account_id);
         let storage = self.internal_get_storage(&account_id);
         let registration_only = registration_only.unwrap_or(false);
         if let Some(mut storage) = storage {
