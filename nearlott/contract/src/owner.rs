@@ -5,18 +5,11 @@ impl NearLott {
     /**
      * @notice Inject funds
      * @param _lotteryId: lottery id
-     * @param _amount: amount to inject in NEAR token
      * @dev Callable by owner or injector address
      */
     #[payable]
-    pub fn inject_funds(&mut self, _lottery_id: LotteryId, _amount: u128) {
+    pub fn inject_funds(&mut self, _lottery_id: LotteryId) {
         self.assert_injector_or_owner_calling();
-
-        assert!(
-            env::attached_deposit() >= _amount,
-            "{}",
-            ERR39_ATTACHED_DEPOSIT_LESS_AMOUNT
-        );
 
         let data = self.data_mut();
         let mut lottery: Lottery = data
@@ -29,9 +22,8 @@ impl NearLott {
             "{}",
             ERR17_LOTTERY_IS_NOT_OPEN
         );
-
-        let new_near_fund = lottery.amount_collected_in_near + env::attached_deposit();
-        lottery.amount_collected_in_near = new_near_fund;
+        lottery.amount_collected_in_near =
+            lottery.amount_collected_in_near + env::attached_deposit();
 
         // save lottery
         data._lotteries.insert(&_lottery_id, &lottery);
@@ -41,7 +33,7 @@ impl NearLott {
                 "type": "inject_funds",
                 "params": {
                     "lottery_id": _lottery_id,
-                    "amount": env::attached_deposit(),
+                    "amount": U128(env::attached_deposit()),
                 }
             })
             .to_string(),

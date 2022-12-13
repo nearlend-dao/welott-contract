@@ -195,7 +195,7 @@ impl NearLott {
         _cursor: Option<usize>,
         _size: Option<usize>,
     ) -> LotteryUserData {
-        let size = _size.unwrap_or(PAGINATION_SIZE);
+        let mut size = _size.unwrap_or(PAGINATION_SIZE);
         assert!(
             size <= PAGINATION_SIZE,
             "{}",
@@ -226,11 +226,15 @@ impl NearLott {
         // if there is no tickets. Return as a default value
         let mut account = self.internal_unwrap_account(&_user);
         let user_tickets = account.internal_get_ticket_id_per_lottery_or_default(&_lottery_id);
+        let number_tickets_bought_at_lottery_id = user_tickets.len();
 
-        if user_tickets.is_empty() || user_tickets.len() <= cursor {
+        if user_tickets.is_empty() || number_tickets_bought_at_lottery_id <= cursor {
             return empty_user_info;
         }
 
+        if size > (number_tickets_bought_at_lottery_id - cursor) {
+            size = number_tickets_bought_at_lottery_id - cursor;
+        }
         let mut lottery_ticket_ids = vec![0; size as usize];
         let mut ticket_numbers = vec![0; size as usize];
 
