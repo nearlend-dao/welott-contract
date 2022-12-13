@@ -127,8 +127,8 @@ fn lotter_actions() {
         )
         .assert_success();
 
-    // Do a loop buying 2000 tickets
-    for i in 0..2000 {
+    // Do a loop buying 120 tickets
+    for i in 0..120 {
         // check storage available
         let chandra_storage: StorageBalance = chandra
             .view(
