@@ -22,8 +22,7 @@ impl NearLott {
             "{}",
             ERR17_LOTTERY_IS_NOT_OPEN
         );
-        lottery.amount_collected_in_near =
-            lottery.amount_collected_in_near + env::attached_deposit();
+        lottery.amount_collected_in_near += env::attached_deposit();
 
         // save lottery
         data._lotteries.insert(&_lottery_id, &lottery);
