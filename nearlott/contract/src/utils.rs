@@ -2,7 +2,6 @@ use crate::callback::ext_ft_contract;
 use crate::gas::GAS_FOR_FT_TRANSFER;
 
 use crate::*;
-// use rand::Rng; // 0.8.0
 
 use near_sdk::AccountId;
 
@@ -35,7 +34,7 @@ impl NearLott {
 * @param sequence: the time repeats number generator
 * For example: 1, 11, 111, 1111, 1111...etc
 */
-pub(crate) fn create_number_one(sequence: u32) -> u32 {
+pub fn create_number_one(sequence: u32) -> u32 {
     (1..=sequence)
         .into_iter()
         .map(|_| '1')
@@ -50,7 +49,7 @@ pub(crate) fn create_number_one(sequence: u32) -> u32 {
  * @param _price_ticket: price of a ticket
  * @param _number_ticket: number of tickets purchased
  */
-pub(crate) fn _calculate_total_price_for_bulk_tickets(
+pub fn _calculate_total_price_for_bulk_tickets(
     _discount_divisor: u128,
     _price_ticket: u128,
     _number_ticket: u128,
@@ -66,7 +65,7 @@ pub(crate) fn _calculate_total_price_for_bulk_tickets(
  * @param _discount_divisor: divisor for the discount (the smaller it is, the greater the discount is)
  * @param _price_ticket: price of a ticket
  */
-pub(crate) fn _calculate_number_of_tickets(
+pub fn _calculate_number_of_tickets(
     _number_tickets_per_lottery: u128,
     near_per_bracket: u128,
 ) -> u128 {
@@ -79,7 +78,7 @@ pub(crate) fn _calculate_number_of_tickets(
  * @param _ticket_id: ticket id
  * @param _bracket: bracket for the ticketId to verify the claim and calculate rewards
  */
-pub(crate) fn _calculate_rewards_for_ticket_id(
+pub fn _calculate_rewards_for_ticket_id(
     data: &ContractData,
     _lottery_id: LotteryId,
     _ticket_id: TicketId,
@@ -119,7 +118,7 @@ pub(crate) fn _calculate_rewards_for_ticket_id(
  * @notice Request randomness from a user-provided seed
  * @param _seed: seed provided by the NearLott lottery
  */
-pub(crate) fn get_random_number() -> u32 {
+pub fn get_random_number() -> u32 {
     // generate 15 number position with random position from [1..9]
     let random: Vec<u8> = random_position();
     assert!(random.len() >= 10, "{}", ERR37_NOT_ENOUGH_RANDOM_NUMBERS);
@@ -165,7 +164,7 @@ pub(crate) fn get_random_number() -> u32 {
 /**
  * @notice Random a number from 1..9
  */
-pub(crate) fn random_position() -> Vec<u8> {
+pub fn random_position() -> Vec<u8> {
     let positions = env::random_seed();
     if positions.len() > 10 {
         let slice: Vec<u8> = positions[0..10].iter().map(|x| x % 9).collect();
@@ -174,7 +173,7 @@ pub(crate) fn random_position() -> Vec<u8> {
     positions
 }
 
-pub(crate) fn extract_data(value: Option<U128>) -> u128 {
+pub fn extract_data(value: Option<U128>) -> u128 {
     if let Some(amount) = value.map(|a| a.0) {
         amount
     } else {
@@ -183,7 +182,7 @@ pub(crate) fn extract_data(value: Option<U128>) -> u128 {
 }
 
 #[allow(unused)]
-pub(crate) fn unordered_map_pagination<K, VV, V>(
+pub fn unordered_map_pagination<K, VV, V>(
     m: &UnorderedMap<K, VV>,
     from_index: Option<u64>,
     limit: Option<u64>,
@@ -202,7 +201,7 @@ where
         .collect()
 }
 
-pub(crate) fn internal_get_account_unwrap_by_contract_data(
+pub fn internal_get_account_unwrap_by_contract_data(
     contract_data: &mut ContractData,
     account_id: &AccountId,
 ) -> Account {
@@ -210,7 +209,7 @@ pub(crate) fn internal_get_account_unwrap_by_contract_data(
     account.expect(ERR42_ACCOUNT_NO_EXISTING)
 }
 
-pub(crate) fn internal_set_storage_data(
+pub fn internal_set_storage_data(
     data: &mut ContractData,
     account_id: &AccountId,
     mut storage: Storage,
@@ -240,7 +239,7 @@ pub(crate) fn internal_set_storage_data(
     data.storage.insert(account_id, &storage.into());
 }
 
-pub(crate) fn internal_set_account_data(
+pub fn internal_set_account_data(
     data: &mut ContractData,
     account_id: &AccountId,
     mut account: Account,
