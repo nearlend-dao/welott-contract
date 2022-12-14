@@ -5,6 +5,12 @@ pub struct AccountBracketCounting {
     pub bracket_ticket_number_counting: HashMap<BracketTicketNumber, CountTicketValue>,
 }
 
+impl Default for AccountBracketCounting {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl AccountBracketCounting {
     pub fn new() -> Self {
         Self {
@@ -32,7 +38,7 @@ impl AccountBracketCounting {
     ) -> Option<CountTicketValue> {
         self.bracket_ticket_number_counting
             .get(_bracket_ticket_number)
-            .map(|x| x.clone())
+            .copied()
     }
 
     pub fn internal_get_bracket_ticket_number_counting_or_default(
@@ -50,8 +56,8 @@ impl AccountBracketCounting {
         let mut ticket_num =
             self.internal_get_bracket_ticket_number_counting_or_default(_bracket_ticket_number);
 
-        ticket_num = ticket_num + 1;
+        ticket_num += 1;
         self.bracket_ticket_number_counting
-            .insert(_bracket_ticket_number.clone(), ticket_num);
+            .insert(*_bracket_ticket_number, ticket_num);
     }
 }

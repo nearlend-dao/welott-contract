@@ -1,14 +1,8 @@
-use crate::utils::{account_o, init, DEFAULT_GAS};
+use crate::utils::{init, DEFAULT_GAS};
 use contract::LotteryUserData;
 use near_contract_standards::storage_management::StorageBalance;
 use near_contract_standards::storage_management::StorageBalanceBounds;
-use near_sdk::{
-    env,
-    json_types::{U128, U64},
-    serde::{Deserialize, Serialize},
-    serde_json::json,
-    AccountId, Balance, Gas,
-};
+use near_sdk::{json_types::U128, serde_json::json, AccountId};
 use near_sdk_sim::{to_yocto, view};
 mod utils;
 
@@ -28,11 +22,11 @@ fn test_storage_deposit() {
         _operator,
         _injector,
         _treasury,
-        alice,
-        bob,
+        _alice,
+        _bob,
         chandra,
-        darmaji,
-        root,
+        _darmaji,
+        _root,
     ) = init();
 
     chandra
@@ -55,10 +49,10 @@ fn lotter_actions() {
         _injector,
         _treasury,
         alice,
-        bob,
+        _bob,
         chandra,
-        darmaji,
-        root,
+        _darmaji,
+        _root,
     ) = init();
 
     let minium_deposit_amount: StorageBalanceBounds = chandra
@@ -73,7 +67,7 @@ fn lotter_actions() {
     const SEP_8_2022: u64 = 1633046400000000000;
     const ONE_DAY: u64 = 86400000000000;
 
-    let msg = &json!({
+    let _msg = &json!({
       "_end_time": "1633046400000000000",
       "_price_ticket_in_near": "1000000000000000000000000",
       "_discount_divisor": "2000",
@@ -133,8 +127,8 @@ fn lotter_actions() {
         )
         .assert_success();
 
-    // Do a loop buying 2000 tickets
-    for i in 0..2000 {
+    // Do a loop buying 120 tickets
+    for i in 0..120 {
         // check storage available
         let chandra_storage: StorageBalance = chandra
             .view(
@@ -190,6 +184,6 @@ fn lotter_actions() {
         view_user_info_for_lottery_id
     );
 
-    assert_eq!(view_user_info_for_lottery_id.ticket_numbers.len(), 20);
+    assert_eq!(view_user_info_for_lottery_id.ticket_numbers.len(), 25);
     assert_eq!(view_user_info_for_lottery_id.ticket_numbers[0], 1039219);
 }

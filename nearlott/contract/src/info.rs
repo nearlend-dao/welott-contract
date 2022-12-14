@@ -47,7 +47,7 @@ impl NearLott {
     /// NEP-129 get information about this contract
     /// returns JSON string according to [NEP-129](https://github.com/nearprotocol/NEPs/pull/129)
     pub fn get_contract_info(&self) -> NEP129Response {
-        return NEP129Response {
+        NEP129Response {
             dataVersion: 1,
             name: CONTRACT_NAME.into(),
             version: CONTRACT_VERSION.into(),
@@ -56,19 +56,19 @@ impl NearLott {
             webAppUrl: self.web_app_url.clone(),
             developersAccountId: DEVELOPERS_ACCOUNT_ID.into(),
             auditorAccountId: self.auditor_account_id.clone(),
-        };
+        }
     }
 
     /// sets configurable contract info [NEP-129](https://github.com/nearprotocol/NEPs/pull/129)
     // Note: params are not Option<String> so the user can not inadvertently set null to data by not including the argument
     pub fn set_contract_info(&mut self, web_app_url: String, auditor_account_id: AccountId) {
         self.assert_owner_calling();
-        self.web_app_url = if web_app_url.len() > 0 {
+        self.web_app_url = if !web_app_url.is_empty() {
             Some(web_app_url)
         } else {
             None
         };
-        self.auditor_account_id = if auditor_account_id.as_str().len() > 0 {
+        self.auditor_account_id = if !auditor_account_id.as_str().is_empty() {
             Some(auditor_account_id)
         } else {
             None

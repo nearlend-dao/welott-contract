@@ -1,11 +1,11 @@
-![Welott](https://pbs.twimg.com/media/FhrHbJpUUAA1m8R?format=jpg&name=4096x4096)
+![Welott](https://i.imgur.com/2u1ruLU.png)
 
-# Welott - Blockchain-based Lottery
-Welott is a secure online lottery system, which employs smart contracts, Chainlink VRF Solution and $NEAR to distribute tickets & prizes.
+# Welott - NEAR based Lottery
+Welott is a secure online lottery system, which employs smart contracts, NEAR VRF Solution and $NEAR to distribute tickets & prizes.
 
 App is live: [https://welott.nearlenddao.com](https://welott.nearlenddao.com/)  
 
-## OnlyFunds App Overview
+## Welott App Overview
 
 ### Inspiration
 The lottery business has been established for a long time and accepted in many countries with different models and scopes. Even so, the organization of lottery games all has the same purpose: Meeting the entertainment needs of a part of the population, Creating jobs; Attracting investment capital; Promoting economic growth, and Contributing to social activities.

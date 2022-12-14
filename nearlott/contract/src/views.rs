@@ -69,11 +69,7 @@ impl NearLott {
         let discount_divisor = lottery.discount_divisor;
         let ticket_price = lottery.price_ticket_in_near;
 
-        return _calculate_total_price_for_bulk_tickets(
-            discount_divisor,
-            ticket_price,
-            _number_tickets,
-        );
+        _calculate_total_price_for_bulk_tickets(discount_divisor, ticket_price, _number_tickets)
     }
     /**
      * @notice View latest lottery id
@@ -100,7 +96,7 @@ impl NearLott {
             ._lotteries
             .iter()
             .skip(_cursor.unwrap_or(0) as usize)
-            .take(_size.unwrap_or(self.data()._lotteries.len()) as usize)
+            .take(_size.unwrap_or_else(|| self.data()._lotteries.len()) as usize)
             .map(|x| x.1)
             .collect()
     }
@@ -161,7 +157,7 @@ impl NearLott {
             return 0;
         }
 
-        return _calculate_rewards_for_ticket_id(data, _lottery_id, _ticket_id, _bracket);
+        _calculate_rewards_for_ticket_id(data, _lottery_id, _ticket_id, _bracket)
     }
     /**
      * @notice View user ticket ids, numbers, and statuses of user for a all lottery joined
@@ -340,7 +336,6 @@ impl NearLott {
      * Get current config
      */
     pub fn get_config(&self) -> ConfigContractData {
-        let config = self._get_config();
-        return config;
+        self._get_config()
     }
 }
