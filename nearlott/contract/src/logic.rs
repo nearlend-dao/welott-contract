@@ -1,6 +1,7 @@
 use crate::*;
 
 pub const ZERO_ADDRESS_WALLET: &str = "no_account.near";
+const LIMIT_TIME_IN_LOTTERY: u64 = 36000000000000;
 
 #[near_bindgen]
 impl NearLott {
@@ -27,6 +28,12 @@ impl NearLott {
         self.assert_operator_calling();
         self.assert_contract_running();
         self.assert_lottery_running();
+
+        assert!(
+            _end_time -  env::block_timestamp() >= LIMIT_TIME_IN_LOTTERY,
+            "{}",
+            ERR45_MINIMUM_TIME_FOR_RUN_LOTTERY
+        );
 
         let mut data = self.data_mut();
         // after 4 hours - 5 minutes since now to  4 days + 5 minutes
