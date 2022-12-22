@@ -19,6 +19,16 @@ pub struct ConfigContractData {
     pub max_reserve_fee: u128,
 }
 
+#[derive(Serialize, Deserialize, BorshSerialize, BorshDeserialize)]
+#[serde(crate = "near_sdk::serde")]
+pub struct ConfigLottery {
+    pub price_ticket_in_near: U128,
+    pub discount_divisor: U128,
+    pub rewards_breakdown: Vec<u128>,
+    pub reserve_fee: U128,
+    pub operate_fee: U128,
+}
+
 #[near_bindgen]
 impl NearLott {
     /**

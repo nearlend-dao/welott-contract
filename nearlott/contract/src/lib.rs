@@ -15,6 +15,7 @@ pub use crate::account::*;
 pub use crate::account_btn_counting::*;
 pub use crate::assert::*;
 pub use crate::callback::*;
+pub use crate::config::*;
 pub use crate::errors::*;
 pub use crate::gas::*;
 pub use crate::logic::*;
@@ -72,10 +73,10 @@ pub struct Lottery {
     pub status: Status,
     pub start_time: Timestamp,
     pub end_time: Timestamp,
-    pub price_ticket_in_near: u128,
-    pub discount_divisor: u128,
-    pub rewards_breakdown: Vec<u128>,
-    pub reserve_fee: u128,
+    //pub price_ticket_in_near: u128,
+    //pub discount_divisor: u128,
+    //pub rewards_breakdown: Vec<u128>,
+    //pub reserve_fee: u128,
     pub near_per_bracket: Vec<u128>,
     pub count_winners_per_bracket: Vec<u128>,
     pub first_ticket_id: u32,
@@ -83,7 +84,7 @@ pub struct Lottery {
     pub amount_collected_in_near: u128,
     pub last_pot_size: u128,
     pub final_number: u32,
-    pub operate_fee: u128,
+    //pub operate_fee: u128,
 }
 
 impl Default for Lottery {
@@ -93,10 +94,10 @@ impl Default for Lottery {
             status: Status::Open,
             start_time: 0,
             end_time: 0,
-            price_ticket_in_near: 0,
-            discount_divisor: 0,
-            rewards_breakdown: vec![],
-            reserve_fee: 0,
+            //price_ticket_in_near: 0,
+            //discount_divisor: 0,
+            //rewards_breakdown: vec![],
+            //reserve_fee: 0,
             near_per_bracket: vec![],
             count_winners_per_bracket: vec![],
             first_ticket_id: 0,
@@ -104,7 +105,7 @@ impl Default for Lottery {
             amount_collected_in_near: 0,
             last_pot_size: 0,
             final_number: 0,
-            operate_fee: 0,
+            //operate_fee: 0,
         }
     }
 }
@@ -151,6 +152,9 @@ pub struct ContractData {
 
     pub min_discount_divisor: u128,
     pub max_reserve_fee: u128,
+
+    // Config Lottery
+    config_lottery: ConfigLottery,
 
     // mapping are cheaper than arrays
     pub _lotteries: UnorderedMap<LotteryId, Lottery>,
@@ -211,6 +215,8 @@ impl NearLott {
         injector_address: AccountId,
         operator_address: AccountId,
         treasury_address: AccountId,
+        // Config Lottery
+        config_lottery: ConfigLottery,
     ) -> Self {
         assert!(!env::state_exists(), "Already initialized");
 
@@ -236,6 +242,7 @@ impl NearLott {
                 pending_injection_next_lottery: 0,
                 min_discount_divisor: 0,
                 max_reserve_fee: 3000, // 30%
+                config_lottery,
                 _lotteries: UnorderedMap::new(StorageKey::Lotteries),
                 _tickets: UnorderedMap::new(StorageKey::Tickets),
                 _bracket_calculator: brackets,
@@ -287,10 +294,36 @@ mod tests {
         builder
     }
 
-    fn setup_contract() -> (VMContextBuilder, NearLott) {
+    fn set_config_lottery(is_default: bool) -> ConfigLottery {
+        if is_default {
+            ConfigLottery {
+                price_ticket_in_near: U128::from(0),
+                discount_divisor: U128::from(0),
+                rewards_breakdown: vec![],
+                reserve_fee: U128::from(0),
+                operate_fee: U128::from(0),
+            }
+        } else {
+            ConfigLottery {
+                price_ticket_in_near: U128(1000000000000000000000000),
+                discount_divisor: U128(2000),
+                rewards_breakdown: vec![125, 375, 750, 1250, 2500, 5000],
+                reserve_fee: U128(2000),
+                operate_fee: U128(500),
+            }
+        }
+    }
+
+    fn setup_contract(config_lottery: ConfigLottery) -> (VMContextBuilder, NearLott) {
         let mut context = VMContextBuilder::new();
         testing_env!(context.predecessor_account_id(accounts(0)).build());
-        let contract = NearLott::new(accounts(0), accounts(1), accounts(2), accounts(3));
+        let contract = NearLott::new(
+            accounts(0),
+            accounts(1),
+            accounts(2),
+            accounts(3),
+            config_lottery,
+        );
         (context, contract)
     }
 
@@ -299,7 +332,13 @@ mod tests {
         let mut context = get_context(accounts(0));
         testing_env!(context.build());
 
-        let contract = NearLott::new(accounts(0), accounts(1), accounts(2), accounts(3));
+        let contract = NearLott::new(
+            accounts(0),
+            accounts(1),
+            accounts(2),
+            accounts(3),
+            set_config_lottery(true),
+        );
         testing_env!(context.is_view(true).build());
 
         let config = contract.get_config();
@@ -334,7 +373,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "Can only be called by the owner")]
     fn test_set_owner_invalid() {
-        let (mut context, mut contract) = setup_contract();
+        let (mut context, mut contract) = setup_contract(set_config_lottery(true));
 
         testing_env!(context
             .predecessor_account_id(accounts(1))
@@ -346,7 +385,7 @@ mod tests {
 
     #[test]
     fn test_set_owner() {
-        let (mut context, mut contract) = setup_contract();
+        let (mut context, mut contract) = setup_contract(set_config_lottery(true));
 
         testing_env!(context
             .predecessor_account_id(accounts(0))
@@ -360,7 +399,7 @@ mod tests {
 
     #[test]
     fn _test_full_asserts() {
-        let (mut context, contract) = setup_contract();
+        let (mut context, contract) = setup_contract(set_config_lottery(true));
         testing_env!(context
             .predecessor_account_id(accounts(0))
             .attached_deposit(1)
@@ -392,7 +431,7 @@ mod tests {
 
     #[test]
     pub fn test_set_operator_and_treasury_and_injector_addresses() {
-        let (mut context, mut contract) = setup_contract();
+        let (mut context, mut contract) = setup_contract(set_config_lottery(true));
         testing_env!(context
             .predecessor_account_id(accounts(0))
             .attached_deposit(1)
@@ -412,7 +451,7 @@ mod tests {
 
     #[test]
     pub fn test_set_max_number_tickets_per_buy() {
-        let (mut context, mut contract) = setup_contract();
+        let (mut context, mut contract) = setup_contract(set_config_lottery(true));
         testing_env!(context
             .predecessor_account_id(accounts(0))
             .attached_deposit(1)
@@ -425,7 +464,7 @@ mod tests {
 
     #[test]
     pub fn test_get_contract_info() {
-        let (_, contract) = setup_contract();
+        let (_, contract) = setup_contract(set_config_lottery(true));
         let contract_info = contract.get_contract_info();
 
         assert_eq!(contract_info.dataVersion, 1);
@@ -452,7 +491,7 @@ mod tests {
 
     #[test]
     fn test_start_lottery() {
-        let (mut context, mut contract) = setup_contract();
+        let (mut context, mut contract) = setup_contract(set_config_lottery(false));
         // deposit storage
         deposit_for_account(&mut context, &mut contract, accounts(2));
 
@@ -505,14 +544,7 @@ mod tests {
             .predecessor_account_id(account_id.clone())
             .attached_deposit(1)
             .build());
-        contract.start_lottery(
-            end_time,
-            Some(U128(1000000000000000000000000)),
-            Some(U128(2000)),
-            vec![125, 375, 750, 1250, 2500, 5000],
-            Some(U128(2000)),
-            Some(U128(500)),
-        );
+        contract.start_lottery(end_time);
     }
 
     fn close_lottery(context: &mut VMContextBuilder, contract: &mut NearLott) {
@@ -547,7 +579,7 @@ mod tests {
 
     #[test]
     fn test_desposit_buy_tickets() {
-        let (mut context, mut contract) = setup_contract();
+        let (mut context, mut contract) = setup_contract(set_config_lottery(false));
 
         // deposit storage
         deposit_for_account(&mut context, &mut contract, accounts(2));
@@ -613,7 +645,7 @@ mod tests {
 
     #[test]
     fn test_draw_final_number_and_make_lottery_claimable() {
-        let (mut context, mut contract) = setup_contract();
+        let (mut context, mut contract) = setup_contract(set_config_lottery(false));
 
         // deposit storage
         deposit_for_account(&mut context, &mut contract, accounts(2));
@@ -690,7 +722,7 @@ mod tests {
         // there is no one be a winner
         let operate_fee = (lottery_claim_lottery.amount_collected_in_near
             - lottery_claim_lottery.last_pot_size)
-            * lottery_claim_lottery.operate_fee
+            * data3.config_lottery.operate_fee.0
             / 10000;
         println!(
             "amount_collected_in_near: {:?}",
@@ -698,13 +730,13 @@ mod tests {
         );
         println!("operate_fee: {:?}", operate_fee);
         let amount_to_shared = ((lottery_claim_lottery.amount_collected_in_near - operate_fee)
-            * (10000 - lottery_claim_lottery.reserve_fee))
+            * (10000 - data3.config_lottery.reserve_fee.0))
             / 10000;
         println!("amount_to_shared: {:?}", amount_to_shared);
         assert_eq!(amount_to_shared, 2279240000000000000000000);
         // reserver pool
         let reserver_pool = ((lottery_claim_lottery.amount_collected_in_near - operate_fee)
-            * lottery_claim_lottery.reserve_fee)
+            * data3.config_lottery.reserve_fee.0)
             / 10000;
         // incase there is no one won.
         assert_eq!(
@@ -715,7 +747,7 @@ mod tests {
 
     #[test]
     fn test_get_user_cover_for_storage() {
-        let (mut context, mut contract) = setup_contract();
+        let (mut context, mut contract) = setup_contract(set_config_lottery(false));
 
         // deposit storage
         deposit_for_account(&mut context, &mut contract, accounts(2));
@@ -727,12 +759,12 @@ mod tests {
             available_storage.available.0, available_storage.total.0
         );
         assert_eq!(available_storage.total.0, 100000000000000000000000);
-        assert_eq!(available_storage.available.0, 97350000000000000000000);
+        assert_eq!(available_storage.available.0, 96720000000000000000000);
     }
 
     #[test]
     fn test_buy_tickets() {
-        let (mut context, mut contract) = setup_contract();
+        let (mut context, mut contract) = setup_contract(set_config_lottery(false));
 
         // deposit storage
         deposit_for_account(&mut context, &mut contract, accounts(2));
@@ -793,7 +825,7 @@ mod tests {
 
     #[test]
     fn test_claim_tickets() {
-        let (mut context, mut contract) = setup_contract();
+        let (mut context, mut contract) = setup_contract(set_config_lottery(false));
         // deposit storage
         deposit_for_account(&mut context, &mut contract, accounts(2));
 
@@ -882,17 +914,17 @@ mod tests {
         let lottery_claim_lottery = data3._lotteries.get(&current_lottery_id).unwrap();
         let operate_fee = (lottery_claim_lottery.amount_collected_in_near
             - lottery_claim_lottery.last_pot_size)
-            * lottery_claim_lottery.operate_fee
+            * data3.config_lottery.operate_fee.0
             / 10000;
         println!("claim_tickets_operate_fee: {}", operate_fee);
 
         // reserver pool
         let reserver_pool = ((lottery_claim_lottery.amount_collected_in_near - operate_fee)
-            * lottery_claim_lottery.reserve_fee)
+            * data3.config_lottery.reserve_fee.0)
             / 10000;
 
         let amount_to_shared = ((lottery_claim_lottery.amount_collected_in_near - operate_fee)
-            * (10000 - lottery_claim_lottery.reserve_fee))
+            * (10000 - data3.config_lottery.reserve_fee.0))
             / 10000;
 
         println!("amount_to_shared: {}", amount_to_shared);
@@ -978,7 +1010,7 @@ mod tests {
 
     #[test]
     fn test_calculate_rewards_for_ticket_id() {
-        let (mut context, mut contract) = setup_contract();
+        let (mut context, mut contract) = setup_contract(set_config_lottery(false));
 
         // deposit storage
         deposit_for_account(&mut context, &mut contract, accounts(2));
@@ -1017,7 +1049,7 @@ mod tests {
 
     #[test]
     fn test_close_lottery() {
-        let (mut context, mut contract) = setup_contract();
+        let (mut context, mut contract) = setup_contract(set_config_lottery(false));
         // deposit storage
         deposit_for_account(&mut context, &mut contract, accounts(2));
 
@@ -1041,7 +1073,7 @@ mod tests {
 
     #[test]
     fn test_get_random_number() {
-        let (mut context, contract) = setup_contract();
+        let (mut context, contract) = setup_contract(set_config_lottery(false));
 
         testing_env!(context
             .predecessor_account_id(accounts(5))
@@ -1058,7 +1090,7 @@ mod tests {
 
     #[test]
     fn test_get_current_timestamp() {
-        let (mut context, contract) = setup_contract();
+        let (mut context, contract) = setup_contract(set_config_lottery(false));
         testing_env!(context
             .predecessor_account_id(accounts(5))
             .random_seed([
@@ -1074,7 +1106,7 @@ mod tests {
 
     #[test]
     fn test_random_position() {
-        let (mut context, _) = setup_contract();
+        let (mut context, _) = setup_contract(set_config_lottery(false));
         let random_seed: [u8; 32] = [
             1, 2, 3, 4, 5, 6, 7, 8, 9, 1, 2, 4, 5, 6, 7, 8, 9, 1, 2, 3, 3, 4, 5, 6, 6, 7, 8, 9, 1,
             2, 4, 5,
@@ -1091,7 +1123,7 @@ mod tests {
     }
     #[test]
     fn test_view_user_info_for_lottery_id() {
-        let (mut context, mut contract) = setup_contract();
+        let (mut context, mut contract) = setup_contract(set_config_lottery(false));
 
         // deposit storage
         deposit_for_account(&mut context, &mut contract, accounts(2));
@@ -1136,7 +1168,7 @@ mod tests {
 
     #[test]
     fn test_view_calculate_total_price_for_bulk_tickets_include_discount() {
-        let (mut context, mut contract) = setup_contract();
+        let (mut context, mut contract) = setup_contract(set_config_lottery(false));
 
         // deposit storage
         deposit_for_account(&mut context, &mut contract, accounts(2));
@@ -1161,7 +1193,7 @@ mod tests {
 
     #[test]
     fn test_view_calculate_total_price_for_bulk_tickets_no_discount() {
-        let (mut context, mut contract) = setup_contract();
+        let (mut context, mut contract) = setup_contract(set_config_lottery(false));
         // call owner
         testing_env!(context
             .predecessor_account_id(accounts(0))
@@ -1199,7 +1231,7 @@ mod tests {
     #[test]
     #[should_panic(expected = "E38: The lottery is running. Could not change any configuration.")]
     fn test_permission_running() {
-        let (mut context, mut contract) = setup_contract();
+        let (mut context, mut contract) = setup_contract(set_config_lottery(false));
         // deposit storage
         deposit_for_account(&mut context, &mut contract, accounts(2));
 
@@ -1210,7 +1242,7 @@ mod tests {
 
     #[test]
     fn test_view_lotteries() {
-        let (mut context, mut contract) = setup_contract();
+        let (mut context, mut contract) = setup_contract(set_config_lottery(false));
 
         // deposit storage
         deposit_for_account(&mut context, &mut contract, accounts(2));
@@ -1226,6 +1258,8 @@ mod tests {
             current_lottery_id,
             vec![1039219],
         );
+
+        let data = contract.data();
         // check
         let lotteries = contract.view_lotteries(Some(0), Some(1000));
         assert_eq!(1, lotteries.len());
@@ -1234,14 +1268,17 @@ mod tests {
         assert_eq!(Status::Open, lottery.status);
         assert_eq!(0, lottery.start_time);
         assert_eq!(162615612345679, lottery.end_time);
-        assert_eq!(1000000000000000000000000, lottery.price_ticket_in_near);
-        assert_eq!(2000, lottery.discount_divisor);
-        assert_eq!(6, lottery.rewards_breakdown.len());
-        assert_eq!(2000, lottery.reserve_fee);
+        assert_eq!(
+            U128(1000000000000000000000000),
+            data.config_lottery.price_ticket_in_near
+        );
+        assert_eq!(U128(2000), data.config_lottery.discount_divisor);
+        assert_eq!(6, data.config_lottery.rewards_breakdown.len());
+        assert_eq!(U128(2000), data.config_lottery.reserve_fee);
         assert_eq!(vec![0, 0, 0, 0, 0, 0], lottery.near_per_bracket);
         assert_eq!(vec![0, 0, 0, 0, 0, 0], lottery.count_winners_per_bracket);
         assert_eq!(0, lottery.first_ticket_id);
-        assert_eq!(0, lottery.first_ticket_id_next_lottery);
+        assert_eq!(1, lottery.first_ticket_id_next_lottery);
         assert_eq!(1000000000000000000000000, lottery.amount_collected_in_near);
         assert_eq!(0, lottery.final_number);
     }

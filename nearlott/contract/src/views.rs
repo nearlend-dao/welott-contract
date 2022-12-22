@@ -57,17 +57,17 @@ impl NearLott {
     ) -> u128 {
         // check existing lottery
         let data = self.data();
-        let lottery = data
-            ._lotteries
-            .get(&_lottery_id)
-            .expect(ERR1_NOT_EXISTING_LOTTERY);
+        // let lottery = data
+        //     ._lotteries
+        //     .get(&_lottery_id)
+        //     .expect(ERR1_NOT_EXISTING_LOTTERY);
 
         // check number of tickets
         assert_ne!(_number_tickets, 0, "{}", ERR7_NUMBER_TICKETS_ZERO);
 
         // get discount divisor and ticket price
-        let discount_divisor = lottery.discount_divisor;
-        let ticket_price = lottery.price_ticket_in_near;
+        let discount_divisor = data.config_lottery.discount_divisor.0;
+        let ticket_price = data.config_lottery.price_ticket_in_near.0;
 
         _calculate_total_price_for_bulk_tickets(discount_divisor, ticket_price, _number_tickets)
     }
