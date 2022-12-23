@@ -326,6 +326,23 @@ impl NearLott {
     }
 
     /**
+     * View config lottery
+     */
+    pub fn view_config_lottery(&self) -> ConfigLottery {
+        let data = self.data();
+        ConfigLottery {
+            time_run_lottery: data.config_lottery.time_run_lottery,
+            price_ticket_in_near: data.config_lottery.price_ticket_in_near,
+            discount_divisor: data.config_lottery.discount_divisor,
+            rewards_breakdown: data.config_lottery.rewards_breakdown.clone(),
+            reserve_fee: data.config_lottery.reserve_fee,
+            operate_fee: data.config_lottery.operate_fee
+        }
+        
+       
+    }
+
+    /**
      * Get current block timestamp running in Near blockchain
      */
     pub fn get_current_timestamp(&self) -> u64 {
