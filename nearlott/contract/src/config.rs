@@ -1,5 +1,3 @@
-use std::ops::Div;
-
 use crate::*;
 
 const LIMIT_TIME_IN_LOTTERY: u64 = 36_000_000_000_000; // 10 hours
