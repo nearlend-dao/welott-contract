@@ -1,7 +1,6 @@
 use crate::*;
 
 pub const ZERO_ADDRESS_WALLET: &str = "no_account.near";
-const LIMIT_TIME_IN_LOTTERY: u64 = 36000000000000;
 
 #[near_bindgen]
 impl NearLott {
@@ -15,34 +14,22 @@ impl NearLott {
      * @param _treasury_fee: treasury fee (10,000 = 100%, 100 = 1%)
      */
     #[payable]
-    pub fn start_lottery(
-        &mut self,
-        _end_time: Timestamp,
-        // _price_ticket_in_near: Option<U128>,
-        // _discount_divisor: Option<U128>,
-        // _rewards_breakdown: Vec<u128>,
-        // _reserve_fee: Option<U128>,
-        // _operate_fee: Option<U128>,
-    ) {
+    pub fn start_lottery(&mut self) {
         self.assert_one_yoctor();
         self.assert_operator_calling();
         self.assert_contract_running();
         self.assert_lottery_running();
-
-        assert!(
-            _end_time - env::block_timestamp() >= LIMIT_TIME_IN_LOTTERY,
-            "{}",
-            ERR45_MINIMUM_TIME_FOR_RUN_LOTTERY
-        );
-
-        let mut data = self.data_mut();
+        
         // after 4 hours - 5 minutes since now to  4 days + 5 minutes
-
+        let mut data = self.data_mut();
         // extract data
+        let start_time = env::block_timestamp();
+        let end_time = start_time + data.config_lottery.time_run_lottery;
         let price_ticket_in_near = data.config_lottery.price_ticket_in_near.0;
         let discount_divisor = data.config_lottery.discount_divisor.0;
         let reserve_fee = data.config_lottery.reserve_fee.0;
         let operate_fee = data.config_lottery.operate_fee.0;
+        let rewards_breakdown = data.config_lottery.rewards_breakdown.clone();
 
         assert!(
             discount_divisor >= data.min_discount_divisor,
@@ -67,12 +54,12 @@ impl NearLott {
             &Lottery {
                 lottery_id: data.current_lottery_id,
                 status: Status::Open,
-                start_time: env::block_timestamp(),
-                end_time: _end_time,
-                //price_ticket_in_near,
-                //discount_divisor,
-                //rewards_breakdown: _rewards_breakdown,
-                //reserve_fee,
+                start_time,
+                end_time,
+                price_ticket_in_near,
+                discount_divisor,
+                rewards_breakdown,
+                reserve_fee,
                 near_per_bracket: vec![0, 0, 0, 0, 0, 0],
                 count_winners_per_bracket: vec![0, 0, 0, 0, 0, 0],
                 first_ticket_id: data.current_ticket_id,
@@ -80,7 +67,7 @@ impl NearLott {
                 amount_collected_in_near: data.pending_injection_next_lottery,
                 last_pot_size: data.pending_injection_next_lottery,
                 final_number: 0,
-                //operate_fee,
+                operate_fee,
             },
         );
 
@@ -89,8 +76,8 @@ impl NearLott {
                 "type": "start_lottery",
                 "params": {
                     "current_lottery_id": next_lottery_id,
-                    "start_time":  env::block_timestamp(),
-                    "end_time": _end_time,
+                    "start_time":  start_time,
+                    "end_time": end_time,
                     "price_ticket_in_near": U128(price_ticket_in_near),
                     "first_ticket_id": data.current_ticket_id,
                     "first_ticket_id_next_lottery": data.current_ticket_id,

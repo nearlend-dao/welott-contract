@@ -73,10 +73,10 @@ pub struct Lottery {
     pub status: Status,
     pub start_time: Timestamp,
     pub end_time: Timestamp,
-    //pub price_ticket_in_near: u128,
-    //pub discount_divisor: u128,
-    //pub rewards_breakdown: Vec<u128>,
-    //pub reserve_fee: u128,
+    pub price_ticket_in_near: u128,
+    pub discount_divisor: u128,
+    pub rewards_breakdown: Vec<u128>,
+    pub reserve_fee: u128,
     pub near_per_bracket: Vec<u128>,
     pub count_winners_per_bracket: Vec<u128>,
     pub first_ticket_id: u32,
@@ -84,7 +84,7 @@ pub struct Lottery {
     pub amount_collected_in_near: u128,
     pub last_pot_size: u128,
     pub final_number: u32,
-    //pub operate_fee: u128,
+    pub operate_fee: u128,
 }
 
 impl Default for Lottery {
@@ -94,10 +94,10 @@ impl Default for Lottery {
             status: Status::Open,
             start_time: 0,
             end_time: 0,
-            //price_ticket_in_near: 0,
-            //discount_divisor: 0,
-            //rewards_breakdown: vec![],
-            //reserve_fee: 0,
+            price_ticket_in_near: 0,
+            discount_divisor: 0,
+            rewards_breakdown: vec![],
+            reserve_fee: 0,
             near_per_bracket: vec![],
             count_winners_per_bracket: vec![],
             first_ticket_id: 0,
@@ -105,7 +105,7 @@ impl Default for Lottery {
             amount_collected_in_near: 0,
             last_pot_size: 0,
             final_number: 0,
-            //operate_fee: 0,
+            operate_fee: 0,
         }
     }
 }
@@ -295,8 +295,10 @@ mod tests {
     }
 
     fn set_config_lottery(is_default: bool) -> ConfigLottery {
+     
         if is_default {
             ConfigLottery {
+                time_run_lottery: 12345678 as u64 + 1,
                 price_ticket_in_near: U128::from(0),
                 discount_divisor: U128::from(0),
                 rewards_breakdown: vec![],
@@ -305,6 +307,7 @@ mod tests {
             }
         } else {
             ConfigLottery {
+                time_run_lottery: 12345678 as u64 + 1,
                 price_ticket_in_near: U128(1000000000000000000000000),
                 discount_divisor: U128(2000),
                 rewards_breakdown: vec![125, 375, 750, 1250, 2500, 5000],
@@ -430,39 +433,6 @@ mod tests {
     }
 
     #[test]
-    pub fn test_set_operator_and_treasury_and_injector_addresses() {
-        let (mut context, mut contract) = setup_contract(set_config_lottery(true));
-        testing_env!(context
-            .predecessor_account_id(accounts(0))
-            .attached_deposit(1)
-            .build());
-
-        contract.set_operator_and_treasury_and_injector_addresses(
-            accounts(3),
-            accounts(4),
-            accounts(5),
-        );
-
-        let data = contract.data();
-        assert_eq!(data.operator_address, accounts(3));
-        assert_eq!(data.treasury_address, accounts(4));
-        assert_eq!(data.injector_address, accounts(5));
-    }
-
-    #[test]
-    pub fn test_set_max_number_tickets_per_buy() {
-        let (mut context, mut contract) = setup_contract(set_config_lottery(true));
-        testing_env!(context
-            .predecessor_account_id(accounts(0))
-            .attached_deposit(1)
-            .build());
-
-        contract.set_max_number_tickets_per_buy(1000);
-        let data = contract.data();
-        assert_eq!(data.max_number_tickets_per_buy_or_claim, 1000);
-    }
-
-    #[test]
     pub fn test_get_contract_info() {
         let (_, contract) = setup_contract(set_config_lottery(true));
         let contract_info = contract.get_contract_info();
@@ -537,14 +507,11 @@ mod tests {
         contract: &mut NearLott,
         account_id: AccountId,
     ) {
-        let start_time = 162615600000000;
-        let end_time = start_time + 12345678 as u64 + 1;
-
         testing_env!(context
             .predecessor_account_id(account_id.clone())
             .attached_deposit(1)
             .build());
-        contract.start_lottery(end_time);
+        contract.start_lottery();
     }
 
     fn close_lottery(context: &mut VMContextBuilder, contract: &mut NearLott) {
@@ -1201,7 +1168,6 @@ mod tests {
             .build());
 
         // set no discount
-        contract.set_min_discount_divisor(0);
         // get current config
         let current_config = contract.get_config();
         println!(

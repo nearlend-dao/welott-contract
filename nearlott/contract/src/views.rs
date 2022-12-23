@@ -57,17 +57,17 @@ impl NearLott {
     ) -> u128 {
         // check existing lottery
         let data = self.data();
-        // let lottery = data
-        //     ._lotteries
-        //     .get(&_lottery_id)
-        //     .expect(ERR1_NOT_EXISTING_LOTTERY);
+        let lottery = data
+            ._lotteries
+            .get(&_lottery_id)
+            .expect(ERR1_NOT_EXISTING_LOTTERY);
 
         // check number of tickets
         assert_ne!(_number_tickets, 0, "{}", ERR7_NUMBER_TICKETS_ZERO);
 
         // get discount divisor and ticket price
-        let discount_divisor = data.config_lottery.discount_divisor.0;
-        let ticket_price = data.config_lottery.price_ticket_in_near.0;
+        let discount_divisor = lottery.discount_divisor;
+        let ticket_price = lottery.price_ticket_in_near;
 
         _calculate_total_price_for_bulk_tickets(discount_divisor, ticket_price, _number_tickets)
     }
@@ -323,6 +323,23 @@ impl NearLott {
     pub fn view_random_result(&self) -> u32 {
         let data = self.data();
         data.random_result as u32
+    }
+
+    /**
+     * View config lottery
+     */
+    pub fn view_config_lottery(&self) -> ConfigLottery {
+        let data = self.data();
+        ConfigLottery {
+            time_run_lottery: data.config_lottery.time_run_lottery,
+            price_ticket_in_near: data.config_lottery.price_ticket_in_near,
+            discount_divisor: data.config_lottery.discount_divisor,
+            rewards_breakdown: data.config_lottery.rewards_breakdown.clone(),
+            reserve_fee: data.config_lottery.reserve_fee,
+            operate_fee: data.config_lottery.operate_fee
+        }
+        
+       
     }
 
     /**
