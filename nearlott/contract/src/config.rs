@@ -1,7 +1,9 @@
+use std::ops::Div;
+
 use crate::*;
 
-const LIMIT_TIME_IN_LOTTERY: u64 = 36000000000000; // 10 hours
-const MINIMUM_PRICE_PER_TICKET:u128 = 100000000000000000000000u128; // 0.1 NEAR
+const LIMIT_TIME_IN_LOTTERY: u64 = 36_000_000_000_000; // 10 hours
+const MINIMUM_PRICE_PER_TICKET: Balance = ONE_NEAR / 10; // 0.1 NEAR
 
 #[derive(Serialize, Deserialize)]
 #[serde(crate = "near_sdk::serde")]
@@ -50,7 +52,7 @@ impl NearLott {
         _treasury_address: AccountId,
         _injector_address: AccountId,
         _max_number_tickets_per_buy: u64,
-        _min_discount_divisor: u128
+        _min_discount_divisor: u128,
     ) {
         self.assert_owner_calling();
         let mut data = self.data_mut();
@@ -60,7 +62,6 @@ impl NearLott {
         data.max_number_tickets_per_buy_or_claim = _max_number_tickets_per_buy;
         data.min_discount_divisor = _min_discount_divisor;
     }
-
 
     /**
      * @notice Set config for run a lottery
@@ -79,7 +80,7 @@ impl NearLott {
             "{}",
             ERR45_MINIMUM_TIME_FOR_RUN_LOTTERY
         );
-        
+
         // get latest lotteryid
         let data = self.data_mut();
 

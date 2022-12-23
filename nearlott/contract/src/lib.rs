@@ -6,7 +6,7 @@ use near_sdk::json_types::U128;
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::{
     env, near_bindgen, serde_json::json, AccountId, Balance, BorshStorageKey, PanicOnDefault,
-    Promise, Timestamp,
+    Promise, Timestamp, ONE_NEAR,
 };
 use std::collections::HashMap;
 use std::fmt;
@@ -295,7 +295,6 @@ mod tests {
     }
 
     fn set_config_lottery(is_default: bool) -> ConfigLottery {
-     
         if is_default {
             ConfigLottery {
                 time_run_lottery: 12345678 as u64 + 1,
