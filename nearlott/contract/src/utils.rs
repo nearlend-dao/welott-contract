@@ -121,7 +121,6 @@ pub fn _calculate_rewards_for_ticket_id(
 pub fn get_random_number() -> u32 {
     // generate 15 number position with random position from [1..9]
     let random: Vec<u8> = random_position();
-    assert!(random.len() >= 10, "{}", ERR37_NOT_ENOUGH_RANDOM_NUMBERS);
     let rand_array_str = format!("{:?}", &random);
 
     // convert so string
@@ -162,11 +161,9 @@ pub fn get_random_number() -> u32 {
  */
 pub fn random_position() -> Vec<u8> {
     let positions = env::random_seed();
-    if positions.len() > 10 {
-        let slice: Vec<u8> = positions[0..10].iter().map(|x| x.clone()).collect();
-        return slice;
-    }
-    positions
+    assert!(positions.len() >= 10, "{}", ERR37_NOT_ENOUGH_RANDOM_NUMBERS);
+    let slice: Vec<u8> = positions[0..10].iter().map(|x| x.clone()).collect();
+    return slice;
 }
 
 pub fn extract_data(value: Option<U128>) -> u128 {
