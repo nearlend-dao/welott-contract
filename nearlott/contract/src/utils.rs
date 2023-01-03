@@ -123,13 +123,9 @@ pub fn get_random_number() -> u32 {
     let random: Vec<u8> = random_position();
     assert!(random.len() >= 10, "{}", ERR37_NOT_ENOUGH_RANDOM_NUMBERS);
     let rand_array_str = format!("{:?}", &random);
-    // Specific position to get values. Random_seeds default return to 32 number in a vector<u8>.
-    let rand_array: Vec<u8> = random
-        .into_iter()
-        .map(|x| *env::random_seed().get(x as usize).unwrap())
-        .collect();
+
     // convert so string
-    let randomness_instr = rand_array
+    let randomness_instr = random
         .into_iter()
         .map(|x| x.to_string())
         .collect::<String>();
@@ -148,8 +144,8 @@ pub fn get_random_number() -> u32 {
             "params": {
                 "block_height": env::block_height(),
                 "vrf_numbers": env::random_seed(),
-                "ten_selected_positions": rand_array_str,
-                "number_generated_by_ten_positions":randomness_instr,
+                "ten_numbers_selected": rand_array_str,
+                "ten_numbers_selected_in_string":randomness_instr,
                 "current_timestamp": env::block_timestamp(),
                 "logic": format!("(1000000 + ({} % 1000000))", &randomness),
                 "final_number":  &win_number
