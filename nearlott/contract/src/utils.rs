@@ -167,7 +167,7 @@ pub fn get_random_number() -> u32 {
 pub fn random_position() -> Vec<u8> {
     let positions = env::random_seed();
     if positions.len() > 10 {
-        let slice: Vec<u8> = positions[0..10].iter().map(|x| x % 9).collect();
+        let slice: Vec<u8> = positions[0..10].iter().map(|x| x.clone()).collect();
         return slice;
     }
     positions
