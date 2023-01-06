@@ -1,3 +1,9 @@
+# Welott - NEAR based Lottery
+
+We have recently migrated the repository for the welott contract project from Gitlab to Github. The new location for the repository is https://github.com/nearlend-dao/welott-contract. Please update any local clones of the repository and make sure to use the new location for all future development work. Thank you for your cooperation and we apologize for any inconvenience this may have caused.
+
+---
+
 ![Welott](https://i.imgur.com/2u1ruLU.png)
 
 # Welott - NEAR based Lottery
