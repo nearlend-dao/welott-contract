@@ -34,7 +34,7 @@ impl Default for NEP129Response {
             dataVersion: 1,
             name: CONTRACT_NAME.into(),
             version: CONTRACT_VERSION.into(),
-            source: "https://gitlab.com/nearlend/nearlott".into(),
+            source: "https://github.com/nearlend-dao/welott-contract".into(),
             standards: vec!["NEP-141".into(), "NEP-145".into(), "SP".into()], //SP=>core-contracts/Staking-pool
             developersAccountId: DEVELOPERS_ACCOUNT_ID.into(),
             auditorAccountId: None,
@@ -51,7 +51,7 @@ impl NearLott {
             dataVersion: 1,
             name: CONTRACT_NAME.into(),
             version: CONTRACT_VERSION.into(),
-            source: "https://gitlab.com/nearlend/nearlott".into(),
+            source: "https://github.com/nearlend-dao/welott-contract".into(),
             standards: vec!["NEP-141".into(), "NEP-145".into(), "SP".into()], //SP=>core-contracts/Staking-pool
             webAppUrl: self.web_app_url.clone(),
             developersAccountId: DEVELOPERS_ACCOUNT_ID.into(),

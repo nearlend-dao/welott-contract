@@ -441,7 +441,7 @@ mod tests {
         assert_eq!(contract_info.version, CONTRACT_VERSION);
         assert_eq!(
             contract_info.source,
-            String::from("https://gitlab.com/nearlend/nearlott")
+            String::from("https://github.com/nearlend-dao/welott-contract")
         );
         assert_eq!(
             contract_info.standards,

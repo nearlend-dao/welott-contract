@@ -74,7 +74,7 @@ It is calculated by the math: 1,000,000 - (1,000,000 + (9262542654 % 1,000,000))
 
 ```
 cd your_path_folder
-git clone https://gitlab.com/nearlend-protocol/welott.git
+git clone https://github.com/nearlend-dao/welott-contract.git
 cd welott
 ```
 
