@@ -24,7 +24,8 @@ pub struct Account {
     pub tickets: UnorderedMap<LotteryId, Vec<TicketId>>,
 }
 
-#[derive(BorshSerialize, BorshDeserialize)]
+#[derive(BorshSerialize, BorshDeserialize, Serialize)]
+#[serde(crate = "near_sdk::serde")]
 pub enum VAccount {
     Current(Account),
 }
