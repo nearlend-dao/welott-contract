@@ -132,10 +132,10 @@ impl NearLott {
         // Calculate the amount to share post-treasury fee
         // The totally amount_collected_in_near minus 20% of the reserve pool, minutes 5% of the operator fee
         let _operate_fee = ((lottery.amount_collected_in_near - lottery.last_pot_size)
-            * data.config_lottery.operate_fee.0)
+            * lottery.operate_fee)
             / 10000;
         let _reserver_fee = ((lottery.amount_collected_in_near - _operate_fee)
-            * data.config_lottery.reserve_fee.0)
+            * lottery.reserve_fee)
             / 10000;
         let mut _amount_to_share_to_winners = 0;
         if lottery.amount_collected_in_near > _operate_fee {
@@ -173,9 +173,9 @@ impl NearLott {
                 if (number_ticket_in_winning_number - _number_addresses_in_previous_bracket) != 0 {
                     // B. If rewards at this bracket are > 0, calculate, else, report the numberAddresses from previous bracket
                     // rewardsBreakdown / total (10000) * amount_to_shared_to_winner / (total bracket winner - previous bracket received. Winner lower bracket does not calculate in higher bracket
-                    if data.config_lottery.rewards_breakdown[j as usize] != 0 {
+                    if lottery.rewards_breakdown[j as usize] != 0 {
                         lottery.near_per_bracket[j as usize] =
-                            ((data.config_lottery.rewards_breakdown[j as usize]
+                            ((lottery.rewards_breakdown[j as usize]
                                 * _amount_to_share_to_winners)
                                 / (number_ticket_in_winning_number
                                     - _number_addresses_in_previous_bracket))
@@ -186,7 +186,7 @@ impl NearLott {
                     // A. No NEAR to distribute, they are added to the amount to withdraw to treasury address
                 } else {
                     lottery.near_per_bracket[j as usize] = 0;
-                    _amount_to_withdraw_to_next_lottery += (data.config_lottery.rewards_breakdown
+                    _amount_to_withdraw_to_next_lottery += (lottery.rewards_breakdown
                         [j as usize]
                         * _amount_to_share_to_winners)
                         / 10000;
@@ -222,9 +222,7 @@ impl NearLott {
             .collect();
 
         // get rewards breakdown
-        let rewards_breakdown: Vec<String> = data
-            .config_lottery
-            .rewards_breakdown
+        let rewards_breakdown: Vec<String> = lottery.rewards_breakdown
             .iter()
             .map(|&id| id.to_string())
             .collect();
@@ -303,8 +301,8 @@ impl NearLott {
 
         // Calculate number of NEAR to this contract
         let amount_near_to_transfer = _calculate_total_price_for_bulk_tickets(
-            data.config_lottery.discount_divisor.0,
-            data.config_lottery.price_ticket_in_near.0,
+            lottery.discount_divisor,
+            lottery.price_ticket_in_near,
             _ticket_numbers.len() as u128,
         );
         assert!(
