@@ -1,7 +1,7 @@
 set -e
 NETWORK=near
 MASTER_ACC=welott.$NETWORK
-CONTRACT_ACC=beta1.$MASTER_ACC
+CONTRACT_ACC=main.$MASTER_ACC
 OWNER=nearlend-dao.sputnik-dao.near
 TREASURY_ACC=nearlend-dao.sputnik-dao.near
 INJECTOR_ACC=nearlend-dao.sputnik-dao.near
@@ -18,10 +18,10 @@ export NEAR_ENV=mainnet
 # near create-account $OPERATOR_ACC --masterAccount $MASTER_ACC --initialBalance 2
 
 # echo "################ BUILD CONTRACT #########################"
-# ../build.sh
+../build.sh
 
 # echo "################ DEPLOY CONTRACT #########################"
-# near deploy $CONTRACT_ACC ../out/nearlott.wasm 
+near deploy $CONTRACT_ACC ../out/nearlott.wasm 
 
 # echo "####################### GET CONFIG LOTTERY #########################"
 # near view $CONTRACT_ACC view_config_lottery ''

@@ -1,7 +1,7 @@
 set -e
 NETWORK=near
 MASTER_ACC=welott.$NETWORK
-CONTRACT_ACC=beta1.$MASTER_ACC
+CONTRACT_ACC=main.$MASTER_ACC
 OWNER=nearlend-dao.sputnik-dao.near
 TREASURY_ACC=nearlend-dao.sputnik-dao.near
 INJECTOR_ACC=nearlend-dao.sputnik-dao.near
