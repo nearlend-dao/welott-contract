@@ -160,9 +160,10 @@ pub fn get_random_number() -> u32 {
  * @notice Random a number from 1..9
  */
 pub fn random_position() -> Vec<u8> {
-    let positions = env::random_seed();
-    assert!(positions.len() >= 10, "{}", ERR37_NOT_ENOUGH_RANDOM_NUMBERS);
-    let slice: Vec<u8> = positions[0..10].iter().map(|x| x.clone()).collect();
+    let random_seed = env::random_seed();
+    assert!(random_seed.len() >= 10, "{}", ERR37_NOT_ENOUGH_RANDOM_NUMBERS);
+    let last_digits: Vec<u8> = random_seed.iter().map(|x| x % 10).collect();
+    let slice = last_digits[0..10].to_vec();
     return slice;
 }
 

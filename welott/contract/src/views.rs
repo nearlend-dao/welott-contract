@@ -338,8 +338,13 @@ impl NearLott {
             reserve_fee: data.config_lottery.reserve_fee,
             operate_fee: data.config_lottery.operate_fee
         }
-        
-       
+    }
+
+    pub fn view_accounts(&self, _cursor: usize, _size: usize) -> Vec<AccountId> {
+        self.assert_operator_calling();
+        self.data().accounts.iter().map(|account| {
+            account.0
+        }).skip(_cursor).take(_size).collect()
     }
 
     /**
