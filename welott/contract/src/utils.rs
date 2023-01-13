@@ -161,6 +161,7 @@ pub fn get_random_number() -> u32 {
  */
 pub fn random_position() -> Vec<u8> {
     let random_seed = env::random_seed();
+    assert!(random_seed.len() >= 10, "{}", ERR37_NOT_ENOUGH_RANDOM_NUMBERS);
     let last_digits: Vec<u8> = random_seed.iter().map(|x| x % 10).collect();
     let slice = last_digits[0..10].to_vec();
     return slice;
